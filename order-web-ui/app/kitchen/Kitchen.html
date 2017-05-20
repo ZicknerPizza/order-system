@@ -1,0 +1,14 @@
+<div class="row">
+    <div class="col-system-service col-lg-3 col-md-4 col-sm-5">
+        <orderCreate [party]="party" [condiments]="condiments" title="Neuer Wunsch"></orderCreate>
+        <orderList [partyId]="party.id" [orders]="orders.INACTIVE_AND_WAITING" title="Offene Bestellungen"></orderList>
+        <pizzaList [partyId]="party.id" [orders]="orders.TOPPING" [alwaysOpen]="true"
+                   title="Pizzen in der Küche"></pizzaList>
+        <pizzaList [partyId]="party.id" [orders]="orders.BAKING" [alwaysOpen]="true" title="Pizzen im Ofen"></pizzaList>
+        <pizzaList [partyId]="party.id" [orders]="orders.EATING" title="Fertige Pizzen"></pizzaList>
+    </div>
+
+    <div class="col-system-bake col-lg-9 col-md-8 col-sm-7 hidden-xs">
+        <bakery [partyId]="party.id" [orders]="orders.WAITING"></bakery>
+    </div>
+</div>

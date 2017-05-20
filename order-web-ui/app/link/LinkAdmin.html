@@ -1,0 +1,52 @@
+<div class="panel panel-default panel-table">
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th width="70%">Link</th>
+            <th width="30%">Party</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let link of links">
+            <td>
+                <div class="input-group">
+                    <span class="input-group-addon">{{pagePath}}/l/</span>
+                    <input type="text" [(ngModel)]="link.identifier" class="form-control" id="identifier">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button"
+                                title="In die Zwischenablage kopieren"
+                                ngxClipboard [cbContent]="pagePath + '/l/' + link.identifier">
+                            <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                        </button>
+                    </span>
+                </div>
+
+            </td>
+            <td>
+                <div class="btn-group btn-justified dropdown">
+                    <button type="button" class="btn btn-default btn-justified"
+                            aria-haspopup="true"
+                            aria-expanded="true"
+                            data-toggle="dropdown" title="Event auswählen" [id]="'dropdown_' + link.id.value">
+                        {{getName(link.partyId).name}}
+                    </button>
+                    <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdown_' + link.id.value">
+                        <li class="dropdown-item" *ngFor="let party of upcomingPartys">
+                            <a (click)="setParty(link, party)" class="pointer">{{party.name}}</a>
+                        </li>
+                    </ul>
+
+                </div>
+            </td>
+            <td>
+                <button (click)="save(link)" type="button" class="btn btn-default"
+                        title="Speichern">
+                    <span class="glyphicon glyphicon-floppy-disk " aria-hidden="true"></span>
+                </button>
+
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

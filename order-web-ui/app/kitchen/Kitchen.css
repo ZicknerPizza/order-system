@@ -1,0 +1,6 @@
+/* Vanish side margin at kitchen page */
+.container {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+}

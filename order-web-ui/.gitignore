@@ -1,0 +1,9 @@
+logs/*
+!.gitkeep
+node_modules/
+target/
+target.tar*
+tmp
+.DS_Store
+*.iml
+.idea

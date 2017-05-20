@@ -1,0 +1,233 @@
+<div class="nav-head print_not">
+    <ul class="nav nav-tabs">
+        <li><a routerLink="/event/list">Übersicht</a></li>
+        <li class="active"><a routerLink="/event/edit">Event neu/bearbeiten</a></li>
+    </ul>
+</div>
+
+<form (submit)="ctrl.saveData()">
+    <div class="panel panel-info print_not">
+        <div class="panel-heading">
+            <h3 class="panel-title">Hinweis: Du befindest dich im Konfigurations- und Kalkulationsmenü für dein
+                Event.</h3>
+        </div>
+        <div class="panel-body">
+            <h4>Bitte gehe folgendermaßen vor:</h4>
+            <ol>
+                <li>Eventdaten eintragen und speichern.</li>
+                <li>Vorbestellen Link an alle Gäste verschicken.</li>
+            </ol>
+            <h4>Wenige Tage vor deinem Event:</h4>
+            <ol start=3>
+                <li>Anzahl der Pizzen eintragen. Die Vergangenheit hat gezeigt, dass bei einer gemischten (m/w)
+                    Gesellschaft mit <b>ca. einer Pizza pro Gast</b> gerechnet werden kann.
+                </li>
+                <li>Einfluss der allgemeinen Statisik auf die Kalkulation einstellen. Bei einer geringen Anzahl an
+                    Vorbestellungen empfiehlt es sich den Wert zu erhöhen.
+                </li>
+                <li> Der Kalkulator hat nun zwei werte berechnet:
+                    <ul>
+                        <li><b>für alle Pizzen</b>: Dieser Wert gibt an, wie viel man von jeder Zutat benötigt, würden
+                            alle Pizzen damit belegt. Er beruht auf den Bewertungen der Kalkulation, die nach der Party
+                            abgegeben werden können.
+                        </li>
+                        <li><b>nach Statistik</b>: mit Hilfe der Vorbestellungen und allgemeinen Statistik wird die für
+                            das Event benötigte Menge der Zutat berechnet.
+                        </li>
+                    </ul>
+                </li>
+                <li>In der Spalte <b>Manuell</b> sollte jetzt der Wert eingetragen werden, der auf dem Einkaufszettel
+                    stehen soll. Dieser Wert wird später auf für die Bewertung der Kalkulation herangezogen.
+                </li>
+                <li>Einkaufszettel drucken.</li>
+
+            </ol>
+            <h4>Nach deinem Event:</h4>
+            <ol start=8>
+                <li>Bewerte deine Kalkulation. Dücke ...
+                    <ul>
+                        <li><b>Zu wenig</b> <span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>,
+                            wenn
+                            dir die Zutat während der Party aus gegegangen ist und nicht alle Bestellungen damit belegt
+                            werden konnten.
+                        </li>
+                        <li><b>genau richtig</b> <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>, wenn
+                            du mit dem Rest der übrig ist zufrieden bist. Bitte auch anwählen, wenn du nachdem die Zutat
+                            nicht mehr verfügbar war, Sie auf dem Wunschzettel deaktiviert hast. D. h. alle Bestellungen
+                            zufriedensetellend bedient wurden.
+                        </li>
+                        <li><b>Zu viel</b> <span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span>,
+                            wenn die Menge der Reste nicht akzeptabel ist.
+                        </li>
+                    </ul>
+                    Gespeichert wird der Belag pro Pizza. Dieser Berechnet sich aus dem Wert im Feld Manuell (bitte
+                    nicht ändern) und der Anzahl der Bestellungen für diese Zutat.
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <h1 class="print_only">{{party.name}} am {{party.date| date:'dd.MM.yyyy'}}</h1>
+
+    <div class="panel panel-default print_not">
+        <div class="panel-heading">
+            <h3 class="panel-title">Allgemeinen</h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="form-group col-sm-3">
+                    <label for="partyName" class="control-label">Party Name</label>
+                    <input class="form-control" id="partyName" name="partyName" [(ngModel)]="party.name"/>
+                </div>
+                <div class="form-group col-sm-3">
+                    <label for="partyDate" class="control-label">Datum</label>
+                    <input type="date" class="form-control" id="partyDate" name="partyDate" [(ngModel)]="party.date"/>
+                </div>
+                <div class="form-group col-sm-3">
+                    <label for="countPizza" class="control-label">Anzahl Pizzen*</label>
+                    <div class="input-group">
+					<span class="input-group-btn"><button type="button" class="btn btn-default"
+                                                          (click)="changeCountPizza(-4)">
+                        <span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button></span>
+                        <input class="form-control" id="countPizza" name="countPizza" [(ngModel)]="party.countPizza"/>
+                        <span class="input-group-btn"><button type="button" class="btn btn-default"
+                                                              (click)="changeCountPizza(4)">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button></span>
+                    </div>
+                </div>
+                <div class="form-group col-sm-3">
+                    <label for="blendStatistics" class="control-label">Anteil der allg. Statistik*</label>
+                    <input id="blendStatistics" name="blendStatistics" type="range" min="0" max="100" step="5"
+                           [(ngModel)]="party.blendStatistics" class="slider"/>
+                </div>
+            </div>
+            <div>
+                * Benötigt für die Kalkulation.
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="party.id">
+
+        <div class="print-info">
+            <div class="print_only">
+                <h2>Pizzateig für {{party.countPizza}} Pizzen (300 g Teiglinge)</h2>
+                <ul class="recipe">
+                    <li>{{(1.5 / 8 * party.countPizza) |number: "1.1-1"}} kg Mehl</li>
+                    <li>{{(820 / 8 * party.countPizza) |number: "1.0-0"}} ml Wasser</li>
+                    <li>{{(40 / 12 * party.countPizza) |number: "1.0-0"}} g Hefe</li>
+                    <li>{{(30 / 8 * party.countPizza) |number: "1.0-0"}} g Salz</li>
+                </ul>
+                <h2>Weitere Gewürze</h2>
+                <p>Oregano, Thymian, Majoran, Zimt, Pfeffer und Salz</p>
+                <h2>Kommentare</h2>
+            </div>
+            <span class="label label-default label-comment"
+                  *ngFor="let order of orders">{{showOrderLabel(order)}}</span>
+            <div class="clear"></div>
+            <div class="print_only">
+                <h2>Checkliste</h2>
+                <ul>
+                    <li>Backofen, Pizzasteine, Schieber,Brett für den Ofen, Backofengitter</li>
+                    <li>Küchenmaschine, Waage,Margarine-Schälchen</li>
+                    <li>Schneidebretter (groß/klein), Küchenmesser, Schalen, Schüsseln, Dosenöffner, Knoblauchpresse,
+                        Kuchengabeln
+                    </li>
+                    <li>Backbretter, Wellholz, Tassen, Esslöffel, Gabeln, Teigschaber, Wiegemesser, Reibe, Lasagneheber,
+                        Topflappen
+                    </li>
+                    <li>Handtücher, Putzschwamm, Spühlmittel, Müllbeutel</li>
+                    <li>Laptops, Tablets, Smartphones, Mäuse, Netzteile, W-Lan Router, LTE-Hotspot, Verlängerungskabel,
+                        Mehrfachsteckdosen
+                    </li>
+                    <li>Bestellzettel, Speisekarte</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="print_not">Zutaten</h2>
+        <div class="panel panel-default panel-condiment">
+            <table class="table table-condensed">
+                <ng-container *ngFor="let category of categories">
+                    <thead>
+                    <tr>
+                        <th class="td_center print_not">Aktiv</th>
+                        <th class="td_center">%</th>
+                        <th>{{category[0]}}</th>
+                        <th class="td_right">für alle Pizzen</th>
+                        <th class="td_right">nach Statistik</th>
+                        <th class="td_right">Manuell</th>
+                        <th class="td_center print_not">Bewertung</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <ng-container *ngFor="let condiment of category[1]">
+                        <tr [ngClass]="{print_not: !isCondimentSelected(condiment.id)}">
+                            <td class="td_center print_not"><input
+                                    id="condiment{{condiment.id.value}}"
+                                    name="condiment{{condiment.id.value}}"
+                                    [(ngModel)]="availableCondiments[condiment.id.value]"
+                                    type="checkbox"></td>
+                            <td class="td_center">{{blendCondimentStatistic(condiment) | number: "1.1-1"}}</td>
+                            <td>{{condiment.name}}</td>
+                            <td class="td_right">{{amountForAll(condiment) | number: "1.1-1"}} {{condiment.unit}}
+                                <a (click)="showCondimentDetails(condiment.id)"
+                                   style="cursor:pointer" class="print_not">
+                                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                </a></td>
+                            <td class="td_right">
+                                {{amountCalculated(condiment) | number: "1.1-1"}}
+                                {{condiment.unit}}
+                            </td>
+                            <td class="td_right print_not">
+                                <div class="input-group input-group-sm input-100">
+                                    <input size="2" type="text"
+                                           class="form-control"
+                                           [(ngModel)]="condiment.amount"
+                                           [ngModelOptions]="{standalone: true}"
+                                           [disabled]="!isCondimentSelected(condiment.id)">
+                                    <span class="input-group-addon">{{condiment.unit}}</span>
+                                </div>
+                            </td>
+                            <td class="td_right print_only">{{condiment.amount}} {{condiment.unit}}</td>
+                            <td class="td_center print_not">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="...">
+                                    <button type="button"
+                                            [disabled]="!isCondimentSelected(condiment.id)"
+                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, -1)}"
+                                            (click)="changeRating(condiment, -1);"><span
+                                            class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>
+                                    </button>
+                                    <button type="button"
+                                            [disabled]="!isCondimentSelected(condiment.id)"
+                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 0)}"
+                                            (click)="changeRating(condiment, 0);"><span
+                                            class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+                                    <button type="button"
+                                            [disabled]="!isCondimentSelected(condiment.id)"
+                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 1)}"
+                                            (click)="changeRating(condiment, 1);"><span
+                                            class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="condimentSettings[condiment.id.value].showDetails" class="print_not">
+                            <td colspan="7">
+                                <condimentStatisticChart
+                                        [statistic]="getCondimentStatistic(condiment)"
+                                        [unit]="condiment.unit"></condimentStatisticChart>
+                            </td>
+                        </tr>
+                    </ng-container>
+                    </tbody>
+                </ng-container>
+            </table>
+        </div>
+    </div>
+
+    <div class="form-group td_right">
+        <button type="button" class="btn btn-default" *ngIf="party.id" onclick="window.print();">Drucken</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+</form>

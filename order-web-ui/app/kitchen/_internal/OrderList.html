@@ -1,0 +1,38 @@
+<div class="panel panel-default">
+    <div (click)="show = !show"
+         [ngClass]="{'panel-heading-standalone': !show}" class="panel-heading panel-expand">
+        <h3 class="panel-title"><span class="badge">{{(orders | async)?.length}}</span>
+            {{title}}
+        </h3>
+    </div>
+    <ul class="list-group" [hidden]="!show">
+        <li *ngFor="let order of (orders | async)"
+            [ngClass]="{'list-group-item': true, 'list-group-item-disabled': !isActive(order)}">
+            <div class="row row-standalone row-flex">
+                <div class="list-group-item-content pointer" (click)="openClose(order)">
+                    {{order.name}} ({{order.orderId.value}})
+                    <div *ngIf="showDetails(order)">
+                        <p *ngIf="order.comment" class="order-comment">{{order.comment}}<br/></p>
+                        <span *ngFor="let condiment of order.condiments" class="condiment-list"><condiment
+                                [id]="condiment"></condiment></span>
+                    </div>
+                </div>
+
+                <div *ngIf="!isActive(order)" (click)="enable(order);"
+                     class="list-group-item-action pointer bg-success">
+                    <span title="aktivieren" class="glyphicon glyphicon-ok-circle text-success"
+                          aria-hidden="true"></span>
+                </div>
+                <div *ngIf="isActive(order)" (click)="disable(order);" class="list-group-item-action pointer bg-info">
+                    <span title="deaktivieren" class="glyphicon glyphicon-ban-circle text-info"
+                          aria-hidden="true"></span>
+                </div>
+                <div (click)="delete(order);" class="list-group-item-action pointer bg-danger">
+                    <span title="löschen" class="glyphicon glyphicon-remove-circle text-danger"
+                          aria-hidden="true"></span>
+                </div>
+
+            </div>
+        </li>
+    </ul>
+</div>

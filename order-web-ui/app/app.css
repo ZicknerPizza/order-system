@@ -1,0 +1,326 @@
+/* app css stylesheet */
+
+/* GLOBAL */
+@media screen {
+    body {
+        padding-top: 65px;
+    }
+
+    h2 {
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    h3 {
+        margin-top: 0px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    label {
+        margin-left: 5px;
+        font-weight: normal;
+    }
+
+    h4 {
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .row-standalone {
+        margin-top: -10px;
+        margin-bottom: -10px;
+    }
+
+    .btn-justified {
+        width:100%;
+        text-align: left;
+    }
+
+    .container-full {
+        width: 100%;
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    /* SLIDER */
+    .slider-handle {
+        background-color: #101010;
+        background-image: none;
+    }
+
+    /* SUB PAGE NAVIGATION */
+    .nav-head {
+        margin-top: 5px;
+        margin-bottom: 15px;
+    }
+
+    /* MOUSE */
+    .pointer {
+        cursor: pointer;
+    }
+
+    /* DISPLAY FLEX */
+    .row-flex,
+    .col-flex {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+    }
+
+    .col-flex {
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+    }
+
+    .list-group-item-content {
+        flex: 1;
+        padding: 10px 15px;
+    }
+
+    .list-group-item-action {
+        padding: 10px 15px;
+    }
+}
+
+/* EVENT */
+@media screen {
+    .input-100 {
+        width: 100px;
+        margin-left: auto;
+    }
+
+    /* ORDER LABELS */
+    .label-comment {
+        font-size: 14px;
+        line-height: 150%;
+        margin-right: 0.4em;
+        margin-bottom: 0.4em;
+        float: left;
+    }
+
+    /* CONDIMENT LIST */
+    .panel-condiment thead th {
+        background-color: #f5f5f5;
+        font-size: 16px;
+        color: inherit;
+        font-weight: 500;
+        line-height: 1.1;
+        padding: 10px 15px;
+    }
+
+    .panel-condiment th,
+    .panel-condiment td {
+        vertical-align: middle !important;
+    }
+}
+
+/* SYSTEM (KITCHEN) */
+@media screen {
+    .panel-heading .badge {
+        float: right;
+        background-color: #777 !important;
+    }
+
+    .panel-expand {
+        cursor: pointer;
+    }
+
+    .panel-heading-standalone {
+        border: none;
+        border-radius: 4px;
+    }
+
+    .condiment-list:before,
+    .condiment-sublist:before {
+        content: ", ";
+    }
+
+    .condiment-list:first-of-type:before,
+    .condiment-sublist:first-child:before {
+        content: none;
+    }
+
+
+    /* SYSTEM -> SERVICE -> SHOW ORDERS */
+    .col-system-service .list-group-item-disabled {
+        color: #aaa;
+    }
+
+    .col-system-service .list-group-item-disabled:last-child {
+        border-bottom: 1px solid #ddd !important;
+    }
+}
+
+/* SYSTEM (KITCHEN) -> PIZZA */
+@media screen {
+    .table-pizza th,
+    .table-pizza td {
+        padding: 0px !important;
+        vertical-align: top !important;
+        width: 50%;
+    }
+
+    .table-pizza th {
+        padding: 10px 15px !important;
+        line-height: 105%;
+        border-bottom: none !important;
+    }
+
+    .table-pizza .list-group-item:first-child {
+        border: none;
+    }
+
+    .table-pizza .list-group-item {
+        background: none;
+    }
+
+    .table-pizza p {
+        margin: 0;
+    }
+
+    .order-comment,
+    .table-pizza .p-pizza-comment {
+        color: #aaa;
+        font-style: italic;
+        font-weight: normal;
+    }
+
+    .table-pizza,
+    .table-pizza ul,
+    .table-pizza .list-group-item p {
+        margin-bottom: 0px;
+    }
+
+    /* HIGHLIGHT DOUBLE CONDIMENTS */
+
+    .condimentTwin {
+        color: #d9534f;
+    }
+
+    /* SYSTEM -> KITCHEN -> PIZZA*/
+
+    .col-system-bake .panel {
+        padding-bottom: 0px;
+    }
+
+    .col-system-bake .table-pizza-head {
+        font-size: 14px;
+        line-height: 14px;
+    }
+
+    .col-system-bake .table-pizza .condimentCategory {
+        font-size: 14px;
+        line-height: 14px;
+        color: #aaa;
+    }
+
+    .col-system-bake .table-pizza .list-group-item {
+        border-radius: 0;
+        border: none;
+        line-height: 105%;
+        padding: 7px 15px;
+    }
+
+    .col-system-bake .table-pizza th:first-child,
+    .col-system-bake .table-pizza td:first-child {
+        border-right: 1px solid #f2f2f2;
+    }
+
+    /* SYSTEM -> SERVICE -> PIZZA */
+
+    .list-group-item-pizzas .order-copy {
+        padding: 10px 15px;
+        text-align: center;
+        margin-bottom: -10px;
+    }
+
+    .list-group-item-pizzas .condimentCategory {
+         display: none;
+     }
+
+    .list-group-item-pizzas .list-group-item {
+        padding: 0 15px;
+    }
+
+    .list-group-item-pizzas p {
+        font-size: 14px;
+        margin-bottom: 0px;
+        font-weight: normal;
+    }
+
+    .list-group-item-pizzas .table-pizza td {
+        padding-bottom: 10px !important;
+        border-top: none;
+    }
+
+    .list-group-item-pizzas .table-pizza th,
+    .list-group-item-pizzas .table-pizza td {
+        border-right: 1px solid #f2f2f2;
+    }
+
+    .list-group-item-pizzas .table-pizza th:last-child,
+    .list-group-item-pizzas .table-pizza td:last-child,
+    .list-group-item-pizzas .table-pizza .list-group-item {
+        border: none;
+    }
+}
+
+/* NEW ORDER */
+@media screen {
+    .showCondiment input[type=checkbox] + label,
+    .hideCondiment input[type=checkbox]:checked + label {
+        color: #aaa;
+    }
+
+    .showCondiment input[type=checkbox]:checked + label {
+        color: #333;
+    }
+}
+
+@media screen {
+
+    .panel-body p {
+        padding-bottom: 0px;
+    }
+
+    .panel-padding-fix {
+        padding-bottom: 0px;
+    }
+
+    .margin-right {
+        margin-right: 1em;
+    }
+}
+
+/* ORIENTATION */
+
+.left {
+    float: left;
+    padding-left: 15px;
+}
+
+.right {
+    float: right;
+    padding-right: 15px;
+}
+
+.left a, .right a {
+    margin: -7px;
+    padding: 7px;
+    height: 100%;
+}
+
+.clear {
+    clear: both;
+}
+
+.td_center {
+    text-align: center;
+}
+
+.td_right {
+    text-align: right;
+}

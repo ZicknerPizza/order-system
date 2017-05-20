@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/pizza
+    username: pizza
+    password: pizza
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: pizza.zickner.ordersystem.web.configuration.CompatibilityNamingStrategy
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+security:
+  basic:
+    path: /api

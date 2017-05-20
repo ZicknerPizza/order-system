@@ -1,0 +1,60 @@
+<div class="panel panel-default hideCondiment">
+    <div ng-click="vm.show.settings = !vm.show.settings"
+         ng-class="['panel-heading', 'panel-expand', {'panel-heading-standalone': !vm.show.settings}]">
+        <h3 class="panel-title">Zutaten ausblenden</h3>
+    </div>
+    
+    <ul ng-show="vm.show.settings" class="list-group">
+        <li class="list-group-item">
+            <h3>Käse</h3>
+            <span class="badge">2</span><input id="condiment.hide1" type="checkbox" "><label
+                for="condiment.hide1">Emmentaler</label><br/>
+            <input id="condiment.hide2" type="checkbox" "><label
+                for="condiment.hide2">Schafskäse</label><br/>
+        </li>
+        <li class="list-group-item">
+            <h3>Sonstiges</h3>
+            <span class="badge">1</span><input id="condiment.hide3" type="checkbox" "><label
+                for="condiment.hide3">Pilze</label><br/>
+            <span class="badge">2</span><input id="condiment.hide4" type="checkbox" "><label
+                for="condiment.hide4">Peperoni</label><br/>
+            <span class="badge">2</span><input id="condiment.hide5" type="checkbox" "><label
+                for="condiment.hide5">Tomaten</label><br/>
+            <span class="badge">1</span><input id="condiment.hide6" type="checkbox" "><label
+                for="condiment.hide6">Mais</label><br/>
+            <span class="badge">2</span><input id="condiment.hide7" type="checkbox" "><label
+                for="condiment.hide7">Ananas</label><br/>
+
+        </li>
+        <li class="list-group-item">
+            <h3>Fisch</h3>
+            <input id="condiment.hide8" type="checkbox" "><label
+                for="condiment.hide8">Lachs</label><br/>
+        </li>
+        <li class="list-group-item">
+            <h3>Gewürze</h3>
+            <span class="badge">1</span><input id="condiment.hide11" type="checkbox" "><label
+                for="condiment.hide11">Curry</label><br/>
+            <span class="badge">2</span><input id="condiment.hide12" type="checkbox" "><label
+                for="condiment.hide12">Chili</label><br/>
+
+        </li>
+        <li class="list-group-item">
+            <h3>Wurst</h3>
+            <span class="badge">2</span><input id="condiment.hide9" type="checkbox" "><label
+                for="condiment.hide9">Schinken</label><br/>
+            <input id="condiment.hide10" type="checkbox" "><label
+                for="condiment.hide10">Salami</label><br/>
+        </li>
+        <li class="list-group-item">
+            <h3>Kräuter</h3>
+            <input id="condiment.hide13" type="checkbox" "><label
+                for="condiment.hide13">frischer Basilikum</label><br/>
+            <input id="condiment.hide14" type="checkbox" "><label
+                for="condiment.hide14">Rucola</label><br/>
+        </li>
+        <li class="list-group-item">
+            <button type="button" class="btn btn-default" style="width:100%">Speichern</button>
+        </li>
+    </ul>
+</div>

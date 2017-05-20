@@ -1,0 +1,43 @@
+<div class="panel panel-default">
+    <div (click)="show = !show"
+         [ngClass]="{'panel-heading-standalone': !(show || alwaysOpen)}" class="panel-heading panel-expand">
+        <h3 class="panel-title">{{title}}</h3>
+    </div>
+    <ul class="list-group">
+        <li *ngIf="show || alwaysOpen" class="list-group-item">
+            <div class="row row-standalone">
+                <form (ngSubmit)="sendOrder()">
+                    <ul class="list-group showCondiment" style="margin-bottom: 0;">
+                        <li class="list-group-item">
+                            <input type="text" class="form-control" placeholder="Name" required [(ngModel)]="name"
+                                   name="name">
+                        </li>
+                        <li class="list-group-item" *ngFor="let condiments of categories">
+                            <h3>{{condiments[0]}}</h3>
+                            <div *ngFor="let condiment of condiments[1]|condiment:party.condiments"><input
+                                    type="checkbox"
+                                    id="condiment.order{{condiment.id.value}}"
+                                    name="condiment.order{{condiment.id.value}}"
+                                    [(ngModel)]="requestForPizza[condiment.id.value]">
+                                <label for="condiment.order{{condiment.id.value}}">
+                                    {{condiment.name}}
+                                </label>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <textarea class="form-control custom-control"
+                                      rows="2"
+                                      style="resize:none"
+                                      placeholder="Kommentar, Unverträglichkeiten ..."
+                                      [(ngModel)]="comment"
+                                      name="comment"></textarea>
+                            <button type="submit" class="btn btn-default"
+                                    style="width:100%; margin-top: 10px;">Pizza w&uuml;nschen
+                            </button>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </li>
+    </ul>
+</div>

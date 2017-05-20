@@ -1,0 +1,28 @@
+<div class="nav-head">
+    <ul class="nav nav-tabs">
+        <li><a routerLink="/general/aboutUs">Wir über uns</a></li>
+        <li><a routerLink="/general/history">Geschichte</a></li>
+        <li class="active"><a routerLink="/general/statistic">Statistik</a></li>
+        <li><a routerLink="/general/imprint">Impressum</a></li>
+    </ul>
+</div>
+
+<div class="panel panel-default panel-table" *ngFor="let category of condiments | async">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{category.name}}</h3>
+    </div>
+    <div class="panel-body panel-padding-fix">
+        <div class="row" *ngFor="let condiment of category.condiments">
+            <div class="col-sm-2">{{condiment.name}}</div>
+            <div class="col-sm-10">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar"
+                         [attr.aria-valuenow]="condiment.percentage.overall" aria-valuemin="0" aria-valuemax="100"
+                         [ngStyle]="{'width' : (condiment.percentage.overall * 1.5) + '%', 'min-width': '3em'}">
+                        {{ condiment.percentage.overall | number: '1.0-0' }} %
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

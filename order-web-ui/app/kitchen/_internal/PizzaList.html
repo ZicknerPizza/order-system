@@ -1,0 +1,16 @@
+<div class="panel panel-default">
+    <div (click)="show = !show"
+         [ngClass]="{'panel-heading-standalone': !(show || alwaysOpen)}" class="panel-heading panel-expand">
+        <h3 class="panel-title"><span class="badge">{{(pizzas | async)?.length}}</span>
+            {{title}}
+        </h3>
+    </div>
+    <ul class="list-group" [hidden]="!(show || alwaysOpen)">
+        <li *ngFor="let pizza of pizzas | async" class="list-group-item list-group-item-pizzas">
+            <div class="row row-standalone">
+                <pizzaDetail [partyId]="partyId"
+                             [pizza]="pizza"></pizzaDetail>
+            </div>
+        </li>
+    </ul>
+</div>

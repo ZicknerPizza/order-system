@@ -1,0 +1,45 @@
+<div class="panel panel-info" *ngIf="!enableBake">
+    <div class="panel-heading">
+        <h3 class="panel-title">Backsystem</h3>
+    </div>
+    <div class="panel-body">Anleitung</div>
+</div>
+
+<div class="form-group td_right" *ngIf="!enableBake">
+    <button (click)="startBake()"
+            type="button" class="btn btn-success">Jetzt backen!
+    </button>
+</div>
+
+<div *ngIf="enableBake && current == null" class="alert alert-warning">
+    Es sind nicht ausreichend Bestellungen da.
+</div>
+
+<div *ngIf="enableBake && current != null" class="panel panel-default">
+    <div class="panel-heading">
+        <div class="row">
+            <div class="col-sm-9">
+                <h3 class="panel-title">Pizza</h3>
+            </div>
+            <div class="col-sm-3">
+                <input id="changeFontSize" type="range" min="14" max="64" step="2" [(ngModel)]="changeFontSize"
+                       class="slider"/>
+            </div>
+        </div>
+    </div>
+    <pizzaDetail [partyId]="partyId"
+                 [pizza]="current"
+                 [ngStyle]="{'font-size': fontSize() + 'px'}"
+                 [alwaysOpen]="true"></pizzaDetail>
+</div>
+<div class="row" *ngIf="enableBake">
+    <div class="col-sm-6 form-group">
+        <button (click)="stopBake(current)"
+                type="button" class="btn btn-default">Backmodus verlassen
+        </button>
+    </div>
+
+    <div class="col-sm-6 form-group td_right" *ngIf="current != null">
+        <button type="button" class="btn btn-danger" (click)="goToNextPizza(current);">Ofen</button>
+    </div>
+</div>

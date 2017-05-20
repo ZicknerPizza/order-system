@@ -1,0 +1,8 @@
+<navigation (expand)="lastExpand = $event"></navigation>
+
+<div class="container" [ngClass]="{'container-full': lastExpand}">
+
+    <notification></notification>
+
+    <router-outlet></router-outlet>
+</div>

@@ -1,0 +1,48 @@
+import {Component, Input, OnChanges, SimpleChange} from "@angular/core";
+import {Observable} from "rxjs";
+import {Pizza} from "./PizzaDetailCondiment";
+import {Order, PizzaId} from "../../_internal/api/OrderRestService";
+import {PartyId} from "../../_internal/api/PartyRestService";
+
+@Component({
+    selector: 'pizzaList',
+    template: require('./PizzaList.html'),
+    providers: []
+})
+export class PizzaListComponent implements OnChanges {
+
+    private show: boolean = false;
+
+    @Input()
+    private alwaysOpen: boolean = false;
+
+    @Input()
+    private title: string;
+
+    @Input()
+    private partyId: PartyId;
+
+    @Input()
+    private orders: Observable<Array<Order>>;
+
+    private pizzas: Observable<Array<Pizza>>;
+
+    ngOnChanges(changes: { [propKey: string]: SimpleChange }) {
+        this.pizzas = this.orders
+            .map((orders: Array<Order>) => {
+                return Array.from(
+                    orders.reduce(
+                        (map: Map<string, Pizza>, order: Order) => {
+                            if (map.has(order.pizzaId.value)) {
+                                map.get(order.pizzaId.value).order2 = order;
+                            } else {
+                                map.set(order.pizzaId.value, new Pizza(order));
+                            }
+                            return map;
+                        },
+                        new Map<string, Pizza>()
+                    ).values()
+                );
+            });
+    }
+}

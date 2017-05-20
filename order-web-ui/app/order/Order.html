@@ -1,0 +1,12 @@
+<orderCreate
+        *ngIf="party"
+        [party]="party"
+        [alwaysOpen]="true"
+        [condiments]="condiments"
+        title="Wünsche dir deine Pizza für die {{party.name}}"></orderCreate>
+
+<div *ngIf="party == null" class="alert alert-danger">
+    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+    <span class="sr-only">Fehler:</span>
+    Für dieses Event ist leider keine Bestellung möglich.
+</div>
