@@ -42,7 +42,7 @@ public class CondimentApplicationService {
 
     public List<CondimentDetails> findAll() {
         List<CondimentDetails> condimentDetails = new ArrayList<>();
-        for (Condiment condiment : condimentRepository.findAllByOrderByCategorySorting()) {
+        for (Condiment condiment : condimentRepository.findAllSorted()) {
             condimentDetails.add(toCondimentDetails(condiment));
         }
         return condimentDetails;

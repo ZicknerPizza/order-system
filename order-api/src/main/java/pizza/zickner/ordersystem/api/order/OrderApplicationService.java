@@ -41,7 +41,7 @@ public class OrderApplicationService {
     public List<OrderDetails> findOrdersForParty(PartyId partyId) {
         List<OrderDetails> orderDetails = new ArrayList<>();
         PizzaId lastPizzaId = null;
-        for (Order order : this.orderRepository.findByPartyIdOrderByStatusAscTimeAsc(partyId)) {
+        for (Order order : this.orderRepository.findByPartyId(partyId)) {
             OrderDetails orderDetail = toOrderDetails(order);
             if (order.getStatus().isAtLeast(Status.TOPPING)) {
                 lastPizzaId = setPizzaId(lastPizzaId, orderDetail);

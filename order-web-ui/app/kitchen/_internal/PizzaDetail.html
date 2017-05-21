@@ -3,11 +3,11 @@
     <tr>
         <th class="table-pizza-head pointer" (click)="showContent = !showContent">
             <p>{{pizza.order1.name}}</p>
-            <p class="p-pizza-comment" (show)="contentIsVisible()">{{pizza.order1.comment}}</p>
+            <p class="p-pizza-comment" *ngIf="contentIsVisible()">{{pizza.order1.comment}}</p>
         </th>
         <th class="table-pizza-head pointer" (click)="showContent = !showContent">
             <p>{{pizza.order2.name}}</p>
-            <p class="p-pizza-comment" (show)="contentIsVisible()">{{pizza.order2.comment}}</p>
+            <p class="p-pizza-comment" *ngIf="contentIsVisible()">{{pizza.order2.comment}}</p>
         </th>
         <th *ngIf="pizza.status == Status.TOPPING" class="pointer bg-info" (click)="moveToQueue();">
             <p><span class="glyphicon glyphicon-arrow-up text-info" aria-hidden="true"></span></p>
