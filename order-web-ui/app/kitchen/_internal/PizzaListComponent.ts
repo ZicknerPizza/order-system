@@ -1,8 +1,9 @@
 import {Component, Input, OnChanges, SimpleChange} from "@angular/core";
 import {Observable} from "rxjs";
 import {Pizza} from "./PizzaDetailCondiment";
-import {Order, PizzaId} from "../../_internal/api/OrderRestService";
+import {Order} from "../../_internal/api/OrderRestService";
 import {PartyId} from "../../_internal/api/PartyRestService";
+import {Condiment} from "../../_internal/api/CondimentRestService";
 
 @Component({
     selector: 'pizzaList',
@@ -24,6 +25,9 @@ export class PizzaListComponent implements OnChanges {
 
     @Input()
     private orders: Observable<Array<Order>>;
+
+    @Input()
+    private condiments: Array<Condiment>;
 
     private pizzas: Observable<Array<Pizza>>;
 

@@ -10,7 +10,7 @@
             [ngClass]="{'list-group-item': true, 'list-group-item-disabled': !isActive(order)}">
             <div class="row row-standalone row-flex">
                 <div class="list-group-item-content pointer" (click)="openClose(order)">
-                    {{order.name}} ({{order.orderId.value}})
+                    {{order.name}}
                     <div *ngIf="showDetails(order)">
                         <p *ngIf="order.comment" class="order-comment">{{order.comment}}<br/></p>
                         <span *ngFor="let condiment of order.condiments" class="condiment-list"><condiment

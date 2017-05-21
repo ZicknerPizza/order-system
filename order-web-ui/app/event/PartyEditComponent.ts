@@ -10,7 +10,7 @@ import {Party, PartyCondiment, PartyRestService} from "../_internal/api/PartyRes
 import {ActivatedRoute, Router} from "@angular/router";
 import {NotificationService} from "../_internal/component/notification/NotificationService";
 import {Order} from "../_internal/api/OrderRestService";
-import {CondimentService} from "../_internal/component/condiment/CondimentService";
+import {CondimentCategoryService} from "../_internal/CondimentCategoryService";
 
 @Component({
     template: require('./PartyEdit.html'),
@@ -45,7 +45,7 @@ export class PartyEditComponent {
             }
         }
         let condiments = <Array<Condiment>>this.routeParams.snapshot.data["condiments"];
-        this.categories = CondimentService.groupCondimentsByCategory(condiments);
+        this.categories = CondimentCategoryService.groupCondimentsByCategory(condiments);
         for (let condiment of condiments) {
             this.condimentSettings[condiment.id.value] = {
                 showDetails: false

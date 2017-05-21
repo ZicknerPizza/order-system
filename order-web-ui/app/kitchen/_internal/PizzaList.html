@@ -9,7 +9,8 @@
         <li *ngFor="let pizza of pizzas | async" class="list-group-item list-group-item-pizzas">
             <div class="row row-standalone">
                 <pizzaDetail [partyId]="partyId"
-                             [pizza]="pizza"></pizzaDetail>
+                             [pizza]="pizza"
+                             [condiments]="condiments"></pizzaDetail>
             </div>
         </li>
     </ul>

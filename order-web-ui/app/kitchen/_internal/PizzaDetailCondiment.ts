@@ -2,8 +2,9 @@ import {Component, Inject, Input, OnChanges, SimpleChanges} from "@angular/core"
 import {Observable} from "rxjs";
 import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestService";
 import {PizzaService} from "./PizzaService";
-import {CondimentId} from "../../_internal/api/CondimentRestService";
+import {Condiment, CondimentId} from "../../_internal/api/CondimentRestService";
 import {PartyId} from "../../_internal/api/PartyRestService";
+import {CondimentCategoryService} from "../../_internal/CondimentCategoryService";
 
 @Component({
     selector: 'pizzaDetail',
@@ -23,6 +24,12 @@ export class PizzaDetailComponent implements OnChanges {
     @Input()
     public partyId: PartyId;
 
+    @Input()
+    private condiments: Array<Condiment>;
+
+    private order1Categories: Array<[string, Array<Condiment>]>;
+    private order2Categories: Array<[string, Array<Condiment>]>;
+
     private bothOrderCondiments: Array<CondimentId>;
 
     private showContent: boolean;
@@ -36,6 +43,23 @@ export class PizzaDetailComponent implements OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         this.initBothOrderCondiments();
         this.initTimeStove();
+
+        let condiments1 = this.showCondiments(this.pizza.order1.condiments);
+        this.order1Categories = CondimentCategoryService.groupCondimentsByCategory(condiments1);
+
+        let condiments2 = this.showCondiments(this.pizza.order2.condiments);
+        this.order2Categories = CondimentCategoryService.groupCondimentsByCategory(condiments2);
+    }
+
+    private showCondiments(necessaryCondiments: Array<CondimentId>) {
+        return this.condiments.filter(condiment => {
+            for (let necessaryCondiment of necessaryCondiments) {
+                if (condiment.id.value === necessaryCondiment.value) {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     private initBothOrderCondiments() {

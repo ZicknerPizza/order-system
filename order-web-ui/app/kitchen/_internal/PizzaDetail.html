@@ -21,20 +21,26 @@
         <td>
             <ul class="list-group">
                 <li class="list-group-item">
-                    <p *ngFor="let condimentId of pizza.order1.condiments"
-                       [ngClass]="{'condiment': true, 'condimentTwin': isOnBothOrders(condimentId)}">
-                        <condiment [id]="condimentId"></condiment>
-                    </p>
+                    <div *ngFor="let category of order1Categories">
+                        <p class="condimentCategory">{{category[0]}}</p>
+                        <p *ngFor="let condiment of category[1]"
+                           [ngClass]="{'condiment': true, 'condimentTwin': isOnBothOrders(condiment.id)}">
+                            <condiment [id]="condiment.id"></condiment>
+                        </p>
+                    </div>
                 </li>
             </ul>
         </td>
         <td>
             <ul class="list-group">
                 <li class="list-group-item">
-                    <p *ngFor="let condimentId of pizza.order2.condiments"
-                       [ngClass]="{'condiment': true, 'condimentTwin': isOnBothOrders(condimentId)}">
-                        <condiment [id]="condimentId"></condiment>
-                    </p>
+                    <div *ngFor="let category of order2Categories">
+                        <p class="condimentCategory">{{category[0]}}</p>
+                        <p *ngFor="let condiment of category[1]"
+                           [ngClass]="{'condiment': true, 'condimentTwin': isOnBothOrders(condiment.id)}">
+                            <condiment [id]="condiment.id"></condiment>
+                        </p>
+                    </div>
                 </li>
             </ul>
         </td>

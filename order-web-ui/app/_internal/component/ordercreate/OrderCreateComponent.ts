@@ -5,6 +5,7 @@ import {Party} from "../../api/PartyRestService";
 import {Condiment, CondimentId} from "../../api/CondimentRestService";
 import {CondimentService} from "../condiment/CondimentService";
 import {UUID} from "angular2-uuid";
+import {CondimentCategoryService} from "../../CondimentCategoryService";
 
 @Component({
     selector: 'orderCreate',
@@ -39,7 +40,7 @@ export class OrderCreateComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         let condiments = this.condiments.filter(condiment => this.showCondiment(condiment.id));
-        this.categories = CondimentService.groupCondimentsByCategory(condiments);
+        this.categories = CondimentCategoryService.groupCondimentsByCategory(condiments);
     }
 
     public showCondiment(condimentId: CondimentId): boolean {

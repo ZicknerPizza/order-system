@@ -4,6 +4,7 @@ import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestServ
 import {Observable, Subject} from "rxjs";
 import {Pizza} from "./PizzaDetailCondiment";
 import {PartyId} from "../../_internal/api/PartyRestService";
+import {Condiment} from "../../_internal/api/CondimentRestService";
 
 @Component({
     selector: "bakery",
@@ -22,6 +23,9 @@ export class BakeryComponent implements OnInit {
 
     @Input()
     private orders: Observable<Array<Order>>;
+
+    @Input()
+    private condiments: Array<Condiment>;
 
     private current: Pizza = null;
 
