@@ -16,7 +16,7 @@ public interface OrderRepository extends CrudRepository<Order, OrderId> {
     @Query("SELECT o FROM PizzaOrder o")
     Stream<Order> streamAll();
 
-    @Query("SELECT o FROM PizzaOrder o WHERE o.partyId = :partyId ORDER BY o.status ASC, o.time DESC")
+    @Query("SELECT o FROM PizzaOrder o WHERE o.partyId = :partyId AND o.status <> pizza.zickner.ordersystem.core.domain.order.Status.DELETED ORDER BY o.status ASC, o.time DESC")
     List<Order> findByPartyId(@Param("partyId") PartyId partyId);
 
     List<Order> findByOrderIdIn(List<OrderId> orderIds);
