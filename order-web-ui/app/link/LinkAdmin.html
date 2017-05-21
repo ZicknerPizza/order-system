@@ -11,12 +11,12 @@
         <tr *ngFor="let link of links">
             <td>
                 <div class="input-group">
-                    <span class="input-group-addon">{{pagePath}}/l/</span>
+                    <span class="input-group-addon">{{pagePath}}/#/l/</span>
                     <input type="text" [(ngModel)]="link.identifier" class="form-control" id="identifier">
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button"
                                 title="In die Zwischenablage kopieren"
-                                ngxClipboard [cbContent]="pagePath + '/l/' + link.identifier">
+                                ngxClipboard [cbContent]="pagePath + '/#/l/' + link.identifier">
                             <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
                         </button>
                     </span>

@@ -14,6 +14,7 @@ import {KitchenModule} from "./kitchen/KitchenModule";
 import {LinkModule} from "./link/LinkModule";
 import {AuthenticationModule} from "./_internal/authentication/AuthenticationModule";
 import {OrderModule} from "./order/OrderModule";
+import {HashLocationStrategy, LocationStrategy} from "@angular/common";
 
 @NgModule({
     declarations: [
@@ -36,7 +37,8 @@ import {OrderModule} from "./order/OrderModule";
         OrderModule
     ],
     providers: [
-        AppRoutingProviders
+        AppRoutingProviders,
+        { provide: LocationStrategy, useClass: HashLocationStrategy }
     ],
     bootstrap: [
         AppComponent
