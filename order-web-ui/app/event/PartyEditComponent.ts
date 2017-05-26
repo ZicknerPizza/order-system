@@ -89,7 +89,7 @@ export class PartyEditComponent {
         }
     }
 
-    amountForAll(condiment: Condiment): number {
+    amountPerPizza(condiment: Condiment): number {
         let statistic = this.getCondimentStatistic(condiment);
         let all = 0;
         let num = 0;
@@ -104,7 +104,7 @@ export class PartyEditComponent {
         addInformation(statistic.match);
         addInformation(statistic.greater);
 
-        return all / num * this.party.countPizza;
+        return all / num;
     };
 
     public getCondimentStatistic(condiment: Condiment): Statistic {
@@ -112,7 +112,7 @@ export class PartyEditComponent {
     }
 
     amountCalculated(condiment: Condiment): number {
-        return this.blendCondimentStatistic(condiment) * this.amountForAll(condiment) / 100;
+        return this.blendCondimentStatistic(condiment) * this.amountPerPizza(condiment) * this.party.countPizza / 100;
     };
 
     saveData(): void {

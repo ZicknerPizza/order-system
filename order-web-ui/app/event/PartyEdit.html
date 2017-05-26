@@ -154,7 +154,7 @@
                         <th class="td_center print_not">Aktiv</th>
                         <th class="td_center">%</th>
                         <th>{{category[0]}}</th>
-                        <th class="td_right">für alle Pizzen</th>
+                        <th class="td_right">je Pizza</th>
                         <th class="td_right">nach Statistik</th>
                         <th class="td_right">Manuell</th>
                         <th class="td_center print_not">Bewertung</th>
@@ -170,7 +170,7 @@
                                     type="checkbox"></td>
                             <td class="td_center">{{blendCondimentStatistic(condiment) | number: "1.1-1"}}</td>
                             <td>{{condiment.name}}</td>
-                            <td class="td_right">{{amountForAll(condiment) | number: "1.1-1"}} {{condiment.unit}}
+                            <td class="td_right">{{amountPerPizza(condiment) | number: "1.1-1"}} {{condiment.unit}}
                                 <a (click)="showCondimentDetails(condiment.id)"
                                    style="cursor:pointer" class="print_not">
                                     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>

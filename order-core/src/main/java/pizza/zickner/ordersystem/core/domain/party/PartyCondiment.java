@@ -5,8 +5,6 @@ import pizza.zickner.ordersystem.core.domain.condiment.CondimentId;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import java.io.Serializable;
 
 /**
@@ -20,8 +18,7 @@ public class PartyCondiment implements Serializable {
 
     private Double amount;
 
-    @Enumerated(EnumType.ORDINAL)
-    private Rating rating;
+    private Integer rating;
 
     public CondimentId getCondimentId() {
         return condimentId;
@@ -40,10 +37,16 @@ public class PartyCondiment implements Serializable {
     }
 
     public Rating getRating() {
-        return rating;
+        if (rating == null) {
+            return null;
+        }
+        return Rating.values()[rating + 1];
     }
 
     public void setRating(Rating rating) {
-        this.rating = rating;
+        if (rating == null) {
+            this.rating = null;
+        }
+        this.rating = rating.ordinal() - 1;
     }
 }

@@ -20,6 +20,8 @@ export class CondimentRestService {
             .map((condimentStatistics: Array<CondimentStatistic>) =>
                 condimentStatistics.reduce(
                     (map: Map<number, CondimentStatistic>, condimentStatistic: CondimentStatistic) => {
+                        let statistic = condimentStatistic.statistic;
+                        condimentStatistic.statistic = new Statistic(statistic.greater, statistic.match, statistic.less);
                         map.set(condimentStatistic.id.value, condimentStatistic);
                         return map;
                     },
