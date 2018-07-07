@@ -1,6 +1,7 @@
 package pizza.zickner.ordersystem.api.condiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,8 @@ import pizza.zickner.ordersystem.core.domain.condiment.CondimentId;
 import pizza.zickner.ordersystem.core.domain.condiment.CondimentRepository;
 import pizza.zickner.ordersystem.core.domain.order.Order;
 import pizza.zickner.ordersystem.core.domain.order.OrderRepository;
+import pizza.zickner.ordersystem.core.domain.party.Party;
+import pizza.zickner.ordersystem.core.domain.party.PartyCondiment;
 import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
 import pizza.zickner.ordersystem.core.domain.party.Rating;
 import pizza.zickner.ordersystem.core.domain.user.Roles;
@@ -53,6 +56,7 @@ public class CondimentApplicationService {
     }
 
     @Secured(Roles.ROLE_ORDER_ADMIN)
+    @Cacheable("condimentStatistic")
     public List<CondimentStatisticDetails> findAllCondimentStatistic() {
         double numOrders = this.orderRepository.count();
         Map<CondimentId, Long> condimentOrderCount = getOrderCountForEachCondiment();
@@ -80,21 +84,15 @@ public class CondimentApplicationService {
 
     private Map<CondimentId, CondimentStatisticDetails.Statistic> getStatisticForCondiment() {
         return partyRepository.streamAll()
-                .flatMap(party -> party.getCondiments()
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .filter(partyCondiment -> partyCondiment.getAmount() != null && partyCondiment.getRating() != null)
-                        .map(partyCondiment -> {
-                            double numberOfOrders = this.orderRepository.findByPartyId(party.getPartyId())
-                                    .stream()
-                                    .map(Order::getCondiments)
-                                    .flatMap(Collection::stream)
-                                    .filter(condimentId -> condimentId.equals(partyCondiment.getCondimentId()))
-                                    .count();
-                            double amountPerOrder = partyCondiment.getAmount() / numberOfOrders;
-                            return new CondimentAmount(partyCondiment.getCondimentId(), partyCondiment.getRating(), amountPerOrder);
-                        })
-                )
+                .flatMap(party -> {
+                    Map<CondimentId, Long> countOrderedCondiments = countOrderedCondimentsForParty(party);
+                    return party.getCondiments()
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .filter(CondimentApplicationService::hasRating)
+                            .map(partyCondiment -> toCondimentAmount(partyCondiment, countOrderedCondiments.get(partyCondiment.getCondimentId())));
+                })
+                .filter(Objects::nonNull)
                 .collect(
                         Collectors.groupingBy(
                                 CondimentAmount::getCondimentId,
@@ -103,32 +101,54 @@ public class CondimentApplicationService {
                                                 CondimentAmount::getRating,
                                                 Collectors.collectingAndThen(
                                                         Collectors.toList(),
-                                                        condimentAmounts -> {
-                                                            List<Double> amountPerOrders = condimentAmounts
-                                                                    .stream()
-                                                                    .map(CondimentAmount::getAmountPerOrder)
-                                                                    .collect(Collectors.toList());
-                                                            Double min = Collections.min(amountPerOrders);
-                                                            Double avg = amountPerOrders.stream().collect(Collectors.averagingDouble(t -> t));
-                                                            Double max = Collections.max(amountPerOrders);
-                                                            return Arrays.asList(
-                                                                    min * ORDERS_PER_PIZZA,
-                                                                    avg * ORDERS_PER_PIZZA,
-                                                                    max * ORDERS_PER_PIZZA
-                                                            );
-                                                        }
+                                                        CondimentApplicationService::toArithmeticValuesList
                                                 )
                                         ),
-                                        ratingListMap -> {
-                                            CondimentStatisticDetails.Statistic statistic = new CondimentStatisticDetails.Statistic();
-                                            statistic.setLess(ratingListMap.get(Rating.NOT_ENOUGH));
-                                            statistic.setMatch(ratingListMap.get(Rating.ENOUGH));
-                                            statistic.setGreater(ratingListMap.get(Rating.TO_MUCH));
-                                            return statistic;
-                                        }
+                                        CondimentApplicationService::toCondimentStatistic
                                 )
                         )
                 );
+    }
+
+    private static boolean hasRating(PartyCondiment partyCondiment) {
+        return partyCondiment.getAmount() != null && partyCondiment.getRating() != null;
+    }
+
+    private Map<CondimentId, Long> countOrderedCondimentsForParty(Party party) {
+        return this.orderRepository.findByPartyId(party.getPartyId())
+                                .stream()
+                                .map(Order::getCondiments)
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
+
+    private static CondimentAmount toCondimentAmount(PartyCondiment partyCondiment, Long numberOfOrdersWithCondiment) {
+        if (numberOfOrdersWithCondiment == null) {
+            return null;
+        }
+        CondimentId condimentId = partyCondiment.getCondimentId();
+        double amountPerPizza = partyCondiment.getAmount() / numberOfOrdersWithCondiment * ORDERS_PER_PIZZA;
+        return new CondimentAmount(condimentId, partyCondiment.getRating(), amountPerPizza);
+    }
+
+
+    private static List<Double> toArithmeticValuesList(List<CondimentAmount> condimentAmounts) {
+        List<Double> amountPerPizza = condimentAmounts
+                .stream()
+                .map(CondimentAmount::getAmountPerPizza)
+                .collect(Collectors.toList());
+        Double min = Collections.min(amountPerPizza);
+        Double avg = amountPerPizza.stream().collect(Collectors.averagingDouble(t -> t));
+        Double max = Collections.max(amountPerPizza);
+        return Arrays.asList(min, avg, max);
+    }
+
+    private static CondimentStatisticDetails.Statistic toCondimentStatistic(Map<Rating, List<Double>> ratingListMap) {
+        CondimentStatisticDetails.Statistic statistic = new CondimentStatisticDetails.Statistic();
+        statistic.setLess(ratingListMap.get(Rating.NOT_ENOUGH));
+        statistic.setMatch(ratingListMap.get(Rating.ENOUGH));
+        statistic.setGreater(ratingListMap.get(Rating.TO_MUCH));
+        return statistic;
     }
 
     private Map<CondimentId, Long> getOrderCountForEachCondiment() {
@@ -167,12 +187,12 @@ public class CondimentApplicationService {
     private static class CondimentAmount {
         private final CondimentId condimentId;
         private final Rating rating;
-        private final double amountPerOrder;
+        private final double amountPerPizza;
 
-        public CondimentAmount(CondimentId condimentId, Rating rating, double amountPerOrder) {
+        public CondimentAmount(CondimentId condimentId, Rating rating, double amountPerPizza) {
             this.condimentId = condimentId;
             this.rating = rating;
-            this.amountPerOrder = amountPerOrder;
+            this.amountPerPizza = amountPerPizza;
         }
 
         public CondimentId getCondimentId() {
@@ -183,8 +203,8 @@ public class CondimentApplicationService {
             return rating;
         }
 
-        public double getAmountPerOrder() {
-            return amountPerOrder;
+        public double getAmountPerPizza() {
+            return amountPerPizza;
         }
     }
 }

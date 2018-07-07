@@ -52,7 +52,10 @@ export class LinkAdminComponent {
 
     private static eventUpcoming(party: Party) {
         const date = new Date(new Date().getTime() - 86400000);
-        const dateEvent = party.date;
-        return (dateEvent >= date);
+        const dateEvent = party.date.split("-");
+        let year = parseInt(dateEvent[0], 10);
+        let month = parseInt(dateEvent[1], 10) - 1;
+        let day = parseInt(dateEvent[2], 10);
+        return new Date(year, month, day) >= date;
     }
 }

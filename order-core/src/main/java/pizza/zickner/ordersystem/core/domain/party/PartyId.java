@@ -2,6 +2,7 @@ package pizza.zickner.ordersystem.core.domain.party;
 
 import org.springframework.data.annotation.AccessType;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
@@ -11,8 +12,9 @@ import java.util.Objects;
  */
 @Embeddable
 @AccessType(AccessType.Type.FIELD)
-public class PartyId implements Serializable{
+public class PartyId implements Serializable {
 
+    @Column(name = "party_id")
     private int value;
 
     public PartyId() {

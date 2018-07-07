@@ -18,22 +18,23 @@ public class PartyCondiment implements Serializable {
 
     private Double amount;
 
-    private Integer rating;
+    private Integer rating; // FIXME: Should be Rating ENUM
+
+    public PartyCondiment() {
+    }
+
+    public PartyCondiment(CondimentId condimentId, Double amount, Rating rating) {
+        this.condimentId = condimentId;
+        this.amount = amount;
+        this.setRating(rating);
+    }
 
     public CondimentId getCondimentId() {
         return condimentId;
     }
 
-    public void setCondimentId(CondimentId condimentId) {
-        this.condimentId = condimentId;
-    }
-
     public Double getAmount() {
         return amount;
-    }
-
-    public void setAmount(Double amount) {
-        this.amount = amount;
     }
 
     public Rating getRating() {
@@ -43,9 +44,10 @@ public class PartyCondiment implements Serializable {
         return Rating.values()[rating + 1];
     }
 
-    public void setRating(Rating rating) {
+    private void setRating(Rating rating) {
         if (rating == null) {
             this.rating = null;
+            return;
         }
         this.rating = rating.ordinal() - 1;
     }

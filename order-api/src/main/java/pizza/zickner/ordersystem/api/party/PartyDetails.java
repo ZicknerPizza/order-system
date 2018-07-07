@@ -3,22 +3,22 @@ package pizza.zickner.ordersystem.api.party;
 import pizza.zickner.ordersystem.core.domain.condiment.CondimentId;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * @author Valentin Zickner
  */
 public class PartyDetails {
-    public PartyId id;
-    public String name;
-    public String key;
-    public Date date;
+    private PartyId id;
+    private String name;
+    private String key;
+    private LocalDate date;
 
     @Deprecated
-    public int countPizza;
-    public int blendStatistics;
-    public List<CondimentId> condiments;
+    private int countPizza;
+    private int blendStatistics;
+    private List<CondimentId> condiments;
 
     public PartyId getId() {
         return id;
@@ -44,11 +44,11 @@ public class PartyDetails {
         this.key = key;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

@@ -8,9 +8,6 @@ spring:
       ddl-auto: validate
       naming:
         physical-strategy: pizza.zickner.ordersystem.web.configuration.CompatibilityNamingStrategy
-  jackson:
-    serialization:
-      write_dates_as_timestamps: false
 security:
   basic:
     path: /api

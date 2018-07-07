@@ -3,7 +3,6 @@ import {OrderId, OrderRestService, Status} from "../../api/OrderRestService";
 import {NotificationService} from "../notification/NotificationService";
 import {Party} from "../../api/PartyRestService";
 import {Condiment, CondimentId} from "../../api/CondimentRestService";
-import {CondimentService} from "../condiment/CondimentService";
 import {UUID} from "angular2-uuid";
 import {CondimentCategoryService} from "../../CondimentCategoryService";
 
@@ -57,7 +56,7 @@ export class OrderCreateComponent implements OnChanges {
         }
 
         let status = Status.INACTIVE;
-        if (OrderCreateComponent.onSameDay(this.party.date, new Date())) {
+        if (OrderCreateComponent.isToday(this.party.date)) {
             status = Status.WAITING;
         }
 
@@ -94,9 +93,7 @@ export class OrderCreateComponent implements OnChanges {
         return false;
     }
 
-    private static onSameDay(date: Date, date2: Date) {
-        return date.getDay() == date2.getDay()
-            && date.getMonth() == date2.getMonth()
-            && date.getFullYear() && date2.getFullYear();
+    private static isToday(date: string) {
+        return new Date().toISOString().startsWith(date);
     }
 }

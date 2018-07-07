@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.List;
 public class Order {
 
     private static final int MINUTES_TO_BAKE = 4;
+    private static final ZoneOffset ZONE_OFFSET = ZoneId.systemDefault().getRules().getOffset(Instant.now());
 
     @EmbeddedId
     @AttributeOverride(name = "value", column = @Column(name = "id"))
@@ -69,6 +71,7 @@ public class Order {
         this.comment = comment;
         this.status = Preconditions.checkNotNull(status);
         this.condiments = Preconditions.checkNotNull(condiments);
+        this.time = (int) LocalDateTime.now().toEpochSecond(ZONE_OFFSET);
     }
 
     public OrderId getOrderId() {
@@ -123,7 +126,7 @@ public class Order {
         if (this.time == 0) {
             return null;
         }
-        return LocalDateTime.ofEpochSecond(this.time, 0, ZoneId.systemDefault().getRules().getOffset(Instant.now()));
+        return LocalDateTime.ofEpochSecond(this.time, 0, ZONE_OFFSET);
     }
 
     public Integer getTimeStove() {
@@ -138,7 +141,7 @@ public class Order {
         if (this.timeStove == null || this.timeStove == 0) {
             return null;
         }
-        return LocalDateTime.ofEpochSecond(this.timeStove, 0, ZoneId.systemDefault().getRules().getOffset(Instant.now()));
+        return LocalDateTime.ofEpochSecond(this.timeStove, 0, ZONE_OFFSET);
     }
 
     public List<CondimentId> getCondiments() {

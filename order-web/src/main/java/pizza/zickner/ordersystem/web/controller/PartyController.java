@@ -1,12 +1,9 @@
 package pizza.zickner.ordersystem.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import pizza.zickner.ordersystem.api.party.CreatePartyDetails;
 import pizza.zickner.ordersystem.api.party.PartyApplicationService;
 import pizza.zickner.ordersystem.api.party.PartyDetails;
 import pizza.zickner.ordersystem.api.party.PartyOverviewDetails;
@@ -44,13 +41,13 @@ public class PartyController {
     }
 
     @PostMapping
-    public void save(PartyDetails partyDetails) {
-        // FIXME
-        throw new UnsupportedOperationException("not implemented");
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void create(@RequestBody CreatePartyDetails createPartyDetails) {
+        this.partyApplicationService.create(createPartyDetails);
     }
 
     @PutMapping("/{partyId}")
-    public void update(@PathVariable PartyId partyId, PartyDetails partyDetails) {
+    public void update(@PathVariable PartyId partyId, @RequestBody PartyDetails partyDetails) {
         // FIXME
         throw new UnsupportedOperationException("not implemented");
     }
