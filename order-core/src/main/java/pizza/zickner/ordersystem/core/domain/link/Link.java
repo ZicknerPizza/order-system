@@ -16,7 +16,6 @@ import javax.persistence.GeneratedValue;
 public class Link {
 
     @EmbeddedId
-    @GeneratedValue
     @AttributeOverride(name = "value", column = @Column(name = "id"))
     private LinkId linkId;
 

@@ -26,6 +26,15 @@ public class User implements UserDetails {
     @Column(name = "password")
     private String password;
 
+    public User() {
+    }
+
+    public User(UserId id, String username, String password) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+    }
+
     @Override
     public String getUsername() {
         return this.username;

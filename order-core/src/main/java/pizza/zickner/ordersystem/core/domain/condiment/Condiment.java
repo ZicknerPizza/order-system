@@ -17,7 +17,6 @@ import javax.persistence.OrderBy;
 public class Condiment {
 
     @EmbeddedId
-    @GeneratedValue
     @AttributeOverride(name = "value", column = @Column(name = "id"))
     private CondimentId condimentId;
 
@@ -31,6 +30,17 @@ public class Condiment {
     @JoinColumn(name = "parent_id")
     @OrderBy("sorting ASC")
     private CondimentCategory category;
+
+    public Condiment() {
+    }
+
+    public Condiment(CondimentId condimentId, String name, int sorting, String unit, CondimentCategory category) {
+        this.condimentId = condimentId;
+        this.name = name;
+        this.sorting = sorting;
+        this.unit = unit;
+        this.category = category;
+    }
 
     public CondimentId getCondimentId() {
         return condimentId;

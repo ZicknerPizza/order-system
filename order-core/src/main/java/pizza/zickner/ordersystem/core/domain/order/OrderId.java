@@ -33,7 +33,7 @@ public class OrderId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderId orderId = (OrderId) o;
-        return value == orderId.value;
+        return Objects.equals(value, orderId.value);
     }
 
     @Override

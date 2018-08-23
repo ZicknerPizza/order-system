@@ -14,6 +14,10 @@ public class PartyCondimentDetails {
     private PartyCondimentDetails() {
     }
 
+    public PartyCondimentDetails(CondimentId condimentId) {
+        this.condimentId = condimentId;
+    }
+
     public PartyCondimentDetails(CondimentId condimentId, Double amount, Rating rating) {
         this.condimentId = condimentId;
         this.amount = amount;

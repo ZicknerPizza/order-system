@@ -19,6 +19,15 @@ public class CondimentCategory {
 
     private int sorting;
 
+    public CondimentCategory() {
+    }
+
+    public CondimentCategory(CondimentCategoryId condimentCategoryId, String name, int sorting) {
+        this.id = condimentCategoryId;
+        this.name = name;
+        this.sorting = sorting;
+    }
+
     public CondimentCategoryId getId() {
         return id;
     }
