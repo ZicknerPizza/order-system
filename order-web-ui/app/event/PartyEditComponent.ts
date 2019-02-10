@@ -37,16 +37,21 @@ export class PartyEditComponent {
         this.party = <Party>this.routeParams.snapshot.data["party"];
         this.condimentsStatistic = <Map<number, CondimentStatistic>>this.routeParams.snapshot.data["condimentsStatistic"];
         this.orders = <Array<Order>>this.routeParams.snapshot.data["orders"];
+        let condiments = <Array<Condiment>>this.routeParams.snapshot.data["condiments"];
 
         if (this.party === undefined) {
             this.party = new Party();
+            this.party.blendStatistics = 50;
+            this.party.estimatedNumberOfPizzas = 8;
             this.orders = [];
+            for (let condiment of condiments) {
+                this.availableCondiments[condiment.id.value] = true;
+            }
         } else {
             for (let condimentId of this.party.condiments) {
                 this.availableCondiments[condimentId.value] = true;
             }
         }
-        let condiments = <Array<Condiment>>this.routeParams.snapshot.data["condiments"];
         this.categories = <Array<[string, Array<CondimentWithRating>]>>CondimentCategoryService.groupCondimentsByCategory(condiments);
         for (let condiment of condiments) {
             this.condimentSettings[condiment.id.value] = {
@@ -61,13 +66,6 @@ export class PartyEditComponent {
 
     public isCondimentSelected(condimentId: CondimentId): boolean {
         return this.availableCondiments[condimentId.value] === true;
-    }
-
-    changeEstimatedNumberOfPizzas(factor: number): void {
-        this.party.estimatedNumberOfPizzas = this.party.estimatedNumberOfPizzas + factor;
-        if (this.party.estimatedNumberOfPizzas < 0) {
-            this.party.estimatedNumberOfPizzas = 0;
-        }
     }
 
     blendCondimentStatistic(condiment: Condiment): number {

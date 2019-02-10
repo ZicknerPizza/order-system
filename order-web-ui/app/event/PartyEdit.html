@@ -85,15 +85,9 @@
                 </div>
                 <div class="form-group col-sm-3">
                     <label for="estimatedNumberOfPizzas" class="control-label">Anzahl Pizzen*</label>
-                    <div class="input-group">
-					<span class="input-group-btn"><button type="button" class="btn btn-default"
-                                                          (click)="changeEstimatedNumberOfPizzas(-4)">
-                        <span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button></span>
-                        <input class="form-control" type="number" id="estimatedNumberOfPizzas" name="estimatedNumberOfPizzas" [(ngModel)]="party.estimatedNumberOfPizzas"/>
-                        <span class="input-group-btn"><button type="button" class="btn btn-default"
-                                                              (click)="changeEstimatedNumberOfPizzas(4)">
-                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button></span>
-                    </div>
+                    <input class="form-control" type="number" min="4" step="2" id="estimatedNumberOfPizzas"
+                           name="estimatedNumberOfPizzas"
+                           [(ngModel)]="party.estimatedNumberOfPizzas"/>
                 </div>
                 <div class="form-group col-sm-3">
                     <label for="blendStatistics" class="control-label">Anteil der allg. Statistik*</label>
@@ -107,123 +101,120 @@
         </div>
     </div>
 
-    <div *ngIf="party.id">
-
-        <div class="print-info">
-            <div class="print_only">
-                <h2>Pizzateig für {{party.estimatedNumberOfPizzas}} Pizzen (300 g Teiglinge)</h2>
-                <ul class="recipe">
-                    <li>{{(1.5 / 8 * party.estimatedNumberOfPizzas) |number: "1.1-1"}} kg Mehl</li>
-                    <li>{{(820 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} ml Wasser</li>
-                    <li>{{(40 / 12 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Hefe</li>
-                    <li>{{(30 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Salz</li>
-                </ul>
-                <h2>Weitere Gewürze</h2>
-                <p>Oregano, Thymian, Majoran, Zimt, Pfeffer und Salz</p>
-                <h2>Kommentare</h2>
-            </div>
-            <span class="label label-default label-comment"
-                  *ngFor="let order of orders">{{showOrderLabel(order)}}</span>
-            <div class="clear"></div>
-            <div class="print_only">
-                <h2>Checkliste</h2>
-                <ul>
-                    <li>Backofen, Pizzasteine, Schieber, Brett für den Ofen, Backofengitter</li>
-                    <li>Küchenmaschine, Waage, Margarine-Schälchen</li>
-                    <li>Schneidebretter (groß/klein), Küchenmesser, Schalen, Schüsseln, Dosenöffner, Knoblauchpresse,
-                        Kuchengabeln
-                    </li>
-                    <li>Backbretter, Wellholz, Tassen, Esslöffel, Gabeln, Teigschaber, Wiegemesser, Reibe, Lasagneheber,
-                        Topflappen
-                    </li>
-                    <li>Handtücher, Putzschwamm, Spühlmittel, Müllbeutel</li>
-                    <li>Laptops, Tablets, Smartphones, Mäuse, Netzteile, W-Lan Router, LTE-Hotspot, Verlängerungskabel,
-                        Mehrfachsteckdosen
-                    </li>
-                    <li>Bestellzettel, Speisekarte</li>
-                </ul>
-            </div>
+    <div class="print-info">
+        <div class="print_only">
+            <h2>Pizzateig für {{party.estimatedNumberOfPizzas}} Pizzen (300 g Teiglinge)</h2>
+            <ul class="recipe">
+                <li>{{(1.5 / 8 * party.estimatedNumberOfPizzas) |number: "1.1-1"}} kg Mehl</li>
+                <li>{{(820 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} ml Wasser</li>
+                <li>{{(40 / 12 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Hefe</li>
+                <li>{{(30 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Salz</li>
+            </ul>
+            <h2>Weitere Gewürze</h2>
+            <p>Oregano, Thymian, Majoran, Zimt, Pfeffer und Salz</p>
+            <h2>Kommentare</h2>
         </div>
+        <span class="label label-default label-comment"
+              *ngFor="let order of orders">{{showOrderLabel(order)}}</span>
+        <div class="clear"></div>
+        <div class="print_only">
+            <h2>Checkliste</h2>
+            <ul>
+                <li>Backofen, Pizzasteine, Schieber, Brett für den Ofen, Backofengitter</li>
+                <li>Küchenmaschine, Waage, Margarine-Schälchen</li>
+                <li>Schneidebretter (groß/klein), Küchenmesser, Schalen, Schüsseln, Dosenöffner, Knoblauchpresse,
+                    Kuchengabeln
+                </li>
+                <li>Backbretter, Wellholz, Tassen, Esslöffel, Gabeln, Teigschaber, Wiegemesser, Reibe, Lasagneheber,
+                    Topflappen
+                </li>
+                <li>Handtücher, Putzschwamm, Spühlmittel, Müllbeutel</li>
+                <li>Laptops, Tablets, Smartphones, Mäuse, Netzteile, W-Lan Router, LTE-Hotspot, Verlängerungskabel,
+                    Mehrfachsteckdosen
+                </li>
+                <li>Bestellzettel, Speisekarte</li>
+            </ul>
+        </div>
+    </div>
 
-        <h2 class="print_not">Zutaten</h2>
-        <div class="panel panel-default panel-condiment">
-            <table class="table table-condensed">
-                <ng-container *ngFor="let category of categories">
-                    <thead>
-                    <tr>
-                        <th class="td_center print_not">Aktiv</th>
-                        <th class="td_center">%</th>
-                        <th>{{category[0]}}</th>
-                        <th class="td_right">je Pizza</th>
-                        <th class="td_right">nach Statistik</th>
-                        <th class="td_right">Manuell</th>
-                        <th class="td_center print_not">Bewertung</th>
+    <h2 class="print_not">Zutaten</h2>
+    <div class="panel panel-default panel-condiment">
+        <table class="table table-condensed">
+            <ng-container *ngFor="let category of categories">
+                <thead>
+                <tr>
+                    <th class="td_center print_not">Aktiv</th>
+                    <th class="td_center">%</th>
+                    <th>{{category[0]}}</th>
+                    <th class="td_right">je Pizza</th>
+                    <th class="td_right">nach Statistik</th>
+                    <th class="td_right">Manuell</th>
+                    <th class="td_center print_not">Bewertung</th>
+                </tr>
+                </thead>
+                <tbody>
+                <ng-container *ngFor="let condiment of category[1]">
+                    <tr [ngClass]="{print_not: !isCondimentSelected(condiment.id)}">
+                        <td class="td_center print_not"><input
+                                id="condiment{{condiment.id.value}}"
+                                name="condiment{{condiment.id.value}}"
+                                [(ngModel)]="availableCondiments[condiment.id.value]"
+                                type="checkbox"></td>
+                        <td class="td_center">{{blendCondimentStatistic(condiment) | number: "1.1-1"}}</td>
+                        <td>{{condiment.name}}</td>
+                        <td class="td_right">{{amountPerPizza(condiment) | number: "1.1-1"}} {{condiment.unit}}
+                            <a (click)="showCondimentDetails(condiment.id)"
+                               style="cursor:pointer" class="print_not">
+                                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                            </a></td>
+                        <td class="td_right">
+                            {{amountCalculated(condiment) | number: "1.1-1"}}
+                            {{condiment.unit}}
+                        </td>
+                        <td class="td_right print_not">
+                            <div class="input-group input-group-sm input-100">
+                                <input size="2" type="text"
+                                       class="form-control"
+                                       [(ngModel)]="condiment.amount"
+                                       [ngModelOptions]="{standalone: true}"
+                                       [disabled]="!isCondimentSelected(condiment.id)">
+                                <span class="input-group-addon">{{condiment.unit}}</span>
+                            </div>
+                        </td>
+                        <td class="td_right print_only">{{condiment.amount}} {{condiment.unit}}</td>
+                        <td class="td_center print_not">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="...">
+                                <button type="button"
+                                        [disabled]="!isCondimentSelected(condiment.id)"
+                                        [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, -1)}"
+                                        (click)="changeRating(condiment, -1);"><span
+                                        class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>
+                                </button>
+                                <button type="button"
+                                        [disabled]="!isCondimentSelected(condiment.id)"
+                                        [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 0)}"
+                                        (click)="changeRating(condiment, 0);"><span
+                                        class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+                                <button type="button"
+                                        [disabled]="!isCondimentSelected(condiment.id)"
+                                        [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 1)}"
+                                        (click)="changeRating(condiment, 1);"><span
+                                        class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    <ng-container *ngFor="let condiment of category[1]">
-                        <tr [ngClass]="{print_not: !isCondimentSelected(condiment.id)}">
-                            <td class="td_center print_not"><input
-                                    id="condiment{{condiment.id.value}}"
-                                    name="condiment{{condiment.id.value}}"
-                                    [(ngModel)]="availableCondiments[condiment.id.value]"
-                                    type="checkbox"></td>
-                            <td class="td_center">{{blendCondimentStatistic(condiment) | number: "1.1-1"}}</td>
-                            <td>{{condiment.name}}</td>
-                            <td class="td_right">{{amountPerPizza(condiment) | number: "1.1-1"}} {{condiment.unit}}
-                                <a (click)="showCondimentDetails(condiment.id)"
-                                   style="cursor:pointer" class="print_not">
-                                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                </a></td>
-                            <td class="td_right">
-                                {{amountCalculated(condiment) | number: "1.1-1"}}
-                                {{condiment.unit}}
-                            </td>
-                            <td class="td_right print_not">
-                                <div class="input-group input-group-sm input-100">
-                                    <input size="2" type="text"
-                                           class="form-control"
-                                           [(ngModel)]="condiment.amount"
-                                           [ngModelOptions]="{standalone: true}"
-                                           [disabled]="!isCondimentSelected(condiment.id)">
-                                    <span class="input-group-addon">{{condiment.unit}}</span>
-                                </div>
-                            </td>
-                            <td class="td_right print_only">{{condiment.amount}} {{condiment.unit}}</td>
-                            <td class="td_center print_not">
-                                <div class="btn-group btn-group-sm" role="group" aria-label="...">
-                                    <button type="button"
-                                            [disabled]="!isCondimentSelected(condiment.id)"
-                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, -1)}"
-                                            (click)="changeRating(condiment, -1);"><span
-                                            class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>
-                                    </button>
-                                    <button type="button"
-                                            [disabled]="!isCondimentSelected(condiment.id)"
-                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 0)}"
-                                            (click)="changeRating(condiment, 0);"><span
-                                            class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
-                                    <button type="button"
-                                            [disabled]="!isCondimentSelected(condiment.id)"
-                                            [ngClass]="{'btn': true, 'btn-default': true, 'btn-primary': isCurrentRating(condiment, 1)}"
-                                            (click)="changeRating(condiment, 1);"><span
-                                            class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr *ngIf="condimentSettings[condiment.id.value].showDetails" class="print_not">
-                            <td colspan="7">
-                                <condimentStatisticChart
-                                        [statistic]="getCondimentStatistic(condiment)"
-                                        [unit]="condiment.unit"></condimentStatisticChart>
-                            </td>
-                        </tr>
-                    </ng-container>
-                    </tbody>
+                    <tr *ngIf="condimentSettings[condiment.id.value].showDetails" class="print_not">
+                        <td colspan="7">
+                            <condimentStatisticChart
+                                    [statistic]="getCondimentStatistic(condiment)"
+                                    [unit]="condiment.unit"></condimentStatisticChart>
+                        </td>
+                    </tr>
                 </ng-container>
-            </table>
-        </div>
+                </tbody>
+            </ng-container>
+        </table>
     </div>
 
     <div class="form-group td_right">
