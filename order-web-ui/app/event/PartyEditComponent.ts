@@ -165,7 +165,6 @@ export class PartyEditComponent {
 
         result.subscribe(
             (): void => {
-                console.log('save successful');
                 this.notificationService.success('Erfolgreich gespeichert');
                 this.router.navigate(['/event/list'])
                     .then(() => window.scrollTo(0, 0));
