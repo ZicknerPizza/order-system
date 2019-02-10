@@ -7,6 +7,7 @@ import pizza.zickner.ordersystem.api.party.CreatePartyDetails;
 import pizza.zickner.ordersystem.api.party.PartyApplicationService;
 import pizza.zickner.ordersystem.api.party.PartyDetails;
 import pizza.zickner.ordersystem.api.party.PartyOverviewDetails;
+import pizza.zickner.ordersystem.api.party.UpdatePartyDetails;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 
 import java.util.List;
@@ -47,9 +48,9 @@ public class PartyController {
     }
 
     @PutMapping("/{partyId}")
-    public void update(@PathVariable PartyId partyId, @RequestBody PartyDetails partyDetails) {
-        // FIXME
-        throw new UnsupportedOperationException("not implemented");
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void update(@PathVariable PartyId partyId, @RequestBody UpdatePartyDetails partyDetails) {
+        this.partyApplicationService.update(partyId, partyDetails);
     }
 
 }

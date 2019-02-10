@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,6 +32,9 @@ public class Party {
     @Column(name = "aktiv")
     private int aktiv;
 
+    @Column(name = "countPizza")
+    private int estimatedNumberOfPizzas;
+
     private int blendStatistics;
 
     @ElementCollection(fetch = FetchType.LAZY)
@@ -40,9 +44,10 @@ public class Party {
     public Party() {
     }
 
-    public Party(PartyId partyId, String name, String key, LocalDate date, int blendStatistics, List<PartyCondiment> condiments) {
+    public Party(PartyId partyId, String name, String key, LocalDate date, int estimatedNumberOfPizzas, int blendStatistics, List<PartyCondiment> condiments) {
         this.partyId = Preconditions.checkNotNull(partyId);
         this.name = Preconditions.checkNotNull(name);
+        this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
         this.setDate(Preconditions.checkNotNull(date));
         this.key = key;
         this.blendStatistics = blendStatistics;
@@ -78,6 +83,10 @@ public class Party {
                 .toEpochSecond());
     }
 
+    public int getEstimatedNumberOfPizzas() {
+        return estimatedNumberOfPizzas;
+    }
+
     public int getBlendStatistics() {
         return blendStatistics;
     }
@@ -86,14 +95,22 @@ public class Party {
         return condiments;
     }
 
+    public void update(UpdateParty updateParty) {
+        this.name = updateParty.getName();
+        this.setDate(updateParty.getDate());
+        this.blendStatistics = updateParty.getBlendStatistics();
+        this.estimatedNumberOfPizzas = updateParty.getEstimatedNumberOfPizzas();
+    }
+
     public static class Builder {
 
         private PartyId partyId;
         private String name;
         private String key;
         private LocalDate date;
+        private int estimatedNumberOfPizzas;
         private int blendStatistics;
-        private List<PartyCondiment> condiments;
+        private List<PartyCondiment> condiments = Collections.emptyList();
 
         public Builder setPartyId(PartyId partyId) {
             this.partyId = partyId;
@@ -115,6 +132,11 @@ public class Party {
             return this;
         }
 
+        public Builder setEstimatedNumberOfPizzas(int estimatedNumberOfPizzas) {
+            this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
+            return this;
+        }
+
         public Builder setBlendStatistics(int blendStatistics) {
             this.blendStatistics = blendStatistics;
             return this;
@@ -126,7 +148,7 @@ public class Party {
         }
 
         public Party build() {
-            return new Party(partyId, name, key, date, blendStatistics, condiments);
+            return new Party(partyId, name, key, date, estimatedNumberOfPizzas, blendStatistics, condiments);
         }
     }
 }

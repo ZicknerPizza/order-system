@@ -6,25 +6,23 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class CreatePartyDetails {
-    public PartyId id;
-    public String name;
-    public String key;
-    public LocalDate date;
-
-    @Deprecated
-    public int countPizza;
-    public int blendStatistics;
-    public List<PartyCondimentDetails> condiments;
+    private PartyId id;
+    private String name;
+    private String key;
+    private LocalDate date;
+    private int estimatedNumberOfPizzas;
+    private int blendStatistics;
+    private List<PartyCondimentDetails> condiments;
 
     public CreatePartyDetails() {
     }
 
-    public CreatePartyDetails(PartyId id, String name, String key, LocalDate date, int countPizza, int blendStatistics, List<PartyCondimentDetails> condiments) {
+    public CreatePartyDetails(PartyId id, String name, String key, LocalDate date, int estimatedNumberOfPizzas, int blendStatistics, List<PartyCondimentDetails> condiments) {
         this.id = id;
         this.name = name;
         this.key = key;
         this.date = date;
-        this.countPizza = countPizza;
+        this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
         this.blendStatistics = blendStatistics;
         this.condiments = condiments;
     }
@@ -45,9 +43,8 @@ public class CreatePartyDetails {
         return date;
     }
 
-    @Deprecated
-    public int getCountPizza() {
-        return countPizza;
+    public int getEstimatedNumberOfPizzas() {
+        return estimatedNumberOfPizzas;
     }
 
     public int getBlendStatistics() {
@@ -63,7 +60,7 @@ public class CreatePartyDetails {
         private String name;
         private String key;
         private LocalDate date;
-        private int countPizza;
+        private int estimatedNumberOfPizzas;
         private int blendStatistics;
         private List<PartyCondimentDetails> condiments;
 
@@ -87,8 +84,8 @@ public class CreatePartyDetails {
             return this;
         }
 
-        public Builder setCountPizza(int countPizza) {
-            this.countPizza = countPizza;
+        public Builder setEstimatedNumberOfPizzas(int estimatedNumberOfPizzas) {
+            this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
             return this;
         }
 
@@ -103,7 +100,7 @@ public class CreatePartyDetails {
         }
 
         public CreatePartyDetails build() {
-            return new CreatePartyDetails(id, name, key, date, countPizza, blendStatistics, condiments);
+            return new CreatePartyDetails(id, name, key, date, estimatedNumberOfPizzas, blendStatistics, condiments);
         }
     }
 }

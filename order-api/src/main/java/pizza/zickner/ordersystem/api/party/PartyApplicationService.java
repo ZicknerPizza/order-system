@@ -6,6 +6,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pizza.zickner.ordersystem.core.domain.AggregateNotFoundException;
+import pizza.zickner.ordersystem.core.domain.party.UpdateParty;
 import pizza.zickner.ordersystem.core.domain.user.Roles;
 import pizza.zickner.ordersystem.core.domain.party.Party;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
@@ -31,11 +32,11 @@ public class PartyApplicationService {
 
     @Secured(Roles.ROLE_ORDER_ADMIN)
     public List<PartyOverviewDetails> findAllOverviewDetails() {
-        List<PartyOverviewDetails> partys = new ArrayList<>();
+        List<PartyOverviewDetails> parties = new ArrayList<>();
         for (Party party : this.partyRepository.findAllByOrderByAktivDesc()) {
-            partys.add(PartyAssembler.toPartyOverviewDetails(party));
+            parties.add(PartyAssembler.toPartyOverviewDetails(party));
         }
-        return partys;
+        return parties;
     }
 
     @Secured(Roles.ROLE_ORDER_ADMIN)
@@ -47,6 +48,15 @@ public class PartyApplicationService {
     public void create(CreatePartyDetails createPartyDetails) {
         Preconditions.checkNotNull(createPartyDetails);
         Party party = PartyAssembler.toParty(createPartyDetails);
+        this.partyRepository.save(party);
+    }
+
+    @Secured(Roles.ROLE_ORDER_ADMIN)
+    public void update(PartyId partyId, UpdatePartyDetails updatePartyDetails) {
+        Preconditions.checkNotNull(updatePartyDetails);
+        UpdateParty updateParty = PartyAssembler.toUpdateParty(updatePartyDetails);
+        Party party = this.partyRepository.findOne(partyId);
+        party.update(updateParty);
         this.partyRepository.save(party);
     }
 

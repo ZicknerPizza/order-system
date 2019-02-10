@@ -14,9 +14,7 @@ public class PartyDetails {
     private String name;
     private String key;
     private LocalDate date;
-
-    @Deprecated
-    private int countPizza;
+    private int estimatedNumberOfPizzas;
     private int blendStatistics;
     private List<CondimentId> condiments;
 
@@ -52,14 +50,12 @@ public class PartyDetails {
         this.date = date;
     }
 
-    @Deprecated
-    public int getCountPizza() {
-        return countPizza;
+    public int getEstimatedNumberOfPizzas() {
+        return estimatedNumberOfPizzas;
     }
 
-    @Deprecated
-    public void setCountPizza(int countPizza) {
-        this.countPizza = countPizza;
+    public void setEstimatedNumberOfPizzas(int estimatedNumberOfPizzas) {
+        this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
     }
 
     public int getBlendStatistics() {

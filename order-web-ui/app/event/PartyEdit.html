@@ -84,12 +84,12 @@
                     <input type="date" class="form-control" id="partyDate" name="partyDate" [(ngModel)]="party.date"/>
                 </div>
                 <div class="form-group col-sm-3">
-                    <label for="countPizza" class="control-label">Anzahl Pizzen*</label>
+                    <label for="estimatedNumberOfPizzas" class="control-label">Anzahl Pizzen*</label>
                     <div class="input-group">
 					<span class="input-group-btn"><button type="button" class="btn btn-default"
                                                           (click)="changeCountPizza(-4)">
                         <span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button></span>
-                        <input class="form-control" id="countPizza" name="countPizza" [(ngModel)]="party.countPizza"/>
+                        <input class="form-control" id="estimatedNumberOfPizzas" name="estimatedNumberOfPizzas" [(ngModel)]="party.estimatedNumberOfPizzas"/>
                         <span class="input-group-btn"><button type="button" class="btn btn-default"
                                                               (click)="changeCountPizza(4)">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button></span>
@@ -111,12 +111,12 @@
 
         <div class="print-info">
             <div class="print_only">
-                <h2>Pizzateig für {{party.countPizza}} Pizzen (300 g Teiglinge)</h2>
+                <h2>Pizzateig für {{party.estimatedNumberOfPizzas}} Pizzen (300 g Teiglinge)</h2>
                 <ul class="recipe">
-                    <li>{{(1.5 / 8 * party.countPizza) |number: "1.1-1"}} kg Mehl</li>
-                    <li>{{(820 / 8 * party.countPizza) |number: "1.0-0"}} ml Wasser</li>
-                    <li>{{(40 / 12 * party.countPizza) |number: "1.0-0"}} g Hefe</li>
-                    <li>{{(30 / 8 * party.countPizza) |number: "1.0-0"}} g Salz</li>
+                    <li>{{(1.5 / 8 * party.estimatedNumberOfPizzas) |number: "1.1-1"}} kg Mehl</li>
+                    <li>{{(820 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} ml Wasser</li>
+                    <li>{{(40 / 12 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Hefe</li>
+                    <li>{{(30 / 8 * party.estimatedNumberOfPizzas) |number: "1.0-0"}} g Salz</li>
                 </ul>
                 <h2>Weitere Gewürze</h2>
                 <p>Oregano, Thymian, Majoran, Zimt, Pfeffer und Salz</p>

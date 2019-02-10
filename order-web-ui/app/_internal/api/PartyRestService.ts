@@ -24,9 +24,10 @@ export class PartyRestService {
             .map((res: Response) => res.json());
     }
 
-    public update(id: PartyId, info: any): Observable<any> {
+    public update(id: PartyId, info: UpdateParty): Observable<void> {
         return this.http.put(`api/partys/${id.value}`, info)
-            .map((res: Response) => res.json());
+            .map(() => {
+            });
     }
 
     public create(info: CreateParty): Observable<void> {
@@ -67,6 +68,14 @@ export class CreateParty {
     countPizza: number;
     blendStatistics: number;
     condiments: PartyCondiment[];
+}
+
+export interface UpdateParty {
+    name: string;
+    date: string;
+    blendStatistics: number;
+    estimatedNumberOfPizzas: number;
+    condiments: UpdateParty[];
 }
 
 export class Party {

@@ -130,7 +130,14 @@ export class PartyEditComponent {
         info.condiments = condiments;
 
         if (info.id != null) {
-            this.eventService.update(info.id, info).subscribe(this.saveSuccess, this.saveError);
+            this.eventService.update(info.id, {
+                name: info.name,
+                date: info.date,
+                estimatedNumberOfPizzas: info.estimatedNumberOfPizza,
+                blendStatistics: info.blendStatistics,
+                condiments: info.condiments
+            })
+                .subscribe(this.saveSuccess, this.saveError);
         } else {
             info.id = {
                 value: UUID.UUID()
