@@ -22,8 +22,9 @@ public class PartyReposityoryTest {
     @Test
     public void save_withNewParty_ensurePartyIsCreatedAndIdIsNotNull() {
         // Arrange
+        PartyId partyId = new PartyId();
         Party party = new Party.Builder()
-                .setPartyId(new PartyId(1))
+                .setPartyId(partyId)
                 .setName("Test Party")
                 .setDate(LocalDate.now())
                 .build();
@@ -34,7 +35,7 @@ public class PartyReposityoryTest {
         // Assert
         assertThat(newParty).isNotNull();
         assertThat(newParty.getName()).isEqualTo("Test Party");
-        assertThat(newParty.getPartyId()).isEqualTo(new PartyId(1));
+        assertThat(newParty.getPartyId()).isEqualTo(partyId);
     }
 
     @SpringBootApplication

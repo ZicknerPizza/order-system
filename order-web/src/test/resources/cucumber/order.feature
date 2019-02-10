@@ -42,10 +42,13 @@ Business Need: Create an order
     Given the basic condiments exists
     And the "admin" user is authenticated
     And party is created with id 111 and name "Test party" in 0 days
-    And 10 orders with status WAITING exists
     And the kitchen for party 111 is open
+    And 10 orders with status WAITING are created
     And condiments for pizza diavolo are selected
+    # necessary since we are storing seconds in the database :(
+    And wait for 1 second
     When submit the order for "Valentin"
     Then the order should be submitted
+    And the orders are reloaded
     And the order should have status WAITING
     And the order should be at the end of the queue

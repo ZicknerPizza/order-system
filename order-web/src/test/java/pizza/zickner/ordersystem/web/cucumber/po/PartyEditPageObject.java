@@ -26,8 +26,8 @@ public class PartyEditPageObject extends AbstractCucumberMockMvcTest {
 
     private ResultActions partyRequest;
 
-    @When("^party is created with id (\\d+) and name \"([^\"]*)\" in ([\\d+]) days?$")
-    public void partyIsCreatedWithIdAndWithNameAndToday(int id, String partyName, int days) throws Throwable {
+    @When("^party is created with id ([a-zA-Z0-9]+) and name \"([^\"]*)\" in ([\\d+]) days?$")
+    public void partyIsCreatedWithIdAndWithNameAndToday(String id, String partyName, int days) throws Throwable {
         assertThat(objectMapper).isNotNull();
         CreatePartyDetails createPartyDetails = new CreatePartyDetails.Builder()
                 .setId(new PartyId(id))

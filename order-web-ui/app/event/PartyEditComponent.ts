@@ -11,6 +11,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {NotificationService} from "../_internal/component/notification/NotificationService";
 import {Order} from "../_internal/api/OrderRestService";
 import {CondimentCategoryService} from "../_internal/CondimentCategoryService";
+import {UUID} from "angular2-uuid";
 
 @Component({
     template: require('./PartyEdit.html'),
@@ -131,7 +132,11 @@ export class PartyEditComponent {
         if (info.id != null) {
             this.eventService.update(info.id, info).subscribe(this.saveSuccess, this.saveError);
         } else {
-            this.eventService.save(info).subscribe(this.saveSuccess, this.saveError);
+            info.id = {
+                value: UUID.UUID()
+            };
+            info.key = UUID.UUID().substring(0, 8);
+            this.eventService.create(info).subscribe(this.saveSuccess, this.saveError);
         }
     }
 

@@ -6,6 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Valentin Zickner
@@ -15,20 +16,17 @@ import java.util.Objects;
 public class PartyId implements Serializable {
 
     @Column(name = "party_id")
-    private int value;
+    private String value;
 
     public PartyId() {
+        this(UUID.randomUUID().toString());
     }
 
     public PartyId(String value) {
-        this(Integer.parseInt(value));
-    }
-
-    public PartyId(int value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 
@@ -37,7 +35,7 @@ public class PartyId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PartyId partyId = (PartyId) o;
-        return value == partyId.value;
+        return Objects.equals(value, partyId.value);
     }
 
     @Override

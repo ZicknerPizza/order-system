@@ -46,7 +46,7 @@ public class PartyControllerTest {
     public void list_withNewParty_ensureDateFormatIsCorrect() throws Exception {
         // Arrange
         this.partyRepository.save(new Party.Builder()
-                .setPartyId(new PartyId(1))
+                .setPartyId(new PartyId("1"))
                 .setName("Test Party")
                 .setDate(LocalDate.of(2018, 7, 8))
                 .build());
@@ -58,7 +58,7 @@ public class PartyControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id.value").value(1))
+                .andExpect(jsonPath("$[0].id.value").value("1"))
                 .andExpect(jsonPath("$[0].name").value("Test Party"))
                 .andExpect(jsonPath("$[0].date").value("2018-07-08"));
     }
@@ -66,7 +66,7 @@ public class PartyControllerTest {
     @Test
     public void create_withoutAuth_ensureForbiddenIsReturned() throws Exception {
         // Arrange
-        CreatePartyDetails createPartyDetails = generateCreatePartyDetails(new PartyId(1));
+        CreatePartyDetails createPartyDetails = generateCreatePartyDetails(new PartyId());
 
         // Act
         this.mockMvc.perform(post("/api/partys")
@@ -79,7 +79,7 @@ public class PartyControllerTest {
     @WithMockUser(authorities = Roles.ROLE_ORDER_ADMIN)
     public void create_withNewParty_ensurePartyIsCreated() throws Exception {
         // Arrange
-        PartyId partyId = new PartyId(1);
+        PartyId partyId = new PartyId();
         CreatePartyDetails createPartyDetails = generateCreatePartyDetails(partyId);
 
         // Act

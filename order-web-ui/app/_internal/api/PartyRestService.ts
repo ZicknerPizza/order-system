@@ -24,14 +24,15 @@ export class PartyRestService {
             .map((res: Response) => res.json());
     }
 
-    public update(id: string | number, info: any): Observable<any> {
-        return this.http.put(`api/events/${id}`, info)
+    public update(id: PartyId, info: any): Observable<any> {
+        return this.http.put(`api/partys/${id.value}`, info)
             .map((res: Response) => res.json());
     }
 
-    public save(info: any): Observable<any> {
-        return this.http.post(`api/events/`, info)
-            .map((res: Response) => res.json());
+    public create(info: CreateParty): Observable<void> {
+        return this.http.post(`api/partys`, info)
+            .map(() => {
+            });
     }
 
 }
@@ -56,6 +57,16 @@ export class PartyOverview {
         this.key = key;
         this.date = date;
     }
+}
+
+export class CreateParty {
+    id: PartyId;
+    name: String;
+    key: String;
+    date: string;
+    countPizza: number;
+    blendStatistics: number;
+    condiments: PartyCondiment[];
 }
 
 export class Party {

@@ -24,6 +24,7 @@ public class Party {
     @Column(name = "party")
     private String name;
 
+    @Column(name = "`key`")
     private String key;
 
     @Deprecated

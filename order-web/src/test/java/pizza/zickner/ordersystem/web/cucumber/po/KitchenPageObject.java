@@ -1,8 +1,8 @@
 package pizza.zickner.ordersystem.web.cucumber.po;
 
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import cucumber.api.PendingException;
 import cucumber.api.java.en.And;
+import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +19,10 @@ import pizza.zickner.ordersystem.web.cucumber.AbstractCucumberMockMvcTest;
 import pizza.zickner.ordersystem.web.cucumber.data.CondimentTestData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,8 +41,8 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
     private ResultActions orderSubmit;
 
 
-    @When("^the kitchen for party (\\d+) is open$")
-    public void theOrderFormForPartyIsOpen(int party) {
+    @When("^the kitchen for party ([a-zA-Z0-9]*) is open$")
+    public void theOrderFormForPartyIsOpen(String party) {
         this.partyId = new PartyId(party);
     }
 
@@ -164,10 +166,21 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
         assertThat(lastOrder.getOrderId()).isEqualTo(orders.get(0).getOrderId());
     }
 
-    @And("^(\\d+) orders with status ([A-Z]+) exists$")
-    public void ordersWithStatusExists(int orders, Status status) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+    @Given("^(\\d+) orders with status ([A-Z]+) are created$")
+    public void ordersWithStatusAreCreated(int expectedOrders, Status status) throws Exception {
+        for (int i = 0; i < expectedOrders; i++) {
+            OrderCreateDetails orderCreateDetails = new OrderCreateDetails();
+            lastOrderId = new OrderId();
+            orderCreateDetails.setOrderId(lastOrderId);
+            orderCreateDetails.setName(UUID.randomUUID().toString());
+            orderCreateDetails.setCondiments(Collections.emptyList());
+            orderCreateDetails.setStatus(status);
+
+            orderSubmit = this.mockMvc.perform(post("/api/orders/" + partyId.getValue())
+                    .with(userState.getUser())
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(objectMapper.writeValueAsString(orderCreateDetails)));
+        }
     }
 
     private List<OrderDetails> getAllOrders() throws Exception {
@@ -184,6 +197,11 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
                 .filter(orderDetail -> Objects.equals(orderDetail.getOrderId(), lastOrderId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    @And("^wait for (\\d+) second$")
+    public void waitForSecond(int seconds) throws Exception {
+        Thread.sleep(seconds * 1000);
     }
 
     public enum AvailablePizza {

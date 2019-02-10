@@ -39,7 +39,7 @@ public class OrderApplicationServiceTest {
     @Before
     public void setUp() {
         Party party = new Party.Builder()
-                .setPartyId(new PartyId(1))
+                .setPartyId(new PartyId())
                 .setName("Test Party")
                 .setDate(LocalDate.now())
                 .build();
