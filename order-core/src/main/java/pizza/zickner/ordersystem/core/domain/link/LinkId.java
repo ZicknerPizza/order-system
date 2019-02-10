@@ -20,6 +20,10 @@ public class LinkId implements Serializable {
     public LinkId() {
     }
 
+    public LinkId(String value) {
+        this(Integer.valueOf(value));
+    }
+
     public LinkId(int value) {
         this.value = value;
     }

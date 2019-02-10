@@ -24,13 +24,9 @@ export class LinkRestService {
     }
 
     public update(linkId: LinkId, link: Link): Observable<void> {
-        return this.http.put(`api/links/${linkId.value}`, {
-            identifier: link.identifier,
-            event: {
-                id: link.partyId.value
-            }
-        }).map((res: Response) => {
-        });
+        return this.http.put(`api/links/${linkId.value}`, link)
+            .map(() => {
+            });
     }
 }
 
