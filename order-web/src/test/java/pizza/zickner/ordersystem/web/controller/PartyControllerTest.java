@@ -15,19 +15,27 @@ import pizza.zickner.ordersystem.api.party.CreatePartyDetails;
 import pizza.zickner.ordersystem.api.party.PartyCondimentDetails;
 import pizza.zickner.ordersystem.api.party.UpdatePartyDetails;
 import pizza.zickner.ordersystem.core.domain.condiment.CondimentId;
-import pizza.zickner.ordersystem.core.domain.party.*;
+import pizza.zickner.ordersystem.core.domain.party.Party;
+import pizza.zickner.ordersystem.core.domain.party.PartyCondiment;
+import pizza.zickner.ordersystem.core.domain.party.PartyId;
+import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
+import pizza.zickner.ordersystem.core.domain.party.Rating;
 import pizza.zickner.ordersystem.core.domain.user.Roles;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -35,6 +43,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class PartyControllerTest {
 
+    public static final List<PartyCondimentDetails> CONDIMENTS = Arrays.asList(
+            new PartyCondimentDetails(new CondimentId(1), 10.0, Rating.ENOUGH),
+            new PartyCondimentDetails(new CondimentId(2), 20.0, Rating.TO_MUCH),
+            new PartyCondimentDetails(new CondimentId(3), 30.0, null),
+            new PartyCondimentDetails(new CondimentId(42), 10.0, Rating.ENOUGH)
+    );
     @Autowired
     private PartyRepository partyRepository;
 
@@ -123,7 +137,7 @@ public class PartyControllerTest {
 
     @Test
     @WithMockUser(authorities = Roles.ROLE_ORDER_ADMIN)
-    public void update_withoutCondiments_ensureInformationIsSafed() throws Exception {
+    public void update_withoutCondiments_ensureInformationIsSaved() throws Exception {
         // Arrange
         PartyId partyId = new PartyId();
         Party party = new Party.Builder()
@@ -164,6 +178,77 @@ public class PartyControllerTest {
 
     }
 
+    @Test
+    @WithMockUser(authorities = Roles.ROLE_ORDER_ADMIN)
+    public void update_withCondiments_ensureInformationIsSaved() throws Exception {
+        // Arrange
+        PartyId partyId = new PartyId();
+        Party party = new Party.Builder()
+                .setPartyId(partyId)
+                .setName("Test Party")
+                .setKey("12345678")
+                .setDate(LocalDate.of(2019, 1, 18))
+                .setEstimatedNumberOfPizzas(100)
+                .setBlendStatistics(50)
+                .setCondiments(Arrays.asList(
+                        new PartyCondiment(new CondimentId(1), 12.0, Rating.NOT_ENOUGH),
+                        new PartyCondiment(new CondimentId(2), 12.2, Rating.ENOUGH),
+                        new PartyCondiment(new CondimentId(4), 12.4, Rating.TO_MUCH)
+                ))
+                .build();
+
+        this.partyRepository.save(party);
+
+        LocalDate newPartyDate = LocalDate.of(2019, 2, 10);
+        UpdatePartyDetails updatePartyDetails = new UpdatePartyDetails(
+                "New test name",
+                newPartyDate,
+                45,
+                100,
+                CONDIMENTS
+        );
+
+        // Act
+        this.mockMvc.perform(
+                put("/api/partys/" + partyId.getValue())
+                        .content(this.objectMapper.writeValueAsString(updatePartyDetails))
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+        )
+                .andExpect(status().isNoContent());
+
+        // Assert
+        Party resultParty = this.partyRepository.findOne(partyId);
+        assertThat(resultParty).isNotNull();
+        assertThat(resultParty.getName()).isEqualTo("New test name");
+        List<PartyCondiment> condiments = resultParty.getCondiments();
+        assertThat(condiments).hasSize(4);
+        assertThat(condiments)
+                .extracting(PartyCondiment::getCondimentId)
+                .containsExactlyInAnyOrder(
+                        new CondimentId(1),
+                        new CondimentId(2),
+                        new CondimentId(3),
+                        new CondimentId(42)
+                );
+
+        PartyCondiment condimentById1 = getCondimentById(condiments, new CondimentId(1));
+        assertThat(condimentById1).isNotNull();
+        assertThat(condimentById1.getAmount()).isEqualTo(10.0);
+        assertThat(condimentById1.getRating()).isEqualTo(Rating.ENOUGH);
+
+        PartyCondiment condimentById42 = getCondimentById(condiments, new CondimentId(42));
+        assertThat(condimentById42).isNotNull();
+        assertThat(condimentById42.getAmount()).isEqualTo(10.0);
+        assertThat(condimentById42.getRating()).isEqualTo(Rating.ENOUGH);
+    }
+
+    private static PartyCondiment getCondimentById(List<PartyCondiment> condiments, CondimentId condimentId) {
+        return condiments.stream()
+                .filter(c -> Objects.equals(c.getCondimentId(), condimentId))
+                .findFirst()
+                .orElse(null);
+    }
+
     private CreatePartyDetails generateCreatePartyDetails(PartyId partyId) {
         return new CreatePartyDetails.Builder()
                 .setId(partyId)
@@ -171,12 +256,7 @@ public class PartyControllerTest {
                 .setBlendStatistics(50)
                 .setEstimatedNumberOfPizzas(10)
                 .setDate(LocalDate.of(2018, 7, 8))
-                .setCondiments(Arrays.asList(
-                        new PartyCondimentDetails(new CondimentId(1), 10.0, Rating.ENOUGH),
-                        new PartyCondimentDetails(new CondimentId(2), 20.0, Rating.TO_MUCH),
-                        new PartyCondimentDetails(new CondimentId(3), 30.0, null),
-                        new PartyCondimentDetails(new CondimentId(42), 10.0, Rating.ENOUGH)
-                ))
+                .setCondiments(CONDIMENTS)
                 .build();
     }
 }

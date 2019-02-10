@@ -56,7 +56,7 @@ public class PartyApplicationService {
         Preconditions.checkNotNull(updatePartyDetails);
         UpdateParty updateParty = PartyAssembler.toUpdateParty(updatePartyDetails);
         Party party = this.partyRepository.findOne(partyId);
-        party.update(updateParty);
+        party.applyUpdate(updateParty);
         this.partyRepository.save(party);
     }
 

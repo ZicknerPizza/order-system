@@ -75,7 +75,7 @@ export interface UpdateParty {
     date: string;
     blendStatistics: number;
     estimatedNumberOfPizzas: number;
-    condiments: UpdateParty[];
+    condiments: PartyCondiment[];
 }
 
 export class Party {
@@ -83,22 +83,23 @@ export class Party {
     public name: string;
     public key: string;
     public date: string;
-    public countPizza: number;
+    public estimatedNumberOfPizzas: number;
     public blendStatistics: number;
     public condiments: Array<CondimentId>;
 
-    constructor(id?: PartyId, name?: string, key?: string, date?: string, countPizza?: number, blendStatistics?: number, condiments?: Array<CondimentId>) {
+    constructor(id?: PartyId, name?: string, key?: string, date?: string, estimatedNumberOfPizzas?: number, blendStatistics?: number, condiments?: Array<CondimentId>) {
         this.id = id;
         this.name = name;
         this.key = key;
         this.date = date;
-        this.countPizza = countPizza;
+        this.estimatedNumberOfPizzas = estimatedNumberOfPizzas;
         this.blendStatistics = blendStatistics;
         this.condiments = condiments;
     }
 }
 
 export class PartyCondiment {
+    public condimentId: CondimentId;
     public amount: number;
     public rating: number; // TODO: should be an enum
 }

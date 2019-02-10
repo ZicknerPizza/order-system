@@ -12,6 +12,7 @@ import {NotificationService} from "../_internal/component/notification/Notificat
 import {Order} from "../_internal/api/OrderRestService";
 import {CondimentCategoryService} from "../_internal/CondimentCategoryService";
 import {UUID} from "angular2-uuid";
+import {Observable} from "rxjs";
 
 @Component({
     template: require('./PartyEdit.html'),
@@ -23,7 +24,7 @@ import {UUID} from "angular2-uuid";
 export class PartyEditComponent {
 
     private party: Party;
-    private categories: Array<[string, Array<Condiment>]>;
+    private categories: Array<[string, Array<CondimentWithRating>]>;
     private orders: Array<Order>;
     private availableCondiments: Object = {};
     private condimentSettings: Object = {};
@@ -46,7 +47,7 @@ export class PartyEditComponent {
             }
         }
         let condiments = <Array<Condiment>>this.routeParams.snapshot.data["condiments"];
-        this.categories = CondimentCategoryService.groupCondimentsByCategory(condiments);
+        this.categories = <Array<[string, Array<CondimentWithRating>]>>CondimentCategoryService.groupCondimentsByCategory(condiments);
         for (let condiment of condiments) {
             this.condimentSettings[condiment.id.value] = {
                 showDetails: false
@@ -62,10 +63,10 @@ export class PartyEditComponent {
         return this.availableCondiments[condimentId.value] === true;
     }
 
-    changeCountPizza(factor: number): void {
-        this.party.countPizza = this.party.countPizza + factor;
-        if (this.party.countPizza < 0) {
-            this.party.countPizza = 0;
+    changeEstimatedNumberOfPizzas(factor: number): void {
+        this.party.estimatedNumberOfPizzas = this.party.estimatedNumberOfPizzas + factor;
+        if (this.party.estimatedNumberOfPizzas < 0) {
+            this.party.estimatedNumberOfPizzas = 0;
         }
     }
 
@@ -120,40 +121,59 @@ export class PartyEditComponent {
     }
 
     amountCalculated(condiment: Condiment): number {
-        return this.blendCondimentStatistic(condiment) * this.amountPerPizza(condiment) * this.party.countPizza / 100;
+        return this.blendCondimentStatistic(condiment) * this.amountPerPizza(condiment) * this.party.estimatedNumberOfPizzas / 100;
     };
 
     saveData(): void {
-        let condiments: any[] = [];
+        let condiments: PartyCondiment[] = [];
 
+        console.log(this.categories);
+        console.log(this.availableCondiments);
+
+        for (const category of this.categories) {
+            const categoryCondiments = category[1];
+            for (const categoryCondiment of categoryCondiments) {
+                if (this.availableCondiments[categoryCondiment.id.value] === true) {
+                    condiments.push({
+                        condimentId: categoryCondiment.id,
+                        amount: categoryCondiment.amount,
+                        rating: categoryCondiment.rating + 1
+                    })
+                }
+            }
+        }
         let info: any = this.party;
         info.condiments = condiments;
 
+        let result: Observable<void>;
+
         if (info.id != null) {
-            this.eventService.update(info.id, {
+            result = this.eventService.update(info.id, {
                 name: info.name,
                 date: info.date,
-                estimatedNumberOfPizzas: info.estimatedNumberOfPizza,
+                estimatedNumberOfPizzas: info.estimatedNumberOfPizzas,
                 blendStatistics: info.blendStatistics,
                 condiments: info.condiments
-            })
-                .subscribe(this.saveSuccess, this.saveError);
+            });
         } else {
             info.id = {
                 value: UUID.UUID()
             };
             info.key = UUID.UUID().substring(0, 8);
-            this.eventService.create(info).subscribe(this.saveSuccess, this.saveError);
+            result = this.eventService.create(info);
         }
-    }
 
-    saveSuccess(): void {
-        this.notificationService.success('Erfolgreich gespeichert');
-        this.router.navigate(['/event/list']);
-    }
-
-    saveError(): void {
-        this.notificationService.error('Speichern fehlgeschlagen');
+        result.subscribe(
+            (): void => {
+                console.log('save successful');
+                this.notificationService.success('Erfolgreich gespeichert');
+                this.router.navigate(['/event/list'])
+                    .then(() => window.scrollTo(0, 0));
+            },
+            (): void => {
+                this.notificationService.error('Speichern fehlgeschlagen');
+            }
+        );
     }
 
     changeRating(condiment: PartyCondiment, newRating: number) {
@@ -168,4 +188,9 @@ export class PartyEditComponent {
         return condiment.rating == neededRating;
     }
 
+}
+
+export class CondimentWithRating extends Condiment {
+    public amount: number;
+    public rating: number;
 }

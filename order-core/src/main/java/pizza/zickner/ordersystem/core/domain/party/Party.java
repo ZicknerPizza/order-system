@@ -95,11 +95,12 @@ public class Party {
         return condiments;
     }
 
-    public void update(UpdateParty updateParty) {
+    public void applyUpdate(UpdateParty updateParty) {
         this.name = updateParty.getName();
         this.setDate(updateParty.getDate());
         this.blendStatistics = updateParty.getBlendStatistics();
         this.estimatedNumberOfPizzas = updateParty.getEstimatedNumberOfPizzas();
+        this.condiments = updateParty.getCondiments();
     }
 
     public static class Builder {
