@@ -127,9 +127,6 @@ export class PartyEditComponent {
     saveData(): void {
         let condiments: PartyCondiment[] = [];
 
-        console.log(this.categories);
-        console.log(this.availableCondiments);
-
         for (const category of this.categories) {
             const categoryCondiments = category[1];
             for (const categoryCondiment of categoryCondiments) {
