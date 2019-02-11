@@ -17,9 +17,9 @@ import pizza.zickner.ordersystem.core.domain.party.PartyId;
 import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
 import pizza.zickner.ordersystem.core.domain.user.Roles;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Valentin Zickner
@@ -39,14 +39,35 @@ public class OrderApplicationService {
 
     @Secured(Roles.ROLE_ORDER_ADMIN)
     public List<OrderDetails> findOrdersForParty(PartyId partyId) {
-        List<OrderDetails> orderDetails = new ArrayList<>();
+        List<OrderDetails> orderDetails = this.orderRepository.findByPartyId(partyId)
+                .stream()
+                .sorted((order1, order2) -> {
+                    Status status1 = order1.getStatus();
+                    Status status2 = order2.getStatus();
+                    if (status1 != status2) {
+                        return status1.ordinal() - status2.ordinal();
+                    }
+
+                    switch (status1) {
+                        case INACTIVE:
+                        case WAITING:
+                        case TOPPING:
+                            return order2.getTime() - order1.getTime();
+                        case BAKING:
+                        case EATING:
+                            return order2.getTimeStove() - order1.getTimeStove();
+                        default:
+                            return 0;
+                    }
+                })
+                .map(this::toOrderDetails)
+                .collect(Collectors.toList());
+
         PizzaId lastPizzaId = null;
-        for (Order order : this.orderRepository.findByPartyId(partyId)) {
-            OrderDetails orderDetail = toOrderDetails(order);
-            if (order.getStatus().isAtLeast(Status.TOPPING)) {
+        for (OrderDetails orderDetail : orderDetails) {
+            if (orderDetail.getStatus().isAtLeast(Status.TOPPING)) {
                 lastPizzaId = setPizzaId(lastPizzaId, orderDetail);
             }
-            orderDetails.add(orderDetail);
         }
         return orderDetails;
     }
