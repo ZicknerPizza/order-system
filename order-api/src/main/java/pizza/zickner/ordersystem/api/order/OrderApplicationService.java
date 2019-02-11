@@ -50,12 +50,17 @@ public class OrderApplicationService {
 
                     switch (status1) {
                         case INACTIVE:
+                            return order1.getName().compareTo(order2.getName());
                         case WAITING:
+                            return order2.getOrderDateTime().compareTo(order1.getOrderDateTime());
                         case TOPPING:
-                            return order2.getTime() - order1.getTime();
+                            if (order1.getTimeTopping() == null || order2.getTimeTopping() == null) {
+                                return 0;
+                            }
+                            return order2.getTimeTopping().compareTo(order1.getTimeTopping());
                         case BAKING:
                         case EATING:
-                            return order2.getTimeStove() - order1.getTimeStove();
+                            return order2.getStoveDateTime().compareTo(order1.getStoveDateTime());
                         default:
                             return 0;
                     }

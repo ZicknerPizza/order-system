@@ -16,13 +16,11 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -52,6 +50,8 @@ public class Order {
     @Deprecated
     private int time;
 
+    private Integer timeTopping;
+
     @Deprecated
     private Integer timeStove;
 
@@ -71,7 +71,7 @@ public class Order {
         this.comment = comment;
         this.status = Preconditions.checkNotNull(status);
         this.condiments = Preconditions.checkNotNull(condiments);
-        this.time = (int) LocalDateTime.now().toEpochSecond(ZONE_OFFSET);
+        setTime(LocalDateTime.now());
     }
 
     public OrderId getOrderId() {
@@ -114,12 +114,8 @@ public class Order {
         this.status = status;
     }
 
-    public int getTime() {
-        return time;
-    }
-
-    public void setTime(int time) {
-        this.time = time;
+    private void setTime(LocalDateTime localDateTime) {
+        this.time = (int) localDateTime.toEpochSecond(ZONE_OFFSET);
     }
 
     public LocalDateTime getOrderDateTime() {
@@ -129,12 +125,19 @@ public class Order {
         return LocalDateTime.ofEpochSecond(this.time, 0, ZONE_OFFSET);
     }
 
-    public Integer getTimeStove() {
-        return timeStove;
+    public LocalDateTime getTimeTopping() {
+        if (this.timeTopping == null || this.timeTopping == 0) {
+            return null;
+        }
+        return LocalDateTime.ofEpochSecond(this.timeTopping, 0, ZONE_OFFSET);
     }
 
-    public void setTimeStove(Integer timeStove) {
-        this.timeStove = timeStove;
+    private void setTimeTopping(LocalDateTime timeTopping) {
+        this.timeTopping = (int) timeTopping.toEpochSecond(ZONE_OFFSET);
+    }
+
+    private void setTimeStove(LocalDateTime timeStove) {
+        this.timeStove = (int) timeStove.toEpochSecond(ZONE_OFFSET);
     }
 
     public LocalDateTime getStoveDateTime() {
@@ -157,15 +160,19 @@ public class Order {
     }
 
     public void moveToQueue() {
+        if (this.getStatus() == Status.INACTIVE) {
+            this.setTime(LocalDateTime.now());
+        }
         this.setStatus(Status.WAITING);
     }
 
     public void startTopping() {
+        this.setTimeTopping(LocalDateTime.now());
         this.setStatus(Status.TOPPING);
     }
 
     public void startBaking() {
-        this.setTimeStove(new BigDecimal(new Date().getTime() / 1000).intValueExact());
+        this.setTimeStove(LocalDateTime.now());
         this.setStatus(Status.BAKING);
     }
 
