@@ -5,9 +5,10 @@ import {PizzaService} from "./_internal/PizzaService";
 import {Order, Status} from "../_internal/api/OrderRestService";
 import {Party} from "../_internal/api/PartyRestService";
 import {Condiment} from "../_internal/api/CondimentRestService";
+import {map} from "rxjs/operators";
 
 @Component({
-    template: require('./Kitchen.html'),
+    templateUrl: './Kitchen.html',
     providers: []
 })
 export class KitchenComponent implements OnInit, OnDestroy {
@@ -35,11 +36,11 @@ export class KitchenComponent implements OnInit, OnDestroy {
 
         let pizzas = this.pizzaService.pizzas$;
         this.orders = {
-            INACTIVE_AND_WAITING: pizzas.map(PizzaService.filterStatus([Status.INACTIVE, Status.WAITING])),
-            WAITING: pizzas.map(PizzaService.filterStatus([Status.WAITING])),
-            TOPPING: pizzas.map(PizzaService.filterStatus([Status.TOPPING])),
-            BAKING: pizzas.map(PizzaService.filterStatus([Status.BAKING])),
-            EATING: pizzas.map(PizzaService.filterStatus([Status.EATING]))
+            INACTIVE_AND_WAITING: pizzas.pipe(map(PizzaService.filterStatus([Status.INACTIVE, Status.WAITING]))),
+            WAITING: pizzas.pipe(map(PizzaService.filterStatus([Status.WAITING]))),
+            TOPPING: pizzas.pipe(map(PizzaService.filterStatus([Status.TOPPING]))),
+            BAKING: pizzas.pipe(map(PizzaService.filterStatus([Status.BAKING]))),
+            EATING: pizzas.pipe(map(PizzaService.filterStatus([Status.EATING])))
         };
 
     }

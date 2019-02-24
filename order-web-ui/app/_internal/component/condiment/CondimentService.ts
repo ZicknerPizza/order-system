@@ -1,6 +1,7 @@
 import {Inject, Injectable} from "@angular/core";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {Condiment, CondimentId, CondimentRestService} from "../../api/CondimentRestService";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class CondimentService {
@@ -10,7 +11,7 @@ export class CondimentService {
 
     constructor(@Inject(CondimentRestService) private condimentRestService: CondimentRestService) {
         this.condimentMapObservable = condimentRestService.findAll()
-            .map(
+            .pipe(map(
                 (condiments) => condiments.reduce(
                     (condimentMap: Map<number, Condiment>, condiment: Condiment) => {
                         condimentMap.set(condiment.id.value, condiment);
@@ -18,7 +19,7 @@ export class CondimentService {
                     },
                     new Map<number, Condiment>()
                 )
-            );
+            ));
         this.condimentMapObservable.subscribe((condimentMap) => {
             this.condimentMap = condimentMap;
         });
@@ -26,19 +27,19 @@ export class CondimentService {
 
     private getCondimentMapObservable() {
         if (this.condimentMap !== null) {
-            return Observable.of(this.condimentMap);
+            return of(this.condimentMap);
         }
         return this.condimentMapObservable;
     }
 
     public getCondiments(): Observable<Array<Condiment>> {
-        return this.getCondimentMapObservable().map(condiments => Array.from(this.condimentMap.values()));
+        return this.getCondimentMapObservable().pipe(map(() => Array.from(this.condimentMap.values())));
     }
 
     public getCondimentName(condimentId: CondimentId): Observable<string> {
-        return this.getCondimentMapObservable().map((condimentMap) => {
+        return this.getCondimentMapObservable().pipe(map((condimentMap) => {
             return CondimentService.determineCondimentName(condimentMap, condimentId);
-        });
+        }));
     }
 
     private static determineCondimentName(condimentMap, condimentId: CondimentId) {

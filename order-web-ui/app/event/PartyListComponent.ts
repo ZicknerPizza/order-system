@@ -3,7 +3,7 @@ import {Component, Inject} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
 
 @Component({
-    template: require('./PartyList.html'),
+    templateUrl: './PartyList.html',
     providers: [
         PartyRestService
     ]

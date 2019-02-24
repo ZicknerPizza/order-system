@@ -1,6 +1,5 @@
 import {BrowserModule} from "@angular/platform-browser";
 import {NgModule} from "@angular/core";
-import {HttpModule} from "@angular/http";
 import {AppComponent} from "./AppComponent";
 import {NavigationComponent} from "./_internal/navigation/NavigationComponent";
 import {AppRouting, AppRoutingProviders} from "./AppRouting";
@@ -15,6 +14,7 @@ import {LinkModule} from "./link/LinkModule";
 import {AuthenticationModule} from "./_internal/authentication/AuthenticationModule";
 import {OrderModule} from "./order/OrderModule";
 import {HashLocationStrategy, LocationStrategy} from "@angular/common";
+import {HttpClientModule} from "@angular/common/http";
 
 @NgModule({
     declarations: [
@@ -23,7 +23,7 @@ import {HashLocationStrategy, LocationStrategy} from "@angular/common";
     ],
     imports: [
         BrowserModule,
-        HttpModule,
+        HttpClientModule,
         FormsModule,
         AppRouting,
         ApiModule.forRoot(),
@@ -38,14 +38,15 @@ import {HashLocationStrategy, LocationStrategy} from "@angular/common";
     ],
     providers: [
         AppRoutingProviders,
-        { provide: LocationStrategy, useClass: HashLocationStrategy }
+        {provide: LocationStrategy, useClass: HashLocationStrategy}
     ],
     bootstrap: [
         AppComponent
     ]
 })
 export class PizzaModule {
-    ngDoBootstrap() {
 
+    ngDoBootstrap() {
     }
+
 }

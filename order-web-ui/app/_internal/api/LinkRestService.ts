@@ -1,32 +1,24 @@
 import {Inject, Injectable} from "@angular/core";
-import {Http, RequestOptions, Response, URLSearchParams} from "@angular/http";
 import {Observable} from "rxjs";
 import {PartyId} from "./PartyRestService";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable()
 export class LinkRestService {
 
-    constructor(@Inject(Http) private http: Http) {
+    constructor(@Inject(HttpClient) private http: HttpClient) {
     }
 
     public findAll(): Observable<Array<Link>> {
-        return this.http.get("api/links")
-            .map((res: Response) => res.json());
+        return this.http.get<Array<Link>>("api/links");
     }
 
     public findByIdentifier(linkIdentifier: string): Observable<Link> {
-        let urlSearchParams = new URLSearchParams();
-        urlSearchParams.set("identifier", linkIdentifier);
-        return this.http.get(`api/links/search`, new RequestOptions({
-            search: urlSearchParams
-        }))
-            .map((res: Response) => res.json());
+        return this.http.get<Link>(`api/links/search?identifier=${linkIdentifier}`);
     }
 
     public update(linkId: LinkId, link: Link): Observable<void> {
-        return this.http.put(`api/links/${linkId.value}`, link)
-            .map(() => {
-            });
+        return this.http.put<void>(`api/links/${linkId.value}`, link);
     }
 }
 

@@ -4,7 +4,7 @@ import {CondimentId} from "../../api/CondimentRestService";
 
 @Component({
     selector: "condiment",
-    template: require("./Condiment.html")
+    templateUrl: "./Condiment.html"
 })
 export class CondimentComponent implements OnInit {
 

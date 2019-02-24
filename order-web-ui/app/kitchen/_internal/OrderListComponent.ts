@@ -4,9 +4,11 @@ import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestServ
 import {PizzaService} from "./PizzaService";
 import {PartyId} from "../../_internal/api/PartyRestService";
 
+declare const window;
+
 @Component({
     selector: 'orderList',
-    template: require('./OrderList.html')
+    templateUrl: './OrderList.html'
 })
 export class OrderListComponent {
 
@@ -39,8 +41,7 @@ export class OrderListComponent {
     }
 
     openClose(order: Order) {
-        let showDetail = !this.showDetails(order);
-        this.details[order.orderId.value] = showDetail;
+        this.details[order.orderId.value] = !this.showDetails(order);
     }
 
     disable(order: Order) {

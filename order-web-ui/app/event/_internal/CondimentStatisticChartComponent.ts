@@ -3,7 +3,7 @@ import {Statistic} from "../../_internal/api/CondimentRestService";
 
 @Component({
     selector: "condimentStatisticChart",
-    template: require("./CondimentStatisticChart.html")
+    templateUrl: "./CondimentStatisticChart.html"
 })
 export class CondimentStatisticChartComponent implements OnInit {
     private static CHART_LEGEND_POSITION = 10;

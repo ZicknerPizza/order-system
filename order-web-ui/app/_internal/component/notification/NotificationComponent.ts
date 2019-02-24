@@ -5,7 +5,7 @@ import {NotificationService} from "./NotificationService";
 
 @Component({
     selector: 'notification',
-    template: require('./Notification.html')
+    templateUrl: './Notification.html'
 })
 export class NotificationComponent {
     private notifications: Observable<Notification[]>;

@@ -1,17 +1,17 @@
 import {Inject, Injectable} from "@angular/core";
-import {Http, Response} from "@angular/http";
+import {Response} from "@angular/http";
 import {Observable} from "rxjs";
 import {CondimentId} from "./CondimentRestService";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable()
 export class PartyRestService {
 
-    constructor(@Inject(Http) private http: Http) {
+    constructor(@Inject(HttpClient) private http: HttpClient) {
     }
 
     public findAll(): Observable<Array<PartyOverview>> {
-        return this.http.get('api/partys')
-            .map((res: Response) => res.json());
+        return this.http.get<Array<PartyOverview>>('api/partys');
     }
 
     public findOne(partyId: PartyId, key?: string): Observable<Party> {
@@ -20,20 +20,15 @@ export class PartyRestService {
         } else {
             key = "";
         }
-        return this.http.get(`api/partys/${partyId.value}${key}`)
-            .map((res: Response) => res.json());
+        return this.http.get<Party>(`api/partys/${partyId.value}${key}`);
     }
 
     public update(id: PartyId, info: UpdateParty): Observable<void> {
-        return this.http.put(`api/partys/${id.value}`, info)
-            .map(() => {
-            });
+        return this.http.put<void>(`api/partys/${id.value}`, info);
     }
 
     public create(info: CreateParty): Observable<void> {
-        return this.http.post(`api/partys`, info)
-            .map(() => {
-            });
+        return this.http.post<void>(`api/partys`, info);
     }
 
 }
@@ -65,7 +60,7 @@ export class CreateParty {
     name: String;
     key: String;
     date: string;
-    countPizza: number;
+    estimatedNumberOfPizzas: number;
     blendStatistics: number;
     condiments: PartyCondiment[];
 }

@@ -5,7 +5,7 @@ import {Party, PartyId} from "../_internal/api/PartyRestService";
 import {ActivatedRoute} from "@angular/router";
 
 @Component({
-    template: require("./LinkAdmin.html")
+    templateUrl: "./LinkAdmin.html"
 })
 export class LinkAdminComponent {
     private links: Array<Link>;

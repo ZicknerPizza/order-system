@@ -1,42 +1,46 @@
 import {Inject, Injectable} from "@angular/core";
-import {Headers, Http, RequestOptions, Response} from "@angular/http";
-import {Subject} from "rxjs";
-import {Observable} from "rxjs/Observable";
+import {Subject, throwError} from "rxjs";
+import {catchError, map} from "rxjs/operators";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+
+declare const localStorage: any;
+declare const btoa: any;
 
 @Injectable()
 export class AuthenticationService {
 
     private _loginStatus$: Subject<LoginEvent>;
 
-    constructor(@Inject(Http) private http: Http) {
+    constructor(@Inject(HttpClient) private http: HttpClient) {
         this._loginStatus$ = new Subject<LoginEvent>();
     }
 
     public login(username: string, password: string) {
         let base64user = btoa(`${username}:${password}`);
         return this.http
-            .get('api/current-user', new RequestOptions({
-                headers: new Headers({"Authorization": `Basic ${base64user}`})
-            }))
-            .map((response: Response) => {
-                // login successful if there's a jwt token in the response
-                //let user = response.json();
-                let user = {
-                    username: username,
-                    password: password,
-                    token: base64user
-                };
-                if (user && user.token) {
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    this._loginStatus$.next(LoginEvent.LOGIN);
-                }
+            .get('api/current-user', {
+                headers: new HttpHeaders({"Authorization": `Basic ${base64user}`})
             })
-            .catch((e) => {
-                if (e.status === 401) {
-                    return Observable.throw('Unauthorized');
-                }
-                return Observable.throw(e);
-            });
+            .pipe(
+                map(() => {
+                    // login successful if there's a jwt token in the response
+                    let user = {
+                        username: username,
+                        password: password,
+                        token: base64user
+                    };
+                    if (user && user.token) {
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        this._loginStatus$.next(LoginEvent.LOGIN);
+                    }
+                }),
+                catchError((e) => {
+                    if (e.status === 401) {
+                        return throwError('Unauthorized');
+                    }
+                    return throwError(e);
+                })
+            );
     }
 
     public getCurrentUser() {

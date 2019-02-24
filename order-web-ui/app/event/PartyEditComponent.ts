@@ -15,7 +15,7 @@ import {UUID} from "angular2-uuid";
 import {Observable} from "rxjs";
 
 @Component({
-    template: require('./PartyEdit.html'),
+    templateUrl: './PartyEdit.html',
     providers: [
         CondimentRestService,
         PartyRestService

@@ -1,14 +1,15 @@
 import {Component, Inject, Input, OnChanges, SimpleChanges} from "@angular/core";
-import {Observable} from "rxjs";
+import {EMPTY, interval, Observable} from "rxjs";
 import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestService";
 import {PizzaService} from "./PizzaService";
 import {Condiment, CondimentId} from "../../_internal/api/CondimentRestService";
 import {PartyId} from "../../_internal/api/PartyRestService";
 import {CondimentCategoryService} from "../../_internal/CondimentCategoryService";
+import {map} from "rxjs/operators";
 
 @Component({
     selector: 'pizzaDetail',
-    template: require('./PizzaDetail.html'),
+    templateUrl: './PizzaDetail.html',
     providers: []
 })
 export class PizzaDetailComponent implements OnChanges {
@@ -74,10 +75,10 @@ export class PizzaDetailComponent implements OnChanges {
 
     private initTimeStove() {
         if (this.pizza.status == Status.BAKING) {
-            this.timeStove = Observable.interval(1000).startWith(0)
-                .map((time: number) => new Date().getTime() - this.pizza.order1.timeStove.getTime());
+            this.timeStove = interval(1000)
+                .pipe(map(() => new Date().getTime() - this.pizza.order1.timeStove.getTime()));
         } else {
-            this.timeStove = Observable.empty();
+            this.timeStove = EMPTY;
         }
     }
 

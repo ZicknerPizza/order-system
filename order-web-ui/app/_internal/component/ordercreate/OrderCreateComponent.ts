@@ -6,9 +6,11 @@ import {Condiment, CondimentId} from "../../api/CondimentRestService";
 import {UUID} from "angular2-uuid";
 import {CondimentCategoryService} from "../../CondimentCategoryService";
 
+declare const scrollTo;
+
 @Component({
     selector: 'orderCreate',
-    template: require('./OrderCreate.html'),
+    templateUrl: './OrderCreate.html',
     providers: []
 })
 export class OrderCreateComponent implements OnChanges {

@@ -4,7 +4,7 @@ import {ActivatedRoute} from "@angular/router";
 import {Condiment} from "../_internal/api/CondimentRestService";
 
 @Component({
-    template: require("./Order.html")
+    templateUrl: "./Order.html"
 })
 export class OrderComponent {
     private party: Party;

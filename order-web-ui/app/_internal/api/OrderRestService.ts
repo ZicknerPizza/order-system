@@ -1,45 +1,40 @@
 import {Inject, Injectable} from "@angular/core";
-import {Http, RequestOptions, Response, URLSearchParams} from "@angular/http";
+import {Response} from "@angular/http";
 import {Observable} from "rxjs";
 import {Parser} from "./Parser";
 import {CondimentId} from "./CondimentRestService";
 import {UUID} from "angular2-uuid";
 import {PartyId} from "./PartyRestService";
+import {HttpClient} from "@angular/common/http";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class OrderRestService {
 
-    constructor(@Inject(Http) private http: Http) {
+    constructor(@Inject(HttpClient) private http: HttpClient) {
     }
 
     public order(partyId: PartyId, key: string, order: OrderCreateDetails): Observable<void> {
         order.status = (<any>Status)[order.status];
         return this.http
-            .post(`api/orders/${partyId.value}/${key}`, order)
-            .map(() => {
-            });
+            .post<void>(`api/orders/${partyId.value}/${key}`, order);
     }
 
     public changeStatus(partyId: PartyId, orderIds: Array<OrderId>, status: Status): Observable<void> {
         return this.http
-            .put(`api/orders/${partyId.value}/status`, {
+            .put<void>(`api/orders/${partyId.value}/status`, {
                 status,
                 orderIds
-            })
-            .map(() => {
             });
     }
 
     public delete(partyId: PartyId, orderId: OrderId): Observable<void> {
-        return this.http.delete(`api/orders/${partyId.value}/${orderId.value}`)
-            .map((res: Response) => {
-            });
+        return this.http.delete<void>(`api/orders/${partyId.value}/${orderId.value}`);
     }
 
     public findOrdersForParty(partyId: PartyId): Observable<Order[]> {
-        return this.http.get(`api/orders/${partyId.value}`)
-            .map((res: Response) => res.json())
-            .map((orders) => {
+        return this.http.get<any[]>(`api/orders/${partyId.value}`)
+            .pipe(map((orders) => {
                 let result: Array<Order> = [];
                 for (let order of orders) {
                     result.push(new Order(
@@ -55,7 +50,7 @@ export class OrderRestService {
                     ));
                 }
                 return result;
-            });
+            }));
     }
 
 }

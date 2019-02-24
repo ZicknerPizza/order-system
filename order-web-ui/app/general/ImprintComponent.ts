@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 
 @Component({
-    template: require('./Imprint.html')
+    templateUrl: './Imprint.html'
 })
 export class ImprintComponent {
 }

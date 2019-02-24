@@ -1,8 +1,8 @@
 import {ModuleWithProviders, NgModule} from "@angular/core";
 import {AuthenticationService} from "./AuthenticationService";
-import {Http, RequestOptions, XHRBackend} from "@angular/http";
-import {AuthenticatedHttp} from "./AuthenticatedHttp";
 import {AuthenticationGuard} from "./AuthenticationGuard";
+import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import {AuthenticationHttpInterceptor} from "./AuthenticationHttpInterceptor";
 
 @NgModule()
 export class AuthenticationModule {
@@ -13,11 +13,7 @@ export class AuthenticationModule {
             providers: [
                 AuthenticationService,
                 AuthenticationGuard,
-                {
-                    provide: Http,
-                    useFactory: (backend: XHRBackend, defaultOptions: RequestOptions) => new AuthenticatedHttp(backend, defaultOptions),
-                    deps: [XHRBackend, RequestOptions]
-                }
+                {provide: HTTP_INTERCEPTORS, useClass: AuthenticationHttpInterceptor, multi: true}
             ]
         }
     }

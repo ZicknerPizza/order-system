@@ -4,7 +4,7 @@ import {NotificationService} from "../_internal/component/notification/Notificat
 import {Router} from "@angular/router";
 
 @Component({
-    template: require('./Login.html'),
+    templateUrl: './Login.html',
     providers: []
 })
 export class LoginComponent {

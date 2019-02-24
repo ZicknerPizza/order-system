@@ -3,7 +3,7 @@ import {CondimentRestService} from "../_internal/api/CondimentRestService";
 import {Observable} from "rxjs";
 
 @Component({
-    template: require('./Statistic.html'),
+    templateUrl: './Statistic.html',
     providers: [
         CondimentRestService
     ]

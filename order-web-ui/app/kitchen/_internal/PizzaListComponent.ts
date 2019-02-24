@@ -4,10 +4,11 @@ import {Pizza} from "./PizzaDetailCondiment";
 import {Order} from "../../_internal/api/OrderRestService";
 import {PartyId} from "../../_internal/api/PartyRestService";
 import {Condiment} from "../../_internal/api/CondimentRestService";
+import {map} from "rxjs/operators";
 
 @Component({
     selector: 'pizzaList',
-    template: require('./PizzaList.html'),
+    templateUrl: './PizzaList.html',
     providers: []
 })
 export class PizzaListComponent implements OnChanges {
@@ -33,7 +34,7 @@ export class PizzaListComponent implements OnChanges {
 
     ngOnChanges(changes: { [propKey: string]: SimpleChange }) {
         this.pizzas = this.orders
-            .map((orders: Array<Order>) => {
+            .pipe(map((orders: Array<Order>) => {
                 return Array.from(
                     orders.reduce(
                         (map: Map<string, Pizza>, order: Order) => {
@@ -47,6 +48,6 @@ export class PizzaListComponent implements OnChanges {
                         new Map<string, Pizza>()
                     ).values()
                 );
-            });
+            }));
     }
 }

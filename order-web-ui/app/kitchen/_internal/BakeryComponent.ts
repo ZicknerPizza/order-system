@@ -1,14 +1,15 @@
 import {Component, Inject, Input, OnInit} from "@angular/core";
 import {PizzaService} from "./PizzaService";
 import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestService";
-import {Observable, Subject} from "rxjs";
+import {Observable, of, Subject} from "rxjs";
 import {Pizza} from "./PizzaDetailCondiment";
 import {PartyId} from "../../_internal/api/PartyRestService";
 import {Condiment} from "../../_internal/api/CondimentRestService";
+import {flatMap, map, withLatestFrom} from "rxjs/operators";
 
 @Component({
     selector: "bakery",
-    template: require("./Bakery.html")
+    templateUrl: "./Bakery.html"
 })
 export class BakeryComponent implements OnInit {
 
@@ -45,18 +46,22 @@ export class BakeryComponent implements OnInit {
             }
         });
 
-        this.nextPizza.asObservable().withLatestFrom(this.orders)
-            .flatMap((item: [void, Array<Order>]) => {
-                let orders = item[1];
-                if (orders.length >= 2) {
-                    let newOrders = orders.slice(orders.length - 2);
-                    let pizza = new Pizza(newOrders[0], newOrders[1]);
-                    return this.orderService.changeStatus(this.partyId, BakeryComponent.getOrderIds(pizza), Status.TOPPING).map(() => {
-                        return pizza;
-                    });
-                }
-                return Observable.of(null);
-            })
+        this.nextPizza.asObservable()
+            .pipe(
+                withLatestFrom(this.orders),
+                flatMap((item: [void, Array<Order>]) => {
+                    let orders = item[1];
+                    if (orders.length >= 2) {
+                        let newOrders = orders.slice(orders.length - 2);
+                        let pizza = new Pizza(newOrders[0], newOrders[1]);
+                        return this.orderService.changeStatus(this.partyId, BakeryComponent.getOrderIds(pizza), Status.TOPPING)
+                            .pipe(map(() => {
+                                return pizza;
+                            }));
+                    }
+                    return of(null);
+                })
+            )
             .subscribe((pizza: Pizza) => {
                 this.current = pizza;
                 this.pizzaService.refreshPizzaList();

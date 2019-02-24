@@ -1,8 +1,8 @@
 import {Inject, Injectable} from "@angular/core";
 import {ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from "@angular/router";
 import {Order, OrderRestService} from "../../_internal/api/OrderRestService";
-import {Observable} from "rxjs/Observable";
 import {PartyId} from "../../_internal/api/PartyRestService";
+import {Observable} from "rxjs";
 
 @Injectable()
 export class OrdersResolve implements Resolve<Array<Order>> {

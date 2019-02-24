@@ -4,7 +4,7 @@ import {AuthenticationService, LoginEvent} from "../authentication/Authenticatio
 
 @Component({
     selector: 'navigation',
-    template: require('./Navigation.html'),
+    templateUrl: './Navigation.html',
     providers: []
 })
 export class NavigationComponent {

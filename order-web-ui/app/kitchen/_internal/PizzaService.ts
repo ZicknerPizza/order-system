@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@angular/core";
-import {Observable, Subject} from "rxjs";
+import {EMPTY, Observable, Subject} from "rxjs";
 import {Order, OrderRestService, Status} from "../../_internal/api/OrderRestService";
 import {PartyId} from "../../_internal/api/PartyRestService";
 
@@ -30,11 +30,11 @@ export class PizzaService {
     }
 
     bake(partyId: PartyId, kitchenPizza: any): Observable<any> {
-        return Observable.empty();
+        return EMPTY;
     }
 
     getNewKitchenPizza(partyId: PartyId): Observable<any> {
-        return Observable.empty();
+        return EMPTY;
     }
 
     get pizzas$(): Observable<Order[]> {

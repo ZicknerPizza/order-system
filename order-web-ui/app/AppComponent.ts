@@ -2,7 +2,7 @@ import {Component, OnInit} from "@angular/core";
 
 @Component({
     selector: 'pizza-app',
-    template: require('./App.html'),
+    templateUrl: './App.html',
     providers: []
 })
 export class AppComponent implements OnInit {

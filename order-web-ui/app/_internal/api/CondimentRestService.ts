@@ -1,23 +1,21 @@
 import {Inject, Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {Http, Response} from "@angular/http";
+import {HttpClient} from "@angular/common/http";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class CondimentRestService {
 
-    constructor(@Inject(Http) private http: Http) {
+    constructor(@Inject(HttpClient) private http: HttpClient) {
     }
 
     findAllOld(): Observable<any> {
-        return this.http.get('api/condiments/').map((res: Response) => res.json());
+        return this.http.get('api/condiments/');
     }
 
     findCondimentsStatistic(): Observable<Map<number, CondimentStatistic>> {
-        return this.http.get("api/condiments/statistic")
-            .map((response: Response) => {
-                return response.json();
-            })
-            .map((condimentStatistics: Array<CondimentStatistic>) =>
+        return this.http.get<Array<CondimentStatistic>>("api/condiments/statistic")
+            .pipe(map((condimentStatistics: Array<CondimentStatistic>) =>
                 condimentStatistics.reduce(
                     (map: Map<number, CondimentStatistic>, condimentStatistic: CondimentStatistic) => {
                         let statistic = condimentStatistic.statistic;
@@ -27,12 +25,11 @@ export class CondimentRestService {
                     },
                     new Map<number, CondimentStatistic>()
                 )
-            );
+            ));
     }
 
     findAll(): Observable<Array<Condiment>> {
-        return this.http.get('api/condiments')
-            .map((response: Response) => response.json());
+        return this.http.get<Array<Condiment>>('api/condiments');
     }
 
 }
