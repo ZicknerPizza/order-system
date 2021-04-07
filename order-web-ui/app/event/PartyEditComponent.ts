@@ -78,7 +78,10 @@ export class PartyEditComponent {
             }
         }
         let condimentStatistic = this.condimentsStatistic.get(condiment.id.value);
-        let percentageOverall = condimentStatistic.percentageOfOrders;
+        let percentageOverall = 0;
+        if (condimentStatistic) {
+            percentageOverall = condimentStatistic.percentageOfOrders;
+        }
         let percentageParty: number = 0;
         if (this.orders.length > 0) {
             percentageParty = numberOfOrdersWithCondiment / this.orders.length * 100;
