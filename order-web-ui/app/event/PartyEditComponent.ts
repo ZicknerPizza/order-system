@@ -99,6 +99,9 @@ export class PartyEditComponent {
 
     amountPerPizza(condiment: Condiment): number {
         let statistic = this.getCondimentStatistic(condiment);
+        if (statistic == null) {
+            return 0;
+        }
         let all = 0;
         let num = 0;
         let addInformation = (array: Array<number>): void => {
@@ -120,7 +123,11 @@ export class PartyEditComponent {
     };
 
     public getCondimentStatistic(condiment: Condiment): Statistic {
-        return this.condimentsStatistic.get(condiment.id.value).statistic;
+        let condimentStatistic = this.condimentsStatistic.get(condiment.id.value);
+        if (!condimentStatistic) {
+            return null;
+        }
+        return condimentStatistic.statistic;
     }
 
     amountCalculated(condiment: Condiment): number {
