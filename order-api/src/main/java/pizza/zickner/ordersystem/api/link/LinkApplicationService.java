@@ -5,13 +5,13 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pizza.zickner.ordersystem.core.domain.AggregateNotFoundException;
-import pizza.zickner.ordersystem.core.domain.user.Roles;
 import pizza.zickner.ordersystem.core.domain.link.Link;
 import pizza.zickner.ordersystem.core.domain.link.LinkId;
 import pizza.zickner.ordersystem.core.domain.link.LinkRepository;
 import pizza.zickner.ordersystem.core.domain.party.Party;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
+import pizza.zickner.ordersystem.core.domain.user.Roles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,10 +51,8 @@ public class LinkApplicationService {
 
     @Secured(Roles.ROLE_ORDER_ADMIN)
     public void update(LinkId linkId, LinkDetails linkDetails) {
-        Link link = this.linkRepository.findOne(linkId);
-        if (link == null) {
-            throw new AggregateNotFoundException();
-        }
+        Link link = this.linkRepository.findById(linkId)
+                .orElseThrow(AggregateNotFoundException::new);
         link.setIdentifier(linkDetails.getIdentifier());
         link.setPartyId(linkDetails.getPartyId());
         // TODO: Set partyKey to avoid query for each partyKey
@@ -63,11 +61,9 @@ public class LinkApplicationService {
 
     private String determinePartyKey(PartyId partyId) {
         // TODO: Replace this method by key directly saved in the linkRepository
-        Party party = this.partyRepository.findOne(partyId);
-        if (party == null) {
-            return null;
-        }
-        return party.getKey();
+        return this.partyRepository.findById(partyId)
+                .map(Party::getKey)
+                .orElse(null);
     }
 
     private static LinkDetails toLinkDetails(Link link, String partyKey) {

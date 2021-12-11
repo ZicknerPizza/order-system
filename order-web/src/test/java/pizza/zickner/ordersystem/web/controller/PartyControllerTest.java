@@ -70,9 +70,9 @@ public class PartyControllerTest {
 
         // Act + Assert
         this.mockMvc.perform(get("/api/partys")
-                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id.value").value("1"))
@@ -88,7 +88,7 @@ public class PartyControllerTest {
         // Act
         this.mockMvc.perform(post("/api/partys")
                 .content(this.objectMapper.writeValueAsString(createPartyDetails))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -102,11 +102,11 @@ public class PartyControllerTest {
         // Act
         this.mockMvc.perform(post("/api/partys")
                 .content(this.objectMapper.writeValueAsString(createPartyDetails))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         // Assert
-        Party party = this.partyRepository.findOne(partyId);
+        Party party = this.partyRepository.getById(partyId);
         assertThat(party).isNotNull();
         assertThat(party.getName()).isEqualTo("My next party!");
         assertThat(party.getEstimatedNumberOfPizzas()).isEqualTo(10);
@@ -164,12 +164,12 @@ public class PartyControllerTest {
         this.mockMvc.perform(
                 put("/api/partys/" + partyId.getValue())
                         .content(this.objectMapper.writeValueAsString(updatePartyDetails))
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isNoContent());
 
         // Assert
-        Party resultParty = this.partyRepository.findOne(partyId);
+        Party resultParty = this.partyRepository.getById(partyId);
         assertThat(resultParty).isNotNull();
         assertThat(resultParty.getName()).isEqualTo("New test name");
         assertThat(resultParty.getDate()).isEqualTo(newPartyDate);
@@ -212,12 +212,12 @@ public class PartyControllerTest {
         this.mockMvc.perform(
                 put("/api/partys/" + partyId.getValue())
                         .content(this.objectMapper.writeValueAsString(updatePartyDetails))
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isNoContent());
 
         // Assert
-        Party resultParty = this.partyRepository.findOne(partyId);
+        Party resultParty = this.partyRepository.getById(partyId);
         assertThat(resultParty).isNotNull();
         assertThat(resultParty.getName()).isEqualTo("New test name");
         List<PartyCondiment> condiments = resultParty.getCondiments();

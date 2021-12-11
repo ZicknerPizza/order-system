@@ -75,8 +75,8 @@ public class CondimentTestData extends AbstractCucumberMockMvcTest {
 
     @Given("^the basic condiments exists$")
     public void theBasicCondimentsExists() {
-        this.condimentCategoryRepository.save(ALL_CONDIMENT_CATEGORIES);
-        this.condimentRepository.save(ALL_CONDIMENTS);
+        this.condimentCategoryRepository.saveAll(ALL_CONDIMENT_CATEGORIES);
+        this.condimentRepository.saveAll(ALL_CONDIMENTS);
     }
 
 }

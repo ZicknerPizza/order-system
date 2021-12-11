@@ -44,7 +44,7 @@ public class PartyEditPageObject extends AbstractCucumberMockMvcTest {
         partyRequest = this.mockMvc.perform(post("/api/partys")
                 .with(userState.getUser())
                 .content(this.objectMapper.writeValueAsString(createPartyDetails))
-                .contentType(MediaType.APPLICATION_JSON_UTF8));
+                .contentType(MediaType.APPLICATION_JSON));
     }
 
     @Then("^the party request was successful$")

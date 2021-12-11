@@ -126,7 +126,7 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
 
         orderSubmit = this.mockMvc.perform(post("/api/orders/" + partyId.getValue())
                 .with(userState.getUser())
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(orderCreateDetails)));
     }
 
@@ -141,7 +141,7 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
 
         orderSubmit = this.mockMvc.perform(post("/api/orders/" + partyId.getValue())
                 .with(userState.getUser())
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(orderCreateDetails)));
     }
 
@@ -178,7 +178,7 @@ public class KitchenPageObject extends AbstractCucumberMockMvcTest {
 
             orderSubmit = this.mockMvc.perform(post("/api/orders/" + partyId.getValue())
                     .with(userState.getUser())
-                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(orderCreateDetails)));
         }
     }

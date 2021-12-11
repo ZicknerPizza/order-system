@@ -1,6 +1,6 @@
 package pizza.zickner.ordersystem.web.configuration;
 
-import org.springframework.boot.autoconfigure.web.ErrorViewResolver;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;

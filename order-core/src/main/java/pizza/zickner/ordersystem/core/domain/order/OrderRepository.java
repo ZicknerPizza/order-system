@@ -1,7 +1,7 @@
 package pizza.zickner.ordersystem.core.domain.order;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 
@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 /**
  * @author Valentin Zickner
  */
-public interface OrderRepository extends CrudRepository<Order, OrderId> {
+public interface OrderRepository extends JpaRepository<Order, OrderId> {
 
     @Query("SELECT o FROM PizzaOrder o")
     Stream<Order> streamAll();

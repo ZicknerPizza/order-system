@@ -1,15 +1,14 @@
 package pizza.zickner.ordersystem.api.order;
 
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import pizza.zickner.ordersystem.core.domain.condiment.CondimentId;
-import pizza.zickner.ordersystem.core.domain.order.Order;
 import pizza.zickner.ordersystem.core.domain.order.OrderId;
 import pizza.zickner.ordersystem.core.domain.order.Status;
 import pizza.zickner.ordersystem.core.domain.party.Party;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @Transactional
 public class OrderApplicationServiceTest {
@@ -36,7 +35,7 @@ public class OrderApplicationServiceTest {
     @Autowired
     private OrderApplicationService orderApplicationService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Party party = new Party.Builder()
                 .setPartyId(new PartyId())
@@ -66,16 +65,6 @@ public class OrderApplicationServiceTest {
         OrderDetails order = ordersForParty.get(0);
         assertThat(order).isNotNull();
         assertThat(order.getOrderId()).isEqualTo(orderCreateDetails.getOrderId());
-    }
-
-    private void createDatabaseOrderObjectAndStoreIt(OrderId orderId, Status status, int... condimentIds) {
-        Order order = new Order.Builder()
-                .setPartyId(partyId)
-                .setOrderId(orderId)
-                .setName("Valentin")
-                .setStatus(status)
-                .setCondiments(getCondimentIds(condimentIds))
-                .build();
     }
 
     private OrderCreateDetails createNewOrderForQueue(OrderId orderId, int... condimentIds) {

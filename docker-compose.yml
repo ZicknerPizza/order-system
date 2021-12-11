@@ -1,0 +1,21 @@
+version: '3.4'
+services:
+  mysql:
+    image: mysql:8.0.27
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: 'pizza'
+      MYSQL_USER: 'pizza'
+      MYSQL_PASSWORD: 'pizza'
+      MYSQL_ROOT_PASSWORD: 'pizza'
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+
+
+networks:
+  internal:
+
+volumes:
+  mysql:

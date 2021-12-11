@@ -6,11 +6,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pizza.zickner.ordersystem.core.domain.AggregateNotFoundException;
-import pizza.zickner.ordersystem.core.domain.party.UpdateParty;
-import pizza.zickner.ordersystem.core.domain.user.Roles;
 import pizza.zickner.ordersystem.core.domain.party.Party;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
+import pizza.zickner.ordersystem.core.domain.party.UpdateParty;
+import pizza.zickner.ordersystem.core.domain.user.Roles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +55,7 @@ public class PartyApplicationService {
     public void update(PartyId partyId, UpdatePartyDetails updatePartyDetails) {
         Preconditions.checkNotNull(updatePartyDetails);
         UpdateParty updateParty = PartyAssembler.toUpdateParty(updatePartyDetails);
-        Party party = this.partyRepository.findOne(partyId);
+        Party party = this.partyRepository.getById(partyId);
         party.applyUpdate(updateParty);
         this.partyRepository.save(party);
     }
@@ -69,11 +69,8 @@ public class PartyApplicationService {
     }
 
     private Party getParty(PartyId partyId) {
-        Party party = this.partyRepository.findOne(partyId);
-        if (party == null) {
-            throw new AggregateNotFoundException();
-        }
-        return party;
+        return this.partyRepository.findById(partyId)
+                .orElseThrow(AggregateNotFoundException::new);
     }
 
 }

@@ -7,11 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pizza.zickner.ordersystem.core.domain.AggregateNotFoundException;
-import pizza.zickner.ordersystem.core.domain.order.Order;
-import pizza.zickner.ordersystem.core.domain.order.OrderId;
-import pizza.zickner.ordersystem.core.domain.order.OrderRepository;
-import pizza.zickner.ordersystem.core.domain.order.PizzaId;
-import pizza.zickner.ordersystem.core.domain.order.Status;
+import pizza.zickner.ordersystem.core.domain.order.*;
 import pizza.zickner.ordersystem.core.domain.party.Party;
 import pizza.zickner.ordersystem.core.domain.party.PartyId;
 import pizza.zickner.ordersystem.core.domain.party.PartyRepository;
@@ -138,7 +134,7 @@ public class OrderApplicationService {
     }
 
     public void delete(PartyId partyId, OrderId orderId) {
-        Order order = this.orderRepository.findOne(orderId);
+        Order order = this.orderRepository.getById(orderId);
         // TODO: Verify if it is related to party
         if (order.getStatus().isValidTransaction(Status.DELETED)) {
             order.delete();
@@ -182,11 +178,8 @@ public class OrderApplicationService {
     }
 
     private Party getParty(PartyId partyId) {
-        Party party = this.partyRepository.findOne(partyId);
-        if (party == null) {
-            throw new AggregateNotFoundException();
-        }
-        return party;
+        return this.partyRepository.findById(partyId)
+                .orElseThrow(AggregateNotFoundException::new);
     }
 
     private static PizzaId setPizzaId(PizzaId lastPizzaId, OrderDetails orderDetail) {
