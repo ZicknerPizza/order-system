@@ -1,0 +1,23 @@
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # PHP runs as FastCGI on all-inkl and would not see the Basic auth header otherwise
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # REST API
+    RewriteRule ^api(/.*)?$ api.php [L,QSA]
+
+    # Angular routes without hash, every unknown path serves the app
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# index.html must not be cached, otherwise browsers keep loading an old bundle after a deployment
+<FilesMatch "^index\.html$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </IfModule>
+</FilesMatch>

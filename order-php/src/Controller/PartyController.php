@@ -1,0 +1,160 @@
+<?php
+declare(strict_types=1);
+
+namespace OrderSystem\Controller;
+
+use OrderSystem\Auth;
+use OrderSystem\Database;
+use OrderSystem\Domain\Rating;
+use OrderSystem\Http\HttpException;
+use OrderSystem\Http\Request;
+use OrderSystem\Http\Response;
+use OrderSystem\Json;
+use OrderSystem\Time;
+
+final class PartyController
+{
+    /** Join column Hibernate generated for the element collection Party.condiments */
+    public const PARTY_CONDIMENT_PARTY_COLUMN = 'Party_id';
+
+    public function __construct(private readonly Database $db, private readonly Auth $auth)
+    {
+    }
+
+    public function findAll(Request $request): Response
+    {
+        $this->auth->requireAdmin();
+        $parties = $this->db->all('SELECT id, party, `key`, aktiv FROM Party ORDER BY aktiv DESC');
+        return Response::json(array_map(static fn(array $party): array => [
+            'id' => ['value' => $party['id']],
+            'name' => $party['party'],
+            'key' => $party['key'],
+            'date' => Time::toLocalDate($party['aktiv']),
+        ], $parties));
+    }
+
+    public function findById(Request $request, string $partyId): Response
+    {
+        $this->auth->requireAdmin();
+        return Response::json($this->toPartyDetails($this->getParty($partyId)));
+    }
+
+    public function findByIdAndKey(Request $request, string $partyId, string $partyKey): Response
+    {
+        $party = $this->getParty($partyId);
+        if ($party['key'] !== $partyKey) {
+            throw new HttpException(404, 'Party not found');
+        }
+        return Response::json($this->toPartyDetails($party));
+    }
+
+    public function create(Request $request): Response
+    {
+        $this->auth->requireAdmin();
+        $body = Json::object($request->json());
+
+        $partyId = Json::requiredStringId($body['id'] ?? null, 'id');
+        $name = Json::string($body['name'] ?? null) ?? throw new HttpException(400, "Field 'name' is required");
+        $values = [
+            $name,
+            Json::string($body['key'] ?? null),
+            Time::fromLocalDate($body['date'] ?? null),
+            Json::int($body['estimatedNumberOfPizzas'] ?? null),
+            Json::int($body['blendStatistics'] ?? null),
+        ];
+        $condiments = self::toPartyCondiments($body['condiments'] ?? null);
+
+        $this->db->transactional(function () use ($partyId, $values, $condiments): void {
+            // JPA's save() merged an already existing party, so creating twice updates it
+            if ($this->db->one('SELECT id FROM Party WHERE id = ?', [$partyId]) === null) {
+                $this->db->execute(
+                    'INSERT INTO Party (party, `key`, aktiv, countPizza, blendStatistics, id) VALUES (?, ?, ?, ?, ?, ?)',
+                    [...$values, $partyId]
+                );
+            } else {
+                $this->db->execute(
+                    'UPDATE Party SET party = ?, `key` = ?, aktiv = ?, countPizza = ?, blendStatistics = ? WHERE id = ?',
+                    [...$values, $partyId]
+                );
+            }
+            $this->replaceCondiments($partyId, $condiments);
+        });
+        return Response::noContent();
+    }
+
+    public function update(Request $request, string $partyId): Response
+    {
+        $this->auth->requireAdmin();
+        $body = Json::object($request->json());
+
+        $values = [
+            Json::string($body['name'] ?? null),
+            Time::fromLocalDate($body['date'] ?? null),
+            Json::int($body['blendStatistics'] ?? null),
+            Json::int($body['estimatedNumberOfPizzas'] ?? null),
+        ];
+        $condiments = self::toPartyCondiments($body['condiments'] ?? null);
+        $this->getParty($partyId);
+
+        $this->db->transactional(function () use ($partyId, $values, $condiments): void {
+            $this->db->execute(
+                'UPDATE Party SET party = ?, aktiv = ?, blendStatistics = ?, countPizza = ? WHERE id = ?',
+                [...$values, $partyId]
+            );
+            $this->replaceCondiments($partyId, $condiments);
+        });
+        return Response::noContent();
+    }
+
+    private function getParty(string $partyId): array
+    {
+        return $this->db->one('SELECT id, party, `key`, aktiv, countPizza, blendStatistics FROM Party WHERE id = ?', [$partyId])
+            ?? throw new HttpException(404, 'Party not found');
+    }
+
+    private function toPartyDetails(array $party): array
+    {
+        $condiments = $this->db->all(
+            'SELECT condiment_id FROM PartyCondiment_mm WHERE ' . self::PARTY_CONDIMENT_PARTY_COLUMN . ' = ?',
+            [$party['id']]
+        );
+        return [
+            'id' => ['value' => $party['id']],
+            'name' => $party['party'],
+            'key' => $party['key'],
+            'date' => Time::toLocalDate($party['aktiv']),
+            'estimatedNumberOfPizzas' => (int) $party['countPizza'],
+            'blendStatistics' => (int) $party['blendStatistics'],
+            'condiments' => array_map(
+                static fn(array $condiment): ?array => $condiment['condiment_id'] === null ? null : ['value' => (int) $condiment['condiment_id']],
+                $condiments
+            ),
+        ];
+    }
+
+    /**
+     * @return list<array{?int, ?float, ?int}> condiment id, amount and stored rating
+     */
+    private static function toPartyCondiments(mixed $condiments): array
+    {
+        return array_map(static function (mixed $condiment): array {
+            $condiment = Json::object($condiment);
+            return [
+                Json::intId($condiment['condimentId'] ?? null),
+                Json::float($condiment['amount'] ?? null),
+                Rating::fromJson($condiment['rating'] ?? null)?->value,
+            ];
+        }, Json::list($condiments, 'condiments'));
+    }
+
+    private function replaceCondiments(string $partyId, array $condiments): void
+    {
+        $this->db->execute('DELETE FROM PartyCondiment_mm WHERE ' . self::PARTY_CONDIMENT_PARTY_COLUMN . ' = ?', [$partyId]);
+        foreach ($condiments as $condiment) {
+            $this->db->execute(
+                'INSERT INTO PartyCondiment_mm (' . self::PARTY_CONDIMENT_PARTY_COLUMN . ', condiment_id, amount, rating) VALUES (?, ?, ?, ?)',
+                [$partyId, ...$condiment]
+            );
+        }
+    }
+}
