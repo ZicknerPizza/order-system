@@ -1,8 +1,8 @@
 # order-php
 
-PHP backend for the pizza order system, for shared hosting without Java (all-inkl.com).
-It serves the same REST API as the Spring Boot backend (`order-web`), so the Angular frontend
-(`order-web-ui`) runs unchanged and the existing MySQL database is used as is.
+PHP backend for the pizza order system, for shared hosting (all-inkl.com). It replaced the former
+Spring Boot backend with the same REST API, so the database of the Java version is used as is.
+The frontend is `order-frontend`.
 
 No dependencies, no Composer: upload the files and it runs. Requires PHP 8.1 or newer with `pdo_mysql`.
 

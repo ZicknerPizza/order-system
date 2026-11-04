@@ -1,7 +1,7 @@
 # order-frontend
 
-Angular frontend of the pizza order system, successor of `order-web-ui` (Angular 2.4).
-Same pages, URLs and look (Bootstrap 3 styles), talks to the REST API of `order-php`.
+Angular frontend of the pizza order system, successor of the former Angular 2.4 frontend with the
+same URLs and look (Bootstrap 3 styles). It talks to the REST API of `order-php`.
 
 ## Development
 
