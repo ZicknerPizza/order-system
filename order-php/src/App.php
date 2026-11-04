@@ -59,6 +59,11 @@ final class App
         $router->get('/api/current-user', $users->getCurrentUser(...));
         $router->put('/api/current-user/password', $users->changePassword(...));
 
+        $router->get('/api/users', $users->findAll(...));
+        $router->post('/api/users', $users->create(...));
+        $router->put('/api/users/{userId}/password', $users->setPassword(...));
+        $router->delete('/api/users/{userId}', $users->delete(...));
+
         $router->get('/api/links', $links->findAll(...));
         $router->get('/api/links/search', $links->findByIdentifier(...));
         $router->put('/api/links/{linkId}', $links->update(...));

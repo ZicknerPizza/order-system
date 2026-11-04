@@ -65,7 +65,7 @@ export function halfMarker(
               }
             </th>
           }
-          @if (pizza().order1.status === 'TOPPING') {
+          @if (pizza().order1.status === 'TOPPING' && store.canBake()) {
             <th class="pizza-extra pointer bg-info" (click)="moveToQueue()">
               <p><span class="glyphicon glyphicon-arrow-up text-info" aria-hidden="true"></span></p>
             </th>
@@ -109,7 +109,7 @@ export function halfMarker(
                 </ul>
               </td>
             }
-            @if (pizza().order1.status === 'TOPPING') {
+            @if (pizza().order1.status === 'TOPPING' && store.canBake()) {
               <td class="bg-info" (click)="moveToQueue()"></td>
             }
             @if (pizza().order1.status === 'BAKING') {

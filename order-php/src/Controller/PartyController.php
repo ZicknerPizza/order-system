@@ -5,6 +5,7 @@ namespace OrderSystem\Controller;
 
 use OrderSystem\Auth;
 use OrderSystem\Database;
+use OrderSystem\Domain\Role;
 use OrderSystem\Domain\Rating;
 use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
@@ -23,7 +24,7 @@ final class PartyController
 
     public function findAll(Request $request): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::SERVICE);
         $parties = $this->db->all('SELECT id, party, `key`, aktiv FROM Party ORDER BY aktiv DESC');
         return Response::json(array_map(static fn(array $party): array => [
             'id' => ['value' => $party['id']],
@@ -35,7 +36,7 @@ final class PartyController
 
     public function findById(Request $request, string $partyId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::SERVICE);
         return Response::json($this->toPartyDetails($this->getParty($partyId), true));
     }
 
@@ -50,7 +51,7 @@ final class PartyController
 
     public function create(Request $request): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::KITCHEN);
         $body = Json::object($request->json());
 
         $partyId = Json::requiredStringId($body['id'] ?? null, 'id');
@@ -84,7 +85,7 @@ final class PartyController
 
     public function update(Request $request, string $partyId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::KITCHEN);
         $body = Json::object($request->json());
 
         $values = [

@@ -103,6 +103,27 @@ export interface Link {
   partyKey: string | null;
 }
 
+/** SERVICE takes orders, KITCHEN also bakes and manages parties, ADMIN also manages users */
+export type Role = 'ADMIN' | 'KITCHEN' | 'SERVICE';
+
+export interface CurrentUser {
+  name: string;
+  role: Role;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  /** null for deactivated users of the old systems */
+  role: Role | null;
+}
+
+export interface UserCreate {
+  name: string;
+  role: Role;
+  password: string;
+}
+
 /** Person and address of the imprint, configured in the backend */
 export interface Imprint {
   name: string;

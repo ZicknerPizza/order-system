@@ -59,6 +59,8 @@ CREATE TABLE SystemUser (
     id INT NOT NULL,
     name VARCHAR(255),
     password VARCHAR(255),
+    -- Role: 4 admin, 3 kitchen, 2 service, lower values can't log in
+    degree INT NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 );
 

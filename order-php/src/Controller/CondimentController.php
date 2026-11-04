@@ -5,6 +5,7 @@ namespace OrderSystem\Controller;
 
 use OrderSystem\Auth;
 use OrderSystem\Database;
+use OrderSystem\Domain\Role;
 use OrderSystem\Domain\Rating;
 use OrderSystem\Domain\Status;
 use OrderSystem\Http\Request;
@@ -35,7 +36,7 @@ final class CondimentController
 
     public function findCondimentStatistic(Request $request): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::KITCHEN);
 
         $numOrders = (int) $this->db->one('SELECT COUNT(*) AS count FROM PizzaOrder')['count'];
         $condimentOrderCount = $this->getOrderCountForEachCondiment();

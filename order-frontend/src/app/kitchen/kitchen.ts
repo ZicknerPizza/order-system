@@ -40,17 +40,24 @@ import { RemainingCondiments } from './remaining-condiments';
         />
       </div>
       <div class="col-system-bake col-lg-7 col-md-5 col-sm-7 hidden-xs">
-        <app-bakery [condiments]="condiments()" />
-        <!-- Below the bakery on small screens, there is no space beside it -->
-        <app-remaining-condiments
-          class="visible-sm-block"
-          [orders]="store.orders()"
-          [condiments]="condiments()"
-        />
+        @if (store.canBake()) {
+          <app-bakery [condiments]="condiments()" />
+          <!-- Below the bakery on small screens, there is no space beside it -->
+          <app-remaining-condiments
+            class="visible-sm-block"
+            [orders]="store.orders()"
+            [condiments]="condiments()"
+          />
+        } @else {
+          <!-- Service does not bake, the condiments take the place of the bakery -->
+          <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />
+        }
       </div>
-      <div class="col-lg-2 col-md-3 hidden-sm hidden-xs">
-        <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />
-      </div>
+      @if (store.canBake()) {
+        <div class="col-lg-2 col-md-3 hidden-sm hidden-xs">
+          <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />
+        </div>
+      }
     </div>
   `,
 })

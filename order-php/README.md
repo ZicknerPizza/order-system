@@ -39,11 +39,20 @@ order-php/
 7. **Smoke test**: open the site, log in, open the kitchen view of a party.
 
 Users are taken over from the `SystemUser` table, the bcrypt hashes of Spring Security are compatible.
-A new user can be created with:
+The role is the column `degree`:
+
+| degree | Role | Rights |
+|---|---|---|
+| 4 | Admin | everything, including the user management |
+| 3 | Kitchen | parties, links, statistic, kitchen and baking |
+| 2 | Service | party list and kitchen, takes and (de)activates orders, does not bake |
+| lower | – | deactivated, can't log in |
+
+Admins manage users on the page "Benutzerverwaltung". The first admin of a fresh database is created with
 ```
 php -r "echo password_hash('PASSWORD', PASSWORD_BCRYPT), PHP_EOL;"
 ```
-and `INSERT INTO SystemUser (id, name, password) VALUES (2, 'name', '<hash>');`
+and `INSERT INTO SystemUser (id, name, password, degree) VALUES (1, 'name', '<hash>', 4);`
 
 ## Tests
 
@@ -53,28 +62,32 @@ php tests/run.php
 
 ## REST API
 
-| Method | Path | Login | Response |
+| Method | Path | Role | Response |
 |---|---|---|---|
 | GET | `/api/condiments` | – | condiments sorted by category |
-| GET | `/api/condiments/statistic` | admin | amount per pizza by rating |
-| GET | `/api/current-user` | admin | 200, used by the login form |
-| PUT | `/api/current-user/password` | admin | 200, `{oldPassword, newPassword}` |
+| GET | `/api/condiments/statistic` | kitchen | amount per pizza by rating |
+| GET | `/api/current-user` | service | name and role, used by the login form |
+| PUT | `/api/current-user/password` | service | 200, `{oldPassword, newPassword}` |
 | GET | `/api/imprint` | – | person and address from `config.php` |
-| GET | `/api/links` | admin | all links |
+| GET | `/api/links` | kitchen | all links |
 | GET | `/api/links/search?identifier=` | – | link incl. party key |
-| PUT | `/api/links/{linkId}` | admin | 200 |
-| GET | `/api/orders/{partyId}` | admin | orders in kitchen order with pizza ids |
-| POST | `/api/orders/{partyId}` | admin | 204 |
+| PUT | `/api/links/{linkId}` | kitchen | 200 |
+| GET | `/api/orders/{partyId}` | service | orders in kitchen order with pizza ids |
+| POST | `/api/orders/{partyId}` | service | 204 |
 | POST | `/api/orders/{partyId}/{key}` | party key | 204 |
-| PUT | `/api/orders/{partyId}/status` | admin | 200 |
+| PUT | `/api/orders/{partyId}/status` | service, kitchen from topping on | 200 |
 | DELETE | `/api/orders/{partyId}/{orderId}` | – | 200 |
-| GET | `/api/partys` | admin | party overview, newest first |
-| POST | `/api/partys` | admin | 204 |
-| GET | `/api/partys/{partyId}` | admin | party details |
-| PUT | `/api/partys/{partyId}` | admin | 204 |
+| GET | `/api/partys` | service | party overview, newest first |
+| POST | `/api/partys` | kitchen | 204 |
+| GET | `/api/partys/{partyId}` | service | party details |
+| PUT | `/api/partys/{partyId}` | kitchen | 204 |
 | GET | `/api/partys/{partyId}/{partyKey}` | party key | party details |
+| GET | `/api/users` | admin | users with role |
+| POST | `/api/users` | admin | 204, `{name, role, password}` |
+| PUT | `/api/users/{userId}/password` | admin | 200, `{password}` |
+| DELETE | `/api/users/{userId}` | admin | 200, not the own user |
 
-Login is stateless HTTP Basic like before. Wrong credentials give 401 on every endpoint.
+Login is stateless HTTP Basic like before. Wrong credentials give 401 on every endpoint, a missing role 403.
 
 ## Differences to the Java version
 

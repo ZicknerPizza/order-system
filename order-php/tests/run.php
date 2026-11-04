@@ -55,10 +55,13 @@ final class TestContext
 
     private function seed(): void
     {
-        $this->db->execute("INSERT INTO SystemUser (id, name, password) VALUES (1, 'admin', ?)", [
-            // Hash as written by Spring's BCryptPasswordEncoder for "secret"
-            str_replace('$2y$', '$2a$', password_hash('secret', PASSWORD_BCRYPT)),
-        ]);
+        // Hash as written by Spring's BCryptPasswordEncoder for "secret"
+        $hash = str_replace('$2y$', '$2a$', password_hash('secret', PASSWORD_BCRYPT));
+        $this->db->execute(
+            "INSERT INTO SystemUser (id, name, password, degree) VALUES
+                (1, 'admin', ?, 4), (2, 'koch', ?, 3), (3, 'service', ?, 2), (4, 'alt', ?, 0)",
+            [$hash, $hash, $hash, $hash]
+        );
         $this->db->execute("INSERT INTO CondimentCategory (id, name, sorting) VALUES (1, 'Käse', 2), (2, 'Soße', 1)");
         $this->db->execute("INSERT INTO Condiment (id, name, sorting, unit, parent_id) VALUES
             (1, 'Mozzarella', 2, 'g', 1), (2, 'Gouda', 1, 'g', 1), (3, 'Tomatensoße', 1, 'ml', 2)");
@@ -71,7 +74,9 @@ $partyId = 'party-1';
 
 // --- Authentication ---------------------------------------------------------------------------
 
-$t->assertEquals(200, $t->request('GET', '/api/current-user')->status, 'login with correct credentials');
+$t->assertEquals(['name' => 'admin', 'role' => 'ADMIN'], $t->request('GET', '/api/current-user')->decoded(), 'login with correct credentials returns the role');
+$t->assertEquals(['name' => 'service', 'role' => 'SERVICE'], $t->request('GET', '/api/current-user', auth: 'service:secret')->decoded(), 'service role');
+$t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'alt:secret')->status, 'users without role are deactivated');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'admin:wrong')->status, 'login with wrong password');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: null)->status, 'current user without login');
 $t->assertEquals(401, $t->request('GET', '/api/condiments', auth: 'nobody:x')->status, 'wrong credentials are rejected on public endpoints');
@@ -283,6 +288,49 @@ $t->assertEquals(['greater' => null, 'match' => null, 'less' => [500.0, 500.0, 5
 $t->assertEquals(['greater' => [600.0, 600.0, 600.0], 'match' => null, 'less' => null], $statistic[3]['statistic'], 'Tomatensoße: 300ml for 1 order, rated too much');
 $t->assertEquals(['greater' => null, 'match' => null, 'less' => null], $statistic[2]['statistic'], 'Gouda only on a deleted order');
 $t->assertEquals(401, $t->request('GET', '/api/condiments/statistic', auth: null)->status, 'statistic requires login');
+
+// --- Roles ------------------------------------------------------------------------------------
+
+$service = 'service:secret';
+$kitchen = 'koch:secret';
+$t->assertEquals(200, $t->request('GET', '/api/partys', auth: $service)->status, 'service sees the parties');
+$t->assertEquals(200, $t->request('GET', "/api/orders/$partyId", auth: $service)->status, 'service sees the orders');
+$t->assertEquals(403, $t->request('POST', '/api/partys', [...$createParty, 'id' => ['value' => 'p-service']], auth: $service)->status, 'service creates no parties');
+$t->assertEquals(403, $t->request('GET', '/api/condiments/statistic', auth: $service)->status, 'service sees no statistic');
+$t->assertEquals(403, $t->request('GET', '/api/links', auth: $service)->status, 'service manages no links');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId", $order('o5', 'Svenja', [1]), auth: $service)->status, 'service takes orders');
+$t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o5'], 'INACTIVE'), auth: $service)->status, 'service deactivates orders');
+$t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o5'], 'WAITING'), auth: $service)->status, 'service activates orders');
+$t->assertEquals(403, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o5'], 'TOPPING'), auth: $service)->status, 'service does not bake');
+$t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o5'], 'TOPPING'), auth: $kitchen)->status, 'kitchen bakes');
+$t->assertEquals(403, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o5'], 'WAITING'), auth: $service)->status, 'service does not move pizzas back from the kitchen');
+$t->assertEquals(200, $t->request('GET', '/api/condiments/statistic', auth: $kitchen)->status, 'kitchen sees the statistic');
+
+// --- User management --------------------------------------------------------------------------
+
+$t->assertEquals(403, $t->request('GET', '/api/users', auth: $kitchen)->status, 'only admins manage users');
+$t->assertEquals([
+    ['id' => 1, 'name' => 'admin', 'role' => 'ADMIN'],
+    ['id' => 4, 'name' => 'alt', 'role' => null],
+    ['id' => 2, 'name' => 'koch', 'role' => 'KITCHEN'],
+    ['id' => 3, 'name' => 'service', 'role' => 'SERVICE'],
+], $t->request('GET', '/api/users')->decoded(), 'user list sorted by name');
+
+$newUser = ['name' => 'neu', 'role' => 'KITCHEN', 'password' => 'geheim123'];
+$t->assertEquals(403, $t->request('POST', '/api/users', $newUser, auth: $kitchen)->status, 'kitchen creates no users');
+$t->assertEquals(400, $t->request('POST', '/api/users', [...$newUser, 'password' => 'kurz'])->status, 'password too short');
+$t->assertEquals(400, $t->request('POST', '/api/users', [...$newUser, 'role' => 'CHEF'])->status, 'unknown role');
+$t->assertEquals(400, $t->request('POST', '/api/users', [...$newUser, 'name' => ' '])->status, 'user without name');
+$t->assertEquals(204, $t->request('POST', '/api/users', $newUser)->status, 'create user');
+$t->assertEquals(400, $t->request('POST', '/api/users', $newUser)->status, 'user name already taken');
+$t->assertEquals(['name' => 'neu', 'role' => 'KITCHEN'], $t->request('GET', '/api/current-user', auth: 'neu:geheim123')->decoded(), 'new user can log in');
+$t->assertEquals(200, $t->request('PUT', '/api/users/5/password', ['password' => 'anders123'])->status, 'set password of a user');
+$t->assertEquals(200, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'user logs in with the set password');
+$t->assertEquals(404, $t->request('PUT', '/api/users/99/password', ['password' => 'anders123'])->status, 'set password of unknown user');
+$t->assertEquals(400, $t->request('DELETE', '/api/users/1')->status, 'admins cannot delete themselves');
+$t->assertEquals(200, $t->request('DELETE', '/api/users/5')->status, 'delete user');
+$t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'deleted user cannot log in');
+$t->assertEquals(404, $t->request('DELETE', '/api/users/5')->status, 'delete unknown user');
 
 // --- Change password, last because it changes the login of all requests above --------------
 

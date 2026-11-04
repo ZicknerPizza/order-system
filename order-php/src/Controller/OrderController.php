@@ -5,6 +5,7 @@ namespace OrderSystem\Controller;
 
 use OrderSystem\Auth;
 use OrderSystem\Database;
+use OrderSystem\Domain\Role;
 use OrderSystem\Domain\Status;
 use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
@@ -34,7 +35,7 @@ final class OrderController
 
     public function findOrdersForParty(Request $request, string $partyId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::SERVICE);
 
         $orders = $this->db->all(
             'SELECT id, party, name, comment, status, time, timeTopping, timeStove, stove
@@ -87,7 +88,7 @@ final class OrderController
 
     public function createOrder(Request $request, string $partyId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::SERVICE);
         $this->getParty($partyId);
         $this->buildAndSaveOrder($partyId, $request->json());
         return Response::noContent();
@@ -105,7 +106,7 @@ final class OrderController
 
     public function changeStatus(Request $request, string $partyId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::SERVICE);
         $body = Json::object($request->json());
 
         $orderIds = array_map(
@@ -129,8 +130,13 @@ final class OrderController
             if ($order['party'] !== $partyId) {
                 throw new HttpException(404, 'Order not found');
             }
-            if (!Status::from((int) $order['status'])->isValidTransaction($newStatus)) {
+            $status = Status::from((int) $order['status']);
+            if (!$status->isValidTransaction($newStatus)) {
                 throw new HttpException(400, 'Invalid status transition');
+            }
+            // Service activates and deactivates orders, everything from topping on is baking
+            if ($status->isAtLeast(Status::TOPPING) || ($newStatus->isAtLeast(Status::TOPPING) && $newStatus !== Status::DELETED)) {
+                $this->auth->requireRole(Role::KITCHEN);
             }
         }
 

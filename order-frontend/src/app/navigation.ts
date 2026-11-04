@@ -29,7 +29,9 @@ import { AuthService } from './auth/auth';
             <li><a routerLink="/general/aboutUs">Allgemein</a></li>
             @if (auth.loggedIn()) {
               <li><a routerLink="/event/list">Events</a></li>
-              <li><a routerLink="/links">Links</a></li>
+              @if (auth.hasRole('KITCHEN')) {
+                <li><a routerLink="/links">Links</a></li>
+              }
             }
           </ul>
           @if (auth.loggedIn()) {
@@ -62,6 +64,17 @@ import { AuthService } from './auth/auth';
                       Passwort ändern
                     </a>
                   </li>
+                  @if (auth.hasRole('ADMIN')) {
+                    <li>
+                      <a routerLink="/users">
+                        <span
+                          class="glyphicon glyphicon-th-list margin-right"
+                          aria-hidden="true"
+                        ></span>
+                        Benutzerverwaltung
+                      </a>
+                    </li>
+                  }
                   <li role="separator" class="divider"></li>
                   <li>
                     <a class="pointer" (click)="logout()">

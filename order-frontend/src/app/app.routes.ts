@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './auth/auth';
+import { authGuard, roleGuard } from './auth/auth';
 import { partyResolver, ordersResolver } from './event/party-edit';
 import { imprintResolver } from './general/imprint';
 import { linkRedirectGuard, linksResolver, partiesResolver } from './links';
@@ -42,7 +42,7 @@ export const routes: Routes = [
   {
     path: 'links',
     loadComponent: () => import('./links').then((m) => m.LinkAdmin),
-    canActivate: [authGuard],
+    canActivate: [roleGuard('KITCHEN')],
     resolve: { links: linksResolver, parties: partiesResolver },
   },
   {
@@ -54,13 +54,13 @@ export const routes: Routes = [
   {
     path: 'event/edit',
     loadComponent: () => import('./event/party-edit').then((m) => m.PartyEdit),
-    canActivate: [authGuard],
+    canActivate: [roleGuard('KITCHEN')],
     resolve: { condiments: condimentsResolver, statistics: condimentStatisticResolver },
   },
   {
     path: 'event/edit/:partyId',
     loadComponent: () => import('./event/party-edit').then((m) => m.PartyEdit),
-    canActivate: [authGuard],
+    canActivate: [roleGuard('KITCHEN')],
     resolve: {
       party: partyResolver,
       orders: ordersResolver,
@@ -73,6 +73,11 @@ export const routes: Routes = [
     loadComponent: () => import('./kitchen/kitchen').then((m) => m.Kitchen),
     canActivate: [authGuard],
     resolve: { party: partyResolver, condiments: condimentsResolver },
+  },
+  {
+    path: 'users',
+    loadComponent: () => import('./users').then((m) => m.UserAdmin),
+    canActivate: [roleGuard('ADMIN')],
   },
   { path: '**', redirectTo: 'general/aboutUs' },
 ];

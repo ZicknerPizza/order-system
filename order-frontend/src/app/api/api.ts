@@ -17,6 +17,8 @@ import {
   PartySave,
   Status,
   Stove,
+  User,
+  UserCreate,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -82,6 +84,27 @@ export class OrderApi {
 
   delete(partyId: PartyId, orderId: OrderId): Observable<void> {
     return this.http.delete<void>(`api/orders/${partyId.value}/${orderId.value}`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class UserApi {
+  private readonly http = inject(HttpClient);
+
+  findAll(): Observable<User[]> {
+    return this.http.get<User[]>('api/users');
+  }
+
+  create(user: UserCreate): Observable<void> {
+    return this.http.post<void>('api/users', user);
+  }
+
+  setPassword(userId: number, password: string): Observable<void> {
+    return this.http.put<void>(`api/users/${userId}/password`, { password });
+  }
+
+  delete(userId: number): Observable<void> {
+    return this.http.delete<void>(`api/users/${userId}`);
   }
 }
 

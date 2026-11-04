@@ -1,7 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PartyOverview } from '../api/models';
+import { AuthService } from '../auth/auth';
 import { EventTabs } from './event-tabs';
 
 @Component({
@@ -29,9 +30,11 @@ import { EventTabs } from './event-tabs';
                 </div>
               </td>
               <td class="td_center">
-                <a [routerLink]="['/event/edit', party.id.value]"
-                  ><span class="glyphicon glyphicon-pencil margin-right" aria-hidden="true"></span
-                ></a>
+                @if (auth.hasRole('KITCHEN')) {
+                  <a [routerLink]="['/event/edit', party.id.value]"
+                    ><span class="glyphicon glyphicon-pencil margin-right" aria-hidden="true"></span
+                  ></a>
+                }
                 <a [routerLink]="['/kitchen', party.id.value]"
                   ><span class="glyphicon glyphicon-circle-arrow-right" aria-hidden="true"></span
                 ></a>
@@ -45,4 +48,6 @@ import { EventTabs } from './event-tabs';
 })
 export class PartyList {
   readonly parties = input.required<PartyOverview[]>();
+
+  protected readonly auth = inject(AuthService);
 }

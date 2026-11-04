@@ -2,6 +2,7 @@ import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core'
 import { firstValueFrom } from 'rxjs';
 import { OrderApi } from '../api/api';
 import { Order, PartyId, Status, Stove } from '../api/models';
+import { AuthService } from '../auth/auth';
 
 const REFRESH_INTERVAL = 15000;
 
@@ -33,6 +34,10 @@ export interface Pizza {
 @Injectable()
 export class KitchenStore {
   private readonly orderApi = inject(OrderApi);
+  private readonly auth = inject(AuthService);
+
+  /** Service takes orders but does not bake, the backend checks this as well */
+  readonly canBake = () => this.auth.hasRole('KITCHEN');
   private partyId: PartyId | null = null;
 
   readonly orders = signal<Order[]>([]);
@@ -81,6 +86,9 @@ export class KitchenStore {
    * kitchen page was faster the backend rejects the change, which only needs a refresh.
    */
   private async takeOutBakedPizzas(): Promise<void> {
+    if (!this.canBake()) {
+      return;
+    }
     const baked = this.baking().filter(
       (order) =>
         !this.takingOut.has(order.orderId.value) &&

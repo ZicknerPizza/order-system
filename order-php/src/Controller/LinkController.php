@@ -5,6 +5,7 @@ namespace OrderSystem\Controller;
 
 use OrderSystem\Auth;
 use OrderSystem\Database;
+use OrderSystem\Domain\Role;
 use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
@@ -21,7 +22,7 @@ final class LinkController
 
     public function findAll(Request $request): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::KITCHEN);
         $links = $this->db->all(self::SELECT_LINK . ' ORDER BY l.id');
         return Response::json(array_map(self::toLinkDetails(...), $links));
     }
@@ -41,7 +42,7 @@ final class LinkController
 
     public function update(Request $request, string $linkId): Response
     {
-        $this->auth->requireAdmin();
+        $this->auth->requireRole(Role::KITCHEN);
         if (!ctype_digit($linkId)) {
             throw new HttpException(400, 'Invalid link id');
         }
