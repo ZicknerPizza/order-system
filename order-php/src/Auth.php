@@ -11,14 +11,18 @@ use OrderSystem\Http\HttpException;
  */
 final class Auth
 {
-    private function __construct(private readonly bool $admin)
+    private readonly bool $admin;
+
+    /** @param int|null $userId logged in user, null for anonymous requests */
+    private function __construct(private readonly ?int $userId)
     {
+        $this->admin = $userId !== null;
     }
 
     public static function fromHeader(Database $db, ?string $authorization): self
     {
         if ($authorization === null || stripos($authorization, 'basic ') !== 0) {
-            return new self(false);
+            return new self(null);
         }
 
         $credentials = base64_decode(trim(substr($authorization, 6)), true);
@@ -27,17 +31,23 @@ final class Auth
         }
         [$username, $password] = explode(':', $credentials, 2);
 
-        $user = $db->one('SELECT password FROM SystemUser WHERE name = ?', [$username]);
+        $user = $db->one('SELECT id, password FROM SystemUser WHERE name = ?', [$username]);
         // Spring's BCryptPasswordEncoder writes $2a$ hashes, which password_verify understands
         if ($user === null || !password_verify($password, (string) $user['password'])) {
             throw new HttpException(401, 'Bad credentials');
         }
-        return new self(true);
+        return new self((int) $user['id']);
     }
 
     public function isAdmin(): bool
     {
         return $this->admin;
+    }
+
+    public function userId(): int
+    {
+        $this->requireAdmin();
+        return $this->userId;
     }
 
     public function requireAdmin(): void

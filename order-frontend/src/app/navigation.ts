@@ -44,7 +44,36 @@ import { AuthService } from './auth/auth';
                   ></span>
                 </a>
               </li>
-              <li><a class="pointer" (click)="logout()">Abmelden</a></li>
+              <li class="dropdown" [class.open]="userMenuOpen()">
+                <a
+                  class="pointer dropdown-toggle"
+                  role="button"
+                  aria-haspopup="true"
+                  [attr.aria-expanded]="userMenuOpen()"
+                  (click)="toggleUserMenu($event)"
+                >
+                  <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                  {{ auth.username() }} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a routerLink="/account/password">
+                      <span class="glyphicon glyphicon-lock margin-right" aria-hidden="true"></span>
+                      Passwort ändern
+                    </a>
+                  </li>
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    <a class="pointer" (click)="logout()">
+                      <span
+                        class="glyphicon glyphicon-log-out margin-right"
+                        aria-hidden="true"
+                      ></span>
+                      Abmelden
+                    </a>
+                  </li>
+                </ul>
+              </li>
             </ul>
           } @else {
             <ul class="nav navbar-nav navbar-right">
@@ -59,6 +88,7 @@ import { AuthService } from './auth/auth';
       </div>
     </nav>
   `,
+  host: { '(document:click)': 'userMenuOpen.set(false)' },
 })
 export class Navigation {
   readonly expanded = input(false);
@@ -69,16 +99,25 @@ export class Navigation {
 
   /** Collapsed menu on small screens, Bootstrap's own JavaScript did this before. */
   protected readonly menuOpen = signal(false);
+  protected readonly userMenuOpen = signal(false);
 
   constructor() {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.menuOpen.set(false);
+        this.userMenuOpen.set(false);
       }
     });
   }
 
+  /** Clicks anywhere else close the menu, see host listener */
+  protected toggleUserMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.userMenuOpen.set(!this.userMenuOpen());
+  }
+
   protected logout(): void {
+    this.userMenuOpen.set(false);
     this.auth.logout();
     this.router.navigate(['/login']);
   }

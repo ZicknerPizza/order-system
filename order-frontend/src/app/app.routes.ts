@@ -22,6 +22,11 @@ export const routes: Routes = [
   },
   { path: 'login', loadComponent: () => import('./login').then((m) => m.Login) },
   {
+    path: 'account/password',
+    loadComponent: () => import('./change-password').then((m) => m.ChangePassword),
+    canActivate: [authGuard],
+  },
+  {
     path: 'order/:id/:key',
     loadComponent: () => import('./order').then((m) => m.OrderPage),
     resolve: { party: partyByKeyResolver, condiments: condimentsResolver },

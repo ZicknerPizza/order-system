@@ -268,5 +268,16 @@ $t->assertEquals(['greater' => [600.0, 600.0, 600.0], 'match' => null, 'less' =>
 $t->assertEquals(['greater' => null, 'match' => null, 'less' => null], $statistic[2]['statistic'], 'Gouda only on a deleted order');
 $t->assertEquals(401, $t->request('GET', '/api/condiments/statistic', auth: null)->status, 'statistic requires login');
 
+// --- Change password, last because it changes the login of all requests above --------------
+
+$changePassword = static fn(string $old, string $new): array => ['oldPassword' => $old, 'newPassword' => $new];
+$t->assertEquals(401, $t->request('PUT', '/api/current-user/password', $changePassword('secret', 'newsecret1'), auth: null)->status, 'change password requires login');
+$response = $t->request('PUT', '/api/current-user/password', $changePassword('wrong', 'newsecret1'));
+$t->assertEquals([400, 'Das bisherige Passwort ist falsch.'], [$response->status, $response->decoded()['message']], 'change password with wrong old password');
+$t->assertEquals(400, $t->request('PUT', '/api/current-user/password', $changePassword('secret', 'short'))->status, 'new password too short');
+$t->assertEquals(200, $t->request('PUT', '/api/current-user/password', $changePassword('secret', 'newsecret1'))->status, 'change password');
+$t->assertEquals(401, $t->request('GET', '/api/current-user')->status, 'old password no longer works');
+$t->assertEquals(200, $t->request('GET', '/api/current-user', auth: 'admin:newsecret1')->status, 'new password works');
+
 echo "{$t->assertions} assertions, {$t->failures} failures\n";
 exit($t->failures === 0 ? 0 : 1);

@@ -21,6 +21,7 @@ export class AuthService {
   private readonly user = signal<StoredUser | null>(readStoredUser());
 
   readonly loggedIn = () => this.user() !== null;
+  readonly username = () => this.user()?.username ?? '';
 
   get token(): string | null {
     return this.user()?.token ?? null;
@@ -28,7 +29,7 @@ export class AuthService {
 
   /** Throws 'Unauthorized' for wrong credentials, like the old frontend reported it. */
   async login(username: string, password: string): Promise<void> {
-    const token = btoa(String.fromCharCode(...new TextEncoder().encode(`${username}:${password}`)));
+    const token = basicToken(username, password);
     try {
       await firstValueFrom(
         this.http.get('api/current-user', { headers: { Authorization: `Basic ${token}` } }),
@@ -48,6 +49,29 @@ export class AuthService {
     writeStoredUser(null);
     this.user.set(null);
   }
+
+  /** Throws the message of the backend, e.g. for a wrong old password. */
+  async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.put('api/current-user/password', { oldPassword, newPassword }),
+      );
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 400 && error.error?.message) {
+        throw error.error.message as string;
+      }
+      throw 'Das Passwort konnte nicht geändert werden.';
+    }
+    // Every request carries the credentials, so the new password has to be used from now on
+    const username = this.username();
+    const user = { username, token: basicToken(username, newPassword) };
+    writeStoredUser(user);
+    this.user.set(user);
+  }
+}
+
+function basicToken(username: string, password: string): string {
+  return btoa(String.fromCharCode(...new TextEncoder().encode(`${username}:${password}`)));
 }
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {

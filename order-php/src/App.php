@@ -7,6 +7,7 @@ use OrderSystem\Controller\CondimentController;
 use OrderSystem\Controller\LinkController;
 use OrderSystem\Controller\OrderController;
 use OrderSystem\Controller\PartyController;
+use OrderSystem\Controller\UserController;
 use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
@@ -40,17 +41,15 @@ final class App
         $links = new LinkController($this->db, $auth);
         $orders = new OrderController($this->db, $auth, $this->now);
         $parties = new PartyController($this->db, $auth);
+        $users = new UserController($this->db, $auth);
 
         $router = new Router();
 
         $router->get('/api/condiments', $condiments->findAll(...));
         $router->get('/api/condiments/statistic', $condiments->findCondimentStatistic(...));
 
-        // The login form calls this endpoint to verify the credentials
-        $router->get('/api/current-user', static function () use ($auth): Response {
-            $auth->requireAdmin();
-            return Response::ok();
-        });
+        $router->get('/api/current-user', $users->getCurrentUser(...));
+        $router->put('/api/current-user/password', $users->changePassword(...));
 
         $router->get('/api/links', $links->findAll(...));
         $router->get('/api/links/search', $links->findByIdentifier(...));
