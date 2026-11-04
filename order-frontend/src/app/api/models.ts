@@ -70,6 +70,9 @@ export interface PartyCreate extends PartySave {
 
 export type Status = 'INACTIVE' | 'WAITING' | 'TOPPING' | 'BAKING' | 'EATING' | 'DELETED';
 
+/** Oven compartment: upper (go) or lower (gu) */
+export type Stove = 'go' | 'gu';
+
 export interface Order {
   orderId: OrderId;
   /** Shared by the two orders that are baked as one pizza, only set from TOPPING on. */
@@ -80,6 +83,7 @@ export interface Order {
   /** yyyy-MM-ddTHH:mm:ss in local time */
   date: string | null;
   timeStove: string | null;
+  stove: Stove | null;
   status: Status;
   condiments: CondimentId[];
 }

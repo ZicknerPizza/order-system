@@ -1,7 +1,18 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../api/api';
-import { Condiment, CondimentId, hasId, Party, Status } from '../api/models';
+import { Condiment, CondimentId, hasId, Order, Party, Status } from '../api/models';
 import { groupByCategory } from './condiments';
 import { NotificationService } from './notifications';
 
@@ -23,15 +34,22 @@ import { NotificationService } from './notifications';
             <div class="row row-standalone">
               <form (ngSubmit)="sendOrder()">
                 <ul class="list-group showCondiment" style="margin-bottom: 0">
-                  <li class="list-group-item">
+                  <li class="list-group-item" [class.has-error]="nameMissing()">
                     <input
+                      #nameInput
                       type="text"
                       class="form-control"
                       placeholder="Name"
                       required
                       [(ngModel)]="name"
+                      (ngModelChange)="nameMissing.set(false)"
                       name="name"
                     />
+                    @if (nameMissing()) {
+                      <span class="help-block" style="margin-bottom: 0">
+                        Bitte gib deinen Namen ein.
+                      </span>
+                    }
                   </li>
                   @for (category of categories(); track category[0]) {
                     <li class="list-group-item">
@@ -82,6 +100,8 @@ export class OrderCreateForm {
   readonly party = input.required<Party>();
   readonly condiments = input.required<Condiment[]>();
   readonly alwaysOpen = input(false);
+  /** Order whose name and condiments are taken over into the form */
+  readonly template = input<{ order: Order } | null>(null);
   readonly ordered = output<void>();
 
   private readonly orderApi = inject(OrderApi);
@@ -98,8 +118,36 @@ export class OrderCreateForm {
   protected name = '';
   protected comment = '';
   protected selected: Record<number, boolean> = {};
+  protected readonly nameMissing = signal(false);
+  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
+
+  constructor() {
+    effect(() => {
+      const template = this.template();
+      if (template === null) {
+        return;
+      }
+      this.name = template.order.name;
+      this.comment = '';
+      // Only condiments that are still offered, others would be ordered without being visible
+      this.selected = Object.fromEntries(
+        template.order.condiments
+          .filter((condiment) => hasId(untracked(this.party).condiments, condiment))
+          .map((condiment) => [condiment.value, true]),
+      );
+      this.show.set(true);
+      scrollTo(0, 0);
+    });
+  }
 
   protected sendOrder(): void {
+    // The backend rejects orders without a name, which used to show the connection error
+    const name = this.name.trim();
+    if (name === '') {
+      this.nameMissing.set(true);
+      this.nameInput()?.nativeElement.focus();
+      return;
+    }
     const party = this.party();
     const condiments: CondimentId[] = Object.entries(this.selected)
       .filter(([, selected]) => selected)
@@ -110,7 +158,7 @@ export class OrderCreateForm {
     this.orderApi
       .order(party.id, party.key, {
         orderId: { value: crypto.randomUUID() },
-        name: this.name,
+        name,
         comment: this.comment,
         condiments,
         status,

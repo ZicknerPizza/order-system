@@ -5,9 +5,10 @@ import { Bakery } from './bakery';
 import { KitchenStore } from './kitchen-store';
 import { OrderList } from './order-list';
 import { PizzaList } from './pizza-list';
+import { RemainingCondiments } from './remaining-condiments';
 
 @Component({
-  imports: [OrderCreateForm, OrderList, PizzaList, Bakery],
+  imports: [OrderCreateForm, OrderList, PizzaList, Bakery, RemainingCondiments],
   providers: [KitchenStore],
   template: `
     <div class="row">
@@ -16,6 +17,7 @@ import { PizzaList } from './pizza-list';
           [party]="party()"
           [condiments]="condiments()"
           title="Neuer Wunsch"
+          [template]="store.orderToCopy()"
           (ordered)="store.refresh()"
         />
         <app-order-list [orders]="store.open()" title="Offene Bestellungen" />
@@ -37,8 +39,17 @@ import { PizzaList } from './pizza-list';
           [condiments]="condiments()"
         />
       </div>
-      <div class="col-system-bake col-lg-9 col-md-8 col-sm-7 hidden-xs">
+      <div class="col-system-bake col-lg-7 col-md-5 col-sm-7 hidden-xs">
         <app-bakery [condiments]="condiments()" />
+        <!-- Below the bakery on small screens, there is no space beside it -->
+        <app-remaining-condiments
+          class="visible-sm-block"
+          [orders]="store.orders()"
+          [condiments]="condiments()"
+        />
+      </div>
+      <div class="col-lg-2 col-md-3 hidden-sm hidden-xs">
+        <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />
       </div>
     </div>
   `,

@@ -1,11 +1,12 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Condiment } from '../api/models';
-import { KitchenStore, Pizza, pizzaOrders } from './kitchen-store';
+import { Condiment, Order, Stove } from '../api/models';
+import { KitchenStore, Pizza, pizzaOrders, STOVE_LABELS } from './kitchen-store';
 import { PizzaDetail } from './pizza-detail';
 
 /**
  * Bake mode: shows the next pizza to top in large font. The two oldest waiting orders become one pizza.
+ * It starts by itself when a new order completes a pizza.
  */
 @Component({
   selector: 'app-bakery',
@@ -49,6 +50,21 @@ import { PizzaDetail } from './pizza-detail';
             [alwaysOpen]="true"
           />
         </div>
+      } @else if (lastOrder(); as order) {
+        <div class="alert alert-warning">
+          Es ist nur noch die Bestellung von {{ order.name }} da. Mit „Auffüllen“ wird sie doppelt
+          bestellt und als ganze Pizza gebacken.
+        </div>
+        <div class="form-group td_right">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="filling()"
+            (click)="fill(order)"
+          >
+            Auffüllen
+          </button>
+        </div>
       } @else {
         <div class="alert alert-warning">Es sind nicht ausreichend Bestellungen da.</div>
       }
@@ -58,17 +74,31 @@ import { PizzaDetail } from './pizza-detail';
             Backmodus verlassen
           </button>
         </div>
-        @if (current()) {
-          <div class="col-sm-6 form-group td_right">
-            <button type="button" class="btn btn-danger" (click)="toOven()">Ofen</button>
-          </div>
-        }
+        <!-- Green: compartment is free, red: a pizza is still baking there -->
+        <div class="col-sm-6 form-group td_right">
+          @for (compartment of compartments(); track compartment.stove) {
+            <button
+              type="button"
+              class="btn oven-button"
+              [class.btn-success]="!compartment.occupied"
+              [class.btn-danger]="compartment.occupied"
+              [disabled]="!current()"
+              (click)="toOven(compartment.stove)"
+            >
+              Ofen {{ compartment.label }}
+            </button>
+          }
+        </div>
       </div>
     }
   `,
   styles: `
     app-pizza-detail {
       display: block;
+    }
+
+    .oven-button {
+      margin-left: 10px;
     }
   `,
 })
@@ -78,16 +108,32 @@ export class Bakery {
   private readonly store = inject(KitchenStore);
   protected readonly enabled = signal(false);
   protected readonly current = signal<Pizza | null>(null);
+  protected readonly filling = signal(false);
   protected fontSize = 14;
   private busy = false;
 
+  /** The single waiting order, which can be doubled to fill a pizza */
+  protected readonly lastOrder = computed(() => {
+    const waiting = this.store.waiting();
+    return waiting.length === 1 ? waiting[0] : null;
+  });
+
   constructor() {
-    // Waits for new orders while there was nothing to bake
+    // In bake mode a new order that completes a pizza goes straight to baking
     effect(() => {
       if (this.enabled() && this.current() === null && this.store.waiting().length >= 2) {
         this.next();
       }
     });
+  }
+
+  protected async fill(order: Order): Promise<void> {
+    this.filling.set(true);
+    try {
+      await this.store.copy(order);
+    } finally {
+      this.filling.set(false);
+    }
   }
 
   protected start(): void {
@@ -104,13 +150,38 @@ export class Bakery {
     }
   }
 
-  protected async toOven(): Promise<void> {
+  /** Both oven compartments and whether a pizza is still baking inside */
+  protected readonly compartments = computed(() => {
+    const pizzas = this.store.compartments();
+    return (Object.keys(STOVE_LABELS) as Stove[]).map((stove) => ({
+      stove,
+      label: STOVE_LABELS[stove],
+      occupied: pizzas[stove] !== null,
+    }));
+  });
+
+  protected async toOven(stove: Stove): Promise<void> {
     const pizza = this.current();
-    if (pizza !== null) {
-      await this.store.changeStatus(pizzaOrders(pizza), 'BAKING');
-      this.current.set(null);
-      await this.next();
+    if (pizza === null) {
+      return;
     }
+    const occupied = this.store.compartments()[stove];
+    if (occupied !== null) {
+      const names = pizzaOrders(occupied)
+        .map((order) => order.name)
+        .join(' und ');
+      if (
+        !window.confirm(
+          `Im Fach ${STOVE_LABELS[stove]} ist noch die Pizza von ${names}. Ist sie schon draußen?`,
+        )
+      ) {
+        return;
+      }
+      await this.store.changeStatus(pizzaOrders(occupied), 'EATING');
+    }
+    await this.store.bake(pizza, stove);
+    this.current.set(null);
+    await this.next();
   }
 
   private async next(): Promise<void> {

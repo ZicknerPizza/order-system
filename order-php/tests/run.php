@@ -183,6 +183,7 @@ $t->assertEquals([
     'comment' => null,
     'date' => '2021-12-04T19:00:00',
     'timeStove' => null,
+    'stove' => null,
     'status' => 'WAITING',
     'condiments' => [['value' => 1], ['value' => 3]],
 ], $orders[2], 'order details');
@@ -202,15 +203,20 @@ $t->assertEquals(['INACTIVE', 'TOPPING', 'TOPPING'], array_column($orders, 'stat
 $t->assertEquals(true, $orders[1]['pizzaId'] !== null && $orders[1]['pizzaId'] === $orders[2]['pizzaId'], 'two topping orders share one pizza');
 
 $t->now += 10;
-$t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o1', 'o2'], 'BAKING'));
+$t->assertEquals(400, $t->request('PUT', "/api/orders/$partyId/status", [...$changeStatus(['o1', 'o2'], 'BAKING'), 'stove' => 'k2'])->status, 'unknown oven compartment');
+$t->request('PUT', "/api/orders/$partyId/status", [...$changeStatus(['o1', 'o2'], 'BAKING'), 'stove' => 'gu']);
 $orders = $t->request('GET', "/api/orders/$partyId")->decoded();
 $t->assertEquals(['INACTIVE', 'BAKING', 'BAKING'], array_column($orders, 'status'), 'orders in the oven');
 $t->assertEquals('2021-12-04T19:02:10', $orders[1]['timeStove'], 'stove time');
+$t->assertEquals(['gu', 'gu'], [$orders[1]['stove'], $orders[2]['stove']], 'lower oven compartment');
 
-$t->now += 4 * 60;
-$t->assertEquals(['INACTIVE', 'BAKING', 'BAKING'], array_column($t->request('GET', "/api/orders/$partyId")->decoded(), 'status'), 'still baking after exactly 4 minutes');
-$t->now += 1;
-$t->assertEquals(['INACTIVE', 'EATING', 'EATING'], array_column($t->request('GET', "/api/orders/$partyId")->decoded(), 'status'), 'baked pizzas are served automatically');
+// The kitchen page takes pizzas out of the oven, the backend leaves them there
+$t->now += 10 * 60;
+$t->assertEquals(['INACTIVE', 'BAKING', 'BAKING'], array_column($t->request('GET', "/api/orders/$partyId")->decoded(), 'status'), 'backend does not finish baking by itself');
+$t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o1', 'o2'], 'EATING'))->status, 'kitchen takes the pizza out');
+$t->assertEquals(['INACTIVE', 'EATING', 'EATING'], array_column($t->request('GET', "/api/orders/$partyId")->decoded(), 'status'), 'pizza is finished');
+$t->assertEquals($t->now, (int) $t->db->one("SELECT timeFinished FROM PizzaOrder WHERE id = 'o1'")['timeFinished'], 'finish time is stored');
+$t->assertEquals(400, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o1', 'o2'], 'EATING'))->status, 'a second kitchen taking it out gets an error');
 
 $t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o3'], 'WAITING'))->status, 'reactivate order');
 $t->assertEquals($t->now, (int) $t->db->one("SELECT time FROM PizzaOrder WHERE id = 'o3'")['time'], 'reactivated order gets a new order time');

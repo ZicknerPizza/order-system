@@ -1,6 +1,8 @@
 import { Condiment, CondimentStatistic, Order } from './api/models';
 import { PartyCalculation, statisticMaximum, statisticMinimum } from './event/statistic';
-import { toPizzas } from './kitchen/kitchen-store';
+import { remainingBakeTime, toPizzas } from './kitchen/kitchen-store';
+import { halfMarker } from './kitchen/pizza-detail';
+import { countCondiments } from './kitchen/remaining-condiments';
 import { groupByCategory } from './shared/condiments';
 import { isToday } from './shared/order-create';
 
@@ -17,6 +19,7 @@ function order(id: string, condiments: number[], pizzaId: string | null = null):
     comment: null,
     date: null,
     timeStove: null,
+    stove: null,
     status: 'TOPPING',
     condiments: condiments.map((value) => ({ value })),
   };
@@ -61,6 +64,67 @@ describe('toPizzas', () => {
     expect(pizzas.map((p) => [p.order1.name, p.order2?.name ?? null])).toEqual([
       ['a', 'b'],
       ['c', null],
+    ]);
+  });
+});
+
+describe('remainingBakeTime', () => {
+  it('counts down the four minutes from the oven time', () => {
+    const baking = { ...order('a', []), timeStove: '2026-11-04T20:00:00' };
+    const start = new Date('2026-11-04T20:00:00').getTime();
+    expect(remainingBakeTime(baking, start + 60_000)).toBe(3 * 60_000);
+    expect(remainingBakeTime(baking, start + 5 * 60_000)).toBe(0);
+  });
+});
+
+describe('halfMarker', () => {
+  const catalog: Condiment[] = [
+    { id: { value: 1 }, category: 'Käse', name: 'Mozzarella', unit: 'g' },
+    { id: { value: 2 }, category: 'Gewürze', name: 'Chili', unit: 'g' },
+    { id: { value: 3 }, category: 'Wurstwaren', name: 'Schinken', unit: 'g' },
+    { id: { value: 4 }, category: 'Wurstwaren', name: 'Salami', unit: 'g' },
+    { id: { value: 5 }, category: 'frische Kräuter', name: 'Basilikum', unit: 'g' },
+    { id: { value: 6 }, category: 'frische Kräuter', name: 'Rucola', unit: 'g' },
+    { id: { value: 7 }, category: 'Basis', name: 'Tomatensauce', unit: 'ml' },
+  ];
+
+  it('takes the lowest condiment that is only on this half, without base, cheese, herbs and spices', () => {
+    const half1 = order('a', [1, 2, 3, 5]);
+    const half2 = order('b', [1, 4, 6]);
+    expect(halfMarker(half1, half2, catalog)).toEqual({
+      condiment: 'Schinken',
+      basil: true,
+      rucola: false,
+    });
+    expect(halfMarker(half2, half1, catalog)).toEqual({
+      condiment: 'Salami',
+      basil: false,
+      rucola: true,
+    });
+  });
+
+  it('ignores base and cheese', () => {
+    const withCheese = order('a', [1, 7]);
+    expect(halfMarker(withCheese, order('b', []), catalog).condiment).toBeNull();
+  });
+
+  it('has no condiment when both halves are the same', () => {
+    expect(halfMarker(order('a', [1, 3]), order('b', [1, 3]), catalog).condiment).toBeNull();
+  });
+});
+
+describe('countCondiments', () => {
+  it('counts the condiments of orders that are neither in the oven nor finished', () => {
+    const counts = countCondiments([
+      { ...order('a', [1, 2]), status: 'WAITING' },
+      { ...order('b', [1]), status: 'TOPPING' },
+      { ...order('c', [1]), status: 'INACTIVE' },
+      { ...order('d', [1, 2]), status: 'BAKING' },
+      { ...order('e', [2]), status: 'EATING' },
+    ]);
+    expect([...counts.entries()]).toEqual([
+      [1, 3],
+      [2, 1],
     ]);
   });
 });

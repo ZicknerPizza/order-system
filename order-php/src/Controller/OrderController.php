@@ -15,8 +15,16 @@ use OrderSystem\Uuid;
 
 final class OrderController
 {
-    private const SECONDS_TO_BAKE = 4 * 60;
+    /**
+     * Oven compartments, stored in PizzaOrder.stove like in the system before the Java version:
+     * upper and lower compartment of the big oven.
+     */
+    private const STOVES = ['go', 'gu'];
 
+    /**
+     * The kitchen page takes the pizzas out of the oven after baking (BAKING to EATING),
+     * the Java version did that with a job in the backend.
+     */
     public function __construct(
         private readonly Database $db,
         private readonly Auth $auth,
@@ -24,25 +32,12 @@ final class OrderController
     ) {
     }
 
-    /**
-     * The Java version ran this every second with @Scheduled. Shared hosting has no background
-     * processes, so it runs at the beginning of every API request instead.
-     */
-    public static function stopBakingOfFinishedOrders(Database $db, int $now): void
-    {
-        $db->execute(
-            'UPDATE PizzaOrder SET status = ?
-             WHERE status = ? AND (timeStove IS NULL OR timeStove = 0 OR timeStove + ? < ?)',
-            [Status::EATING->value, Status::BAKING->value, self::SECONDS_TO_BAKE, $now]
-        );
-    }
-
     public function findOrdersForParty(Request $request, string $partyId): Response
     {
         $this->auth->requireAdmin();
 
         $orders = $this->db->all(
-            'SELECT id, party, name, comment, status, time, timeTopping, timeStove
+            'SELECT id, party, name, comment, status, time, timeTopping, timeStove, stove
              FROM PizzaOrder WHERE party = ? AND status <> ? ORDER BY status ASC, time DESC',
             [$partyId, Status::DELETED->value]
         );
@@ -82,6 +77,7 @@ final class OrderController
                 'comment' => $order['comment'],
                 'date' => Time::toLocalDateTime($order['time']),
                 'timeStove' => Time::toLocalDateTime($order['timeStove']),
+                'stove' => $order['stove'] === null || $order['stove'] === '' ? null : $order['stove'],
                 'status' => $status->name,
                 'condiments' => $condiments[$order['id']] ?? [],
             ];
@@ -117,6 +113,10 @@ final class OrderController
             Json::list($body['orderIds'] ?? null, 'orderIds')
         );
         $newStatus = Status::fromJson($body['status'] ?? null) ?? throw new HttpException(400, "Field 'status' is required");
+        $stove = Json::string($body['stove'] ?? null);
+        if ($stove !== null && !in_array($stove, self::STOVES, true)) {
+            throw new HttpException(400, 'Unknown oven compartment');
+        }
 
         $orders = $orderIds === [] ? [] : $this->db->all(
             'SELECT id, party, status FROM PizzaOrder WHERE id IN (' . Database::placeholders(count($orderIds)) . ')',
@@ -135,13 +135,14 @@ final class OrderController
         }
 
         $now = ($this->now)();
-        $this->db->transactional(function () use ($orders, $newStatus, $now): void {
+        $this->db->transactional(function () use ($orders, $newStatus, $now, $stove): void {
             foreach ($orders as $order) {
                 $changes = match ($newStatus) {
                     // An order that comes back from INACTIVE queues up with a new order time
                     Status::WAITING => Status::from((int) $order['status']) === Status::INACTIVE ? ['time' => $now] : [],
                     Status::TOPPING => ['timeTopping' => $now],
-                    Status::BAKING => ['timeStove' => $now],
+                    Status::BAKING => ['timeStove' => $now, 'stove' => $stove ?? ''],
+                    Status::EATING => ['timeFinished' => $now],
                     default => [],
                 };
                 $changes['status'] = $newStatus->value;

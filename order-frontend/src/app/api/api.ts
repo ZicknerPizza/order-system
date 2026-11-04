@@ -15,6 +15,7 @@ import {
   PartyOverview,
   PartySave,
   Status,
+  Stove,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -64,8 +65,18 @@ export class OrderApi {
     return this.http.post<void>(`api/orders/${partyId.value}/${key}`, order);
   }
 
-  changeStatus(partyId: PartyId, orderIds: OrderId[], status: Status): Observable<void> {
-    return this.http.put<void>(`api/orders/${partyId.value}/status`, { status, orderIds });
+  /** Same as order(), for logged in users without the party key */
+  orderAsAdmin(partyId: PartyId, order: OrderCreate): Observable<void> {
+    return this.http.post<void>(`api/orders/${partyId.value}`, order);
+  }
+
+  changeStatus(
+    partyId: PartyId,
+    orderIds: OrderId[],
+    status: Status,
+    stove?: Stove,
+  ): Observable<void> {
+    return this.http.put<void>(`api/orders/${partyId.value}/status`, { status, orderIds, stove });
   }
 
   delete(partyId: PartyId, orderId: OrderId): Observable<void> {

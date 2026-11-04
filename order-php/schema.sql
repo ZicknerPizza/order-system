@@ -44,6 +44,9 @@ CREATE TABLE PizzaOrder (
     time INT NOT NULL,
     timeTopping INT,
     timeStove INT,
+    -- Oven compartment: go = upper, gu = lower
+    stove VARCHAR(255) NOT NULL DEFAULT '',
+    timeFinished INT,
     PRIMARY KEY (id)
 );
 

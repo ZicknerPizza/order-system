@@ -76,7 +76,9 @@ Login is stateless HTTP Basic like before. Wrong credentials give 401 on every e
 ## Differences to the Java version
 
 - **Pizzas leave the oven** after 4 minutes. The Java version did this with a job running every second,
-  PHP does it at the start of every API request. The kitchen view polls every 15 seconds, so nothing changes visibly.
+  now the kitchen page does it. Without an open kitchen page pizzas stay in the oven.
+- **Oven compartments**: moving pizzas to the oven takes `"stove": "go"` (upper) or `"gu"` (lower), stored in
+  the old `PizzaOrder.stove` column, and orders return it as `stove`. Leaving the oven sets `timeFinished`.
 - **Statistic** is calculated on every request, the Java version cached it until restart.
 - **Error codes**: invalid input (missing name, invalid status transition, ...) answers 400 instead of 500,
   unknown orders and parties on update/delete answer 404 instead of 500. The frontend only distinguishes success and failure.

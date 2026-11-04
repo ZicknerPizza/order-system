@@ -25,7 +25,6 @@ final class App
     {
         try {
             $auth = Auth::fromHeader($this->db, $request->authorization);
-            OrderController::stopBakingOfFinishedOrders($this->db, ($this->now)());
             return $this->createRouter($auth)->dispatch($request);
         } catch (HttpException $e) {
             return Response::error($e->status, $e->getMessage());
