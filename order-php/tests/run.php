@@ -114,7 +114,10 @@ $expectedParty = [
     'blendStatistics' => 50,
     'condiments' => [['value' => 1], ['value' => 3]],
 ];
-$t->assertEquals($expectedParty, $t->request('GET', "/api/partys/$partyId")->decoded(), 'find party by id');
+$t->assertEquals([...$expectedParty, 'condimentCalculation' => [
+    ['condimentId' => ['value' => 1], 'amount' => 1000.0, 'rating' => 'ENOUGH'],
+    ['condimentId' => ['value' => 3], 'amount' => null, 'rating' => null],
+]], $t->request('GET', "/api/partys/$partyId")->decoded(), 'find party by id includes amounts and ratings for the party page');
 $t->assertEquals(
     (int) strtotime('2021-12-04 07:00:00'),
     (int) $t->db->one('SELECT aktiv FROM Party WHERE id = ?', [$partyId])['aktiv'],
@@ -231,6 +234,19 @@ $t->assertEquals(204, $t->request('PUT', "/api/partys/$partyId", [
 ])->status, 'update party');
 $party = $t->request('GET', "/api/partys/$partyId")->decoded();
 $t->assertEquals(['Weihnachtsfeier 2021', '2021-12-05', 12, 30, 'abcd1234'], [$party['name'], $party['date'], $party['estimatedNumberOfPizzas'], $party['blendStatistics'], $party['key']], 'updated party keeps its key');
+$t->assertEquals([
+    ['condimentId' => ['value' => 1], 'amount' => 500.0, 'rating' => 'NOT_ENOUGH'],
+    ['condimentId' => ['value' => 3], 'amount' => 300.0, 'rating' => 'TO_MUCH'],
+], $party['condimentCalculation'], 'updated amounts and ratings are loaded again');
+// Saving what was loaded must not lose anything, the old frontend sent the values back empty
+$t->request('PUT', "/api/partys/$partyId", [
+    'name' => $party['name'],
+    'date' => $party['date'],
+    'estimatedNumberOfPizzas' => $party['estimatedNumberOfPizzas'],
+    'blendStatistics' => $party['blendStatistics'],
+    'condiments' => $party['condimentCalculation'],
+]);
+$t->assertEquals($party['condimentCalculation'], $t->request('GET', "/api/partys/$partyId")->decoded()['condimentCalculation'], 'saving the loaded party keeps amounts and ratings');
 $t->assertEquals(404, $t->request('PUT', '/api/partys/unknown', ['date' => '2021-12-05', 'condiments' => []])->status, 'update unknown party');
 
 // --- Statistic --------------------------------------------------------------------------------

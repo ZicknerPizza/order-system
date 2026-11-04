@@ -36,7 +36,7 @@ final class PartyController
     public function findById(Request $request, string $partyId): Response
     {
         $this->auth->requireAdmin();
-        return Response::json($this->toPartyDetails($this->getParty($partyId)));
+        return Response::json($this->toPartyDetails($this->getParty($partyId), true));
     }
 
     public function findByIdAndKey(Request $request, string $partyId, string $partyKey): Response
@@ -112,13 +112,17 @@ final class PartyController
             ?? throw new HttpException(404, 'Party not found');
     }
 
-    private function toPartyDetails(array $party): array
+    /**
+     * With $withCalculation the amounts and ratings of the shopping list are included, which the
+     * Java version left out, so saving the party page again overwrote them with empty values.
+     */
+    private function toPartyDetails(array $party, bool $withCalculation = false): array
     {
         $condiments = $this->db->all(
-            'SELECT condiment_id FROM PartyCondiment_mm WHERE ' . self::PARTY_CONDIMENT_PARTY_COLUMN . ' = ?',
+            'SELECT condiment_id, amount, rating FROM PartyCondiment_mm WHERE ' . self::PARTY_CONDIMENT_PARTY_COLUMN . ' = ?',
             [$party['id']]
         );
-        return [
+        $details = [
             'id' => ['value' => $party['id']],
             'name' => $party['party'],
             'key' => $party['key'],
@@ -130,6 +134,14 @@ final class PartyController
                 $condiments
             ),
         ];
+        if ($withCalculation) {
+            $details['condimentCalculation'] = array_map(static fn(array $condiment): array => [
+                'condimentId' => $condiment['condiment_id'] === null ? null : ['value' => (int) $condiment['condiment_id']],
+                'amount' => $condiment['amount'] === null ? null : (float) $condiment['amount'],
+                'rating' => $condiment['rating'] === null ? null : Rating::tryFrom((int) $condiment['rating'])?->name,
+            ], $condiments);
+        }
+        return $details;
     }
 
     /**
