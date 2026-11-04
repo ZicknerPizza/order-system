@@ -12,7 +12,7 @@ use OrderSystem\Http\Response;
  */
 final class ImprintController
 {
-    public function __construct(private readonly array $imprint)
+    public function __construct(private readonly array $imprint, private readonly \Closure $now)
     {
     }
 
@@ -31,6 +31,19 @@ final class ImprintController
             'email' => $this->optional('email'),
             'phone' => $this->optional('phone'),
         ]);
+    }
+
+    /**
+     * Contact for reporting security problems (RFC 9116), generated so the address stays in config.php.
+     */
+    public function securityTxt(Request $request): Response
+    {
+        $email = $this->optional('email') ?? throw new HttpException(404, 'Not Found');
+        return Response::text(
+            "Contact: mailto:$email\n"
+            . 'Expires: ' . gmdate('Y-m-d\\TH:i:s\\Z', ($this->now)() + 365 * 86400) . "\n"
+            . "Preferred-Languages: de, en\n"
+        );
     }
 
     private function optional(string $key): ?string

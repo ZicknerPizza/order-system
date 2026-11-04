@@ -11,6 +11,7 @@ use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
 use OrderSystem\Json;
+use OrderSystem\RateLimiter;
 use OrderSystem\Time;
 use OrderSystem\Uuid;
 
@@ -26,10 +27,14 @@ final class OrderController
      * The kitchen page takes the pizzas out of the oven after baking (BAKING to EATING),
      * the Java version did that with a job in the backend.
      */
+    private const GUEST_ORDERS_PER_WINDOW = 60;
+    private const GUEST_ORDER_WINDOW = 600;
+
     public function __construct(
         private readonly Database $db,
         private readonly Auth $auth,
         private readonly \Closure $now,
+        private readonly RateLimiter $rateLimiter,
     ) {
     }
 
@@ -100,7 +105,13 @@ final class OrderController
         if ($party['key'] !== $key) {
             $this->auth->deny();
         }
+        // Guests often share the address of the party WLAN, so the limit is generous
+        $bucket = 'guest-orders:' . $request->ip;
+        if ($this->rateLimiter->exceeded($bucket, self::GUEST_ORDERS_PER_WINDOW, self::GUEST_ORDER_WINDOW)) {
+            throw new HttpException(429, 'Zu viele Bestellungen, bitte versuche es in ein paar Minuten noch einmal.');
+        }
         $this->buildAndSaveOrder($partyId, $request->json());
+        $this->rateLimiter->hit($bucket);
         return Response::noContent();
     }
 
@@ -160,11 +171,12 @@ final class OrderController
     }
 
     /**
-     * Like in the Java version this endpoint does not require a login.
+     * The Java version allowed this without login, only the kitchen deletes orders.
      */
     public function delete(Request $request, string $partyId, string $orderId): Response
     {
-        $order = $this->db->one('SELECT status FROM PizzaOrder WHERE id = ?', [$orderId])
+        $this->auth->requireRole(Role::SERVICE);
+        $order = $this->db->one('SELECT status FROM PizzaOrder WHERE id = ? AND party = ?', [$orderId, $partyId])
             ?? throw new HttpException(404, 'Order not found');
         if (Status::from((int) $order['status'])->isValidTransaction(Status::DELETED)) {
             $this->db->execute('UPDATE PizzaOrder SET status = ? WHERE id = ?', [Status::DELETED->value, $orderId]);
@@ -183,11 +195,11 @@ final class OrderController
         $body = Json::object($body);
 
         $orderId = Json::requiredStringId($body['orderId'] ?? null, 'orderId');
-        $name = Json::string($body['name'] ?? null);
+        $name = Json::text($body['name'] ?? null, 'Der Name', 255);
         if ($name === null || $name === '') {
             throw new HttpException(400, "Field 'name' is required");
         }
-        $comment = Json::string($body['comment'] ?? null);
+        $comment = Json::text($body['comment'] ?? null, 'Der Kommentar', 255);
         $status = Status::fromJson($body['status'] ?? null);
         if ($status !== Status::INACTIVE && $status !== Status::WAITING) {
             throw new HttpException(400, 'Status for new orders must be INACTIVE or WAITING');

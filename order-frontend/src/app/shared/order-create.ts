@@ -13,6 +13,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../api/api';
 import { Condiment, CondimentId, hasId, Order, Party, Status } from '../api/models';
+import { backendMessage } from '../auth/auth';
 import { groupByCategory } from './condiments';
 import { NotificationService } from './notifications';
 
@@ -176,10 +177,13 @@ export class OrderCreateForm {
           this.ordered.emit();
           scrollTo(0, 0);
         },
-        error: () => {
+        error: (error: unknown) => {
           this.notifications.error(
-            'Es ist ein Fehler bei der Bestellung aufgetreten, bitte überprüfe ' +
-              'deine Internetverbindung und probiere es später nocheinmal.',
+            backendMessage(
+              error,
+              'Es ist ein Fehler bei der Bestellung aufgetreten, bitte überprüfe ' +
+                'deine Internetverbindung und probiere es später nocheinmal.',
+            ),
           );
           scrollTo(0, 0);
         },

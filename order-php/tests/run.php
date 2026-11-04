@@ -10,6 +10,7 @@ use OrderSystem\App;
 use OrderSystem\Database;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
+use OrderSystem\Totp;
 
 require __DIR__ . '/../src/bootstrap.php';
 
@@ -33,15 +34,51 @@ final class TestContext
         $this->seed();
     }
 
-    public function request(string $method, string $path, mixed $body = null, ?string $auth = 'admin:secret', array $query = []): Response
+    /** @var array<string, string> session token per "name:password" */
+    private array $sessions = [];
+
+    /**
+     * @param string|null $auth "name:password", logs in once and reuses the session
+     */
+    public function request(string $method, string $path, mixed $body = null, ?string $auth = 'admin:secret', array $query = [], string $ip = ''): Response
     {
-        return $this->app->handle(new Request(
+        $authorization = null;
+        if ($auth !== null) {
+            $token = $this->sessions[$auth] ?? null;
+            if ($token === null) {
+                [$name, $password] = explode(':', $auth, 2);
+                $token = $this->login($name, $password)->decoded()['token'] ?? 'invalid';
+                if ($token !== 'invalid') {
+                    $this->sessions[$auth] = $token;
+                }
+            }
+            $authorization = "Bearer $token";
+        }
+        $response = $this->app->handle(new Request(
             $method,
             $path,
             $query,
             $body === null ? '' : json_encode($body),
-            $auth === null ? null : 'Basic ' . base64_encode($auth),
+            $authorization,
+            $ip,
         ));
+        // Tests move the clock forward, a stored session may have expired meanwhile
+        if ($auth !== null && isset($this->sessions[$auth]) && ($response->decoded()['message'] ?? null) === 'Session expired') {
+            unset($this->sessions[$auth]);
+            return $this->request($method, $path, $body, $auth, $query, $ip);
+        }
+        return $response;
+    }
+
+    public function login(string $name, string $password, ?string $code = null, string $ip = ''): Response
+    {
+        $body = ['name' => $name, 'password' => $password] + ($code === null ? [] : ['code' => $code]);
+        return $this->app->handle(new Request('POST', '/api/session', [], json_encode($body), null, $ip));
+    }
+
+    public function forgetSessions(): void
+    {
+        $this->sessions = [];
     }
 
     public function assertEquals(mixed $expected, mixed $actual, string $message): void
@@ -74,8 +111,8 @@ $partyId = 'party-1';
 
 // --- Authentication ---------------------------------------------------------------------------
 
-$t->assertEquals(['name' => 'admin', 'role' => 'ADMIN'], $t->request('GET', '/api/current-user')->decoded(), 'login with correct credentials returns the role');
-$t->assertEquals(['name' => 'service', 'role' => 'SERVICE'], $t->request('GET', '/api/current-user', auth: 'service:secret')->decoded(), 'service role');
+$t->assertEquals(['name' => 'admin', 'role' => 'ADMIN', 'totp' => false], $t->request('GET', '/api/current-user')->decoded(), 'login with correct credentials returns the role');
+$t->assertEquals(['name' => 'service', 'role' => 'SERVICE', 'totp' => false], $t->request('GET', '/api/current-user', auth: 'service:secret')->decoded(), 'service role');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'alt:secret')->status, 'users without role are deactivated');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'admin:wrong')->status, 'login with wrong password');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: null)->status, 'current user without login');
@@ -87,7 +124,7 @@ $t->assertEquals(405, $t->request('DELETE', '/api/partys')->status, 'unsupported
 // --- Imprint ----------------------------------------------------------------------------------
 
 $t->assertEquals(404, $t->request('GET', '/api/imprint', auth: null)->status, 'imprint without configuration');
-$imprintApp = new App($t->db, imprint: [
+$imprintApp = new App($t->db, fn(): int => $t->now, imprint: [
     'name' => 'Max Mustermann',
     'address' => ['Musterstraße 1', '12345 Musterstadt'],
     'email' => 'max@example.com',
@@ -99,6 +136,13 @@ $t->assertEquals([
     'email' => 'max@example.com',
     'phone' => null,
 ], $imprintApp->handle(new Request('GET', '/api/imprint'))->decoded(), 'imprint from configuration without login');
+$securityTxt = $imprintApp->handle(new Request('GET', '/.well-known/security.txt'));
+$t->assertEquals(
+    ['text/plain; charset=utf-8', "Contact: mailto:max@example.com\nExpires: " . gmdate('Y-m-d\\TH:i:s\\Z', $t->now + 365 * 86400) . "\nPreferred-Languages: de, en\n"],
+    [$securityTxt->contentType, $securityTxt->body],
+    'security.txt with the contact of the imprint'
+);
+$t->assertEquals(404, $t->request('GET', '/.well-known/security.txt', auth: null)->status, 'no security.txt without contact');
 
 // --- Condiments -------------------------------------------------------------------------------
 
@@ -242,10 +286,12 @@ $t->assertEquals(400, $t->request('PUT', "/api/orders/$partyId/status", $changeS
 $t->assertEquals(200, $t->request('PUT', "/api/orders/$partyId/status", $changeStatus(['o3'], 'WAITING'))->status, 'reactivate order');
 $t->assertEquals($t->now, (int) $t->db->one("SELECT time FROM PizzaOrder WHERE id = 'o3'")['time'], 'reactivated order gets a new order time');
 
-$t->assertEquals(200, $t->request('DELETE', "/api/orders/$partyId/o3", auth: null)->status, 'delete order');
-$t->assertEquals(200, $t->request('DELETE', "/api/orders/$partyId/o1", auth: null)->status, 'deleting an eaten order is ignored');
+$t->assertEquals(401, $t->request('DELETE', "/api/orders/$partyId/o3", auth: null)->status, 'deleting orders requires login');
+$t->assertEquals(404, $t->request('DELETE', "/api/orders/party-old/o3")->status, 'order of another party is not deleted');
+$t->assertEquals(200, $t->request('DELETE', "/api/orders/$partyId/o3")->status, 'delete order');
+$t->assertEquals(200, $t->request('DELETE', "/api/orders/$partyId/o1")->status, 'deleting an eaten order is ignored');
 $t->assertEquals(['o2', 'o1'], array_map(static fn(array $o): string => $o['orderId']['value'], $t->request('GET', "/api/orders/$partyId")->decoded()), 'deleted orders are hidden');
-$t->assertEquals(404, $t->request('DELETE', "/api/orders/$partyId/missing", auth: null)->status, 'delete unknown order');
+$t->assertEquals(404, $t->request('DELETE', "/api/orders/$partyId/missing")->status, 'delete unknown order');
 
 // --- Party update -----------------------------------------------------------------------------
 
@@ -310,10 +356,10 @@ $t->assertEquals(200, $t->request('GET', '/api/condiments/statistic', auth: $kit
 
 $t->assertEquals(403, $t->request('GET', '/api/users', auth: $kitchen)->status, 'only admins manage users');
 $t->assertEquals([
-    ['id' => 1, 'name' => 'admin', 'role' => 'ADMIN'],
-    ['id' => 4, 'name' => 'alt', 'role' => null],
-    ['id' => 2, 'name' => 'koch', 'role' => 'KITCHEN'],
-    ['id' => 3, 'name' => 'service', 'role' => 'SERVICE'],
+    ['id' => 1, 'name' => 'admin', 'role' => 'ADMIN', 'totp' => false],
+    ['id' => 4, 'name' => 'alt', 'role' => null, 'totp' => false],
+    ['id' => 2, 'name' => 'koch', 'role' => 'KITCHEN', 'totp' => false],
+    ['id' => 3, 'name' => 'service', 'role' => 'SERVICE', 'totp' => false],
 ], $t->request('GET', '/api/users')->decoded(), 'user list sorted by name');
 
 $newUser = ['name' => 'neu', 'role' => 'KITCHEN', 'password' => 'geheim123'];
@@ -323,7 +369,7 @@ $t->assertEquals(400, $t->request('POST', '/api/users', [...$newUser, 'role' => 
 $t->assertEquals(400, $t->request('POST', '/api/users', [...$newUser, 'name' => ' '])->status, 'user without name');
 $t->assertEquals(204, $t->request('POST', '/api/users', $newUser)->status, 'create user');
 $t->assertEquals(400, $t->request('POST', '/api/users', $newUser)->status, 'user name already taken');
-$t->assertEquals(['name' => 'neu', 'role' => 'KITCHEN'], $t->request('GET', '/api/current-user', auth: 'neu:geheim123')->decoded(), 'new user can log in');
+$t->assertEquals(['name' => 'neu', 'role' => 'KITCHEN', 'totp' => false], $t->request('GET', '/api/current-user', auth: 'neu:geheim123')->decoded(), 'new user can log in');
 $t->assertEquals(200, $t->request('PUT', '/api/users/5/password', ['password' => 'anders123'])->status, 'set password of a user');
 $t->assertEquals(200, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'user logs in with the set password');
 $t->assertEquals(404, $t->request('PUT', '/api/users/99/password', ['password' => 'anders123'])->status, 'set password of unknown user');
@@ -340,8 +386,95 @@ $response = $t->request('PUT', '/api/current-user/password', $changePassword('wr
 $t->assertEquals([400, 'Das bisherige Passwort ist falsch.'], [$response->status, $response->decoded()['message']], 'change password with wrong old password');
 $t->assertEquals(400, $t->request('PUT', '/api/current-user/password', $changePassword('secret', 'short'))->status, 'new password too short');
 $t->assertEquals(200, $t->request('PUT', '/api/current-user/password', $changePassword('secret', 'newsecret1'))->status, 'change password');
-$t->assertEquals(401, $t->request('GET', '/api/current-user')->status, 'old password no longer works');
+$t->assertEquals(200, $t->request('GET', '/api/current-user')->status, 'the own session stays after changing the password');
+$t->assertEquals(401, $t->login('admin', 'secret')->status, 'old password no longer works');
 $t->assertEquals(200, $t->request('GET', '/api/current-user', auth: 'admin:newsecret1')->status, 'new password works');
+
+// --- Sessions -----------------------------------------------------------------------------------
+
+$login = $t->login('koch', 'secret')->decoded();
+$t->assertEquals(['KITCHEN', false, 64], [$login['role'], $login['totp'], strlen($login['token'])], 'login returns a session token');
+$bearer = static fn(string $token): string => "Bearer $token";
+$asToken = static fn(string $token, string $method, string $path, mixed $body = null): Response =>
+    $t->app->handle(new Request($method, $path, [], $body === null ? '' : json_encode($body), $bearer($token)));
+$t->assertEquals(200, $asToken($login['token'], 'GET', '/api/current-user')->status, 'session works');
+$t->assertEquals(200, $asToken($login['token'], 'DELETE', '/api/session')->status, 'logout');
+$t->assertEquals(401, $asToken($login['token'], 'GET', '/api/current-user')->status, 'session ends with logout');
+$t->assertEquals(401, $t->request('GET', '/api/condiments', auth: 'admin:falsch')->status, 'unknown session token is rejected everywhere');
+
+$idle = $t->login('koch', 'secret')->decoded()['token'];
+$t->now += 29 * 86400;
+$t->assertEquals(200, $asToken($idle, 'GET', '/api/current-user')->status, 'session used within 30 days');
+$t->now += 29 * 86400;
+$t->assertEquals(200, $asToken($idle, 'GET', '/api/current-user')->status, 'using a session keeps it alive');
+$t->now += 31 * 86400;
+$t->assertEquals(401, $asToken($idle, 'GET', '/api/current-user')->status, 'session ends after 30 days without use');
+
+$kochSession = $t->login('koch', 'secret')->decoded()['token'];
+$t->request('PUT', '/api/users/2/password', ['password' => 'kochneu123'], auth: 'admin:newsecret1');
+$t->assertEquals(401, $asToken($kochSession, 'GET', '/api/current-user')->status, 'setting the password ends the sessions of the user');
+
+// --- Login throttling ---------------------------------------------------------------------------
+
+for ($i = 0; $i < 5; $i++) {
+    $t->login('koch', 'falsch', ip: '10.0.0.1');
+}
+$t->assertEquals(429, $t->login('koch', 'kochneu123', ip: '10.0.0.2')->status, 'user is locked after 5 failures, from every address');
+$t->assertEquals(200, $t->login('service', 'secret', ip: '10.0.0.1')->status, 'other users of the address can still log in');
+$t->now += 901;
+$t->assertEquals(200, $t->login('koch', 'kochneu123')->status, 'lock ends after 15 minutes');
+for ($i = 0; $i < 20; $i++) {
+    $t->login("gast$i", 'falsch', ip: '10.0.0.3');
+}
+$t->assertEquals(429, $t->login('service', 'secret', ip: '10.0.0.3')->status, 'address is locked after 20 failures');
+$t->assertEquals(200, $t->login('service', 'secret', ip: '10.0.0.4')->status, 'other addresses are not locked');
+$t->now += 901;
+
+// --- TOTP ---------------------------------------------------------------------------------------
+
+$koch = 'koch:kochneu123';
+$setup = $t->request('POST', '/api/current-user/totp', auth: $koch)->decoded();
+$t->assertEquals(true, str_starts_with($setup['uri'], 'otpauth://totp/zickner.pizza:koch?secret=' . $setup['secret']), 'setup returns the otpauth uri');
+$t->assertEquals(200, $t->login('koch', 'kochneu123')->status, 'unconfirmed TOTP is not asked for');
+$t->assertEquals(400, $t->request('PUT', '/api/current-user/totp', ['code' => '000000'], auth: $koch)->status, 'wrong code does not confirm');
+$code = Totp::code($setup['secret'], intdiv($t->now, 30));
+$t->assertEquals(200, $t->request('PUT', '/api/current-user/totp', ['code' => $code], auth: $koch)->status, 'confirm TOTP');
+$t->assertEquals(true, $t->request('GET', '/api/current-user', auth: $koch)->decoded()['totp'], 'current user has TOTP');
+$t->assertEquals(400, $t->request('POST', '/api/current-user/totp', auth: $koch)->status, 'TOTP cannot be set up twice');
+
+$response = $t->login('koch', 'kochneu123');
+$t->assertEquals([401, true], [$response->status, $response->decoded()['totpRequired'] ?? false], 'login asks for the code');
+$t->assertEquals(401, $t->login('koch', 'kochneu123', '123456')->status, 'wrong code');
+$t->assertEquals(401, $t->login('koch', 'falsch', Totp::code($setup['secret'], intdiv($t->now, 30) + 1))->status, 'code does not help with a wrong password');
+$t->now += 30;
+$code = Totp::code($setup['secret'], intdiv($t->now, 30));
+$t->assertEquals(200, $t->login('koch', 'kochneu123', $code)->status, 'login with password and code');
+$t->assertEquals(401, $t->login('koch', 'kochneu123', $code)->status, 'a code is only accepted once');
+$t->now += 60;
+$t->assertEquals(200, $t->login('koch', 'kochneu123', Totp::code($setup['secret'], intdiv($t->now, 30) - 1))->status, 'unused code of the previous step is accepted');
+
+$t->assertEquals(true, $t->request('GET', '/api/users', auth: 'admin:newsecret1')->decoded()[2]['totp'], 'admin sees who uses TOTP');
+$t->assertEquals(403, $t->request('DELETE', '/api/users/2/totp', auth: $koch)->status, 'only admins reset TOTP');
+$t->assertEquals(200, $t->request('DELETE', '/api/users/2/totp', auth: 'admin:newsecret1')->status, 'admin resets TOTP of a lost phone');
+$t->assertEquals(200, $t->login('koch', 'kochneu123')->status, 'after the reset the password is enough');
+
+$setup = $t->request('POST', '/api/current-user/totp', auth: $koch)->decoded();
+$t->request('PUT', '/api/current-user/totp', ['code' => Totp::code($setup['secret'], intdiv($t->now, 30))], auth: $koch);
+$t->assertEquals(400, $t->request('DELETE', '/api/current-user/totp', ['password' => 'falsch'], auth: $koch)->status, 'disabling TOTP needs the password');
+$t->assertEquals(200, $t->request('DELETE', '/api/current-user/totp', ['password' => 'kochneu123'], auth: $koch)->status, 'user disables TOTP');
+$t->assertEquals(false, $t->request('GET', '/api/current-user', auth: $koch)->decoded()['totp'], 'TOTP is off');
+
+// --- Guest limits and input lengths -------------------------------------------------------------
+
+for ($i = 0; $i < 60; $i++) {
+    $t->request('POST', "/api/orders/$partyId/abcd1234", $order("g$i", "Gast $i", []), auth: null, ip: '10.0.0.5');
+}
+$t->assertEquals(429, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('g60', 'Gast', []), auth: null, ip: '10.0.0.5')->status, 'guest orders are limited per address');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('g61', 'Gast', []), auth: null, ip: '10.0.0.6')->status, 'other addresses can still order');
+$response = $t->request('POST', "/api/orders/$partyId/abcd1234", $order('g62', str_repeat('x', 256), []), auth: null, ip: '10.0.0.6');
+$t->assertEquals([400, 'Der Name darf höchstens 255 Zeichen lang sein.'], [$response->status, $response->decoded()['message']], 'names are limited to the column length');
+$t->assertEquals(400, $t->request('POST', '/api/partys', [...$createParty, 'id' => ['value' => 'p-key'], 'key' => '123456789'], auth: 'admin:newsecret1')->status, 'party keys have at most 8 characters');
+$t->assertEquals(400, $t->request('POST', '/api/users', ['name' => 'lang', 'role' => 'SERVICE', 'password' => str_repeat('x', 73)], auth: 'admin:newsecret1')->status, 'bcrypt only uses 72 characters');
 
 echo "{$t->assertions} assertions, {$t->failures} failures\n";
 exit($t->failures === 0 ? 0 : 1);

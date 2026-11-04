@@ -55,10 +55,10 @@ final class PartyController
         $body = Json::object($request->json());
 
         $partyId = Json::requiredStringId($body['id'] ?? null, 'id');
-        $name = Json::string($body['name'] ?? null) ?? throw new HttpException(400, "Field 'name' is required");
+        $name = Json::text($body['name'] ?? null, 'Der Name', 255) ?? throw new HttpException(400, "Field 'name' is required");
         $values = [
             $name,
-            Json::string($body['key'] ?? null),
+            Json::text($body['key'] ?? null, 'Der Key', 8),
             Time::fromLocalDate($body['date'] ?? null),
             Json::int($body['estimatedNumberOfPizzas'] ?? null),
             Json::int($body['blendStatistics'] ?? null),
@@ -89,7 +89,7 @@ final class PartyController
         $body = Json::object($request->json());
 
         $values = [
-            Json::string($body['name'] ?? null),
+            Json::text($body['name'] ?? null, 'Der Name', 255),
             Time::fromLocalDate($body['date'] ?? null),
             Json::int($body['blendStatistics'] ?? null),
             Json::int($body['estimatedNumberOfPizzas'] ?? null),

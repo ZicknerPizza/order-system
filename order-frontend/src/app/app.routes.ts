@@ -29,6 +29,11 @@ export const routes: Routes = [
   },
   { path: 'login', loadComponent: () => import('./login').then((m) => m.Login) },
   {
+    path: 'account/two-factor',
+    loadComponent: () => import('./two-factor').then((m) => m.TwoFactor),
+    canActivate: [authGuard],
+  },
+  {
     path: 'account/password',
     loadComponent: () => import('./change-password').then((m) => m.ChangePassword),
     canActivate: [authGuard],

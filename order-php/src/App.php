@@ -8,6 +8,8 @@ use OrderSystem\Controller\ImprintController;
 use OrderSystem\Controller\LinkController;
 use OrderSystem\Controller\OrderController;
 use OrderSystem\Controller\PartyController;
+use OrderSystem\Controller\SessionController;
+use OrderSystem\Controller\TotpController;
 use OrderSystem\Controller\UserController;
 use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
@@ -30,10 +32,10 @@ final class App
     public function handle(Request $request): Response
     {
         try {
-            $auth = Auth::fromHeader($this->db, $request->authorization);
+            $auth = Auth::fromHeader($this->db, $request->authorization, ($this->now)());
             return $this->createRouter($auth)->dispatch($request);
         } catch (HttpException $e) {
-            return Response::error($e->status, $e->getMessage());
+            return Response::error($e->status, $e->getMessage(), $e->data);
         } catch (\Throwable $e) {
             error_log((string) $e);
             return Response::error(500, 'Internal Server Error');
@@ -42,26 +44,37 @@ final class App
 
     private function createRouter(Auth $auth): Router
     {
+        $rateLimiter = new RateLimiter($this->db, $this->now);
         $condiments = new CondimentController($this->db, $auth);
         $links = new LinkController($this->db, $auth);
-        $orders = new OrderController($this->db, $auth, $this->now);
+        $orders = new OrderController($this->db, $auth, $this->now, $rateLimiter);
         $parties = new PartyController($this->db, $auth);
+        $sessions = new SessionController($this->db, $auth, $this->now, $rateLimiter);
+        $totp = new TotpController($this->db, $auth, $this->now);
         $users = new UserController($this->db, $auth);
-        $imprint = new ImprintController($this->imprint);
+        $imprint = new ImprintController($this->imprint, $this->now);
 
         $router = new Router();
 
         $router->get('/api/imprint', $imprint->find(...));
+        $router->get('/.well-known/security.txt', $imprint->securityTxt(...));
+
+        $router->post('/api/session', $sessions->login(...));
+        $router->delete('/api/session', $sessions->logout(...));
 
         $router->get('/api/condiments', $condiments->findAll(...));
         $router->get('/api/condiments/statistic', $condiments->findCondimentStatistic(...));
 
         $router->get('/api/current-user', $users->getCurrentUser(...));
         $router->put('/api/current-user/password', $users->changePassword(...));
+        $router->post('/api/current-user/totp', $totp->start(...));
+        $router->put('/api/current-user/totp', $totp->confirm(...));
+        $router->delete('/api/current-user/totp', $totp->disable(...));
 
         $router->get('/api/users', $users->findAll(...));
         $router->post('/api/users', $users->create(...));
         $router->put('/api/users/{userId}/password', $users->setPassword(...));
+        $router->delete('/api/users/{userId}/totp', $users->resetTotp(...));
         $router->delete('/api/users/{userId}', $users->delete(...));
 
         $router->get('/api/links', $links->findAll(...));

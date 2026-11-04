@@ -64,6 +64,15 @@ import { AuthService } from './auth/auth';
                       Passwort ändern
                     </a>
                   </li>
+                  <li>
+                    <a routerLink="/account/two-factor">
+                      <span
+                        class="glyphicon glyphicon-phone margin-right"
+                        aria-hidden="true"
+                      ></span>
+                      Zwei-Faktor-Anmeldung
+                    </a>
+                  </li>
                   @if (auth.hasRole('ADMIN')) {
                     <li>
                       <a routerLink="/users">
@@ -129,9 +138,9 @@ export class Navigation {
     this.userMenuOpen.set(!this.userMenuOpen());
   }
 
-  protected logout(): void {
+  protected async logout(): Promise<void> {
     this.userMenuOpen.set(false);
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    await this.auth.logout();
+    await this.router.navigate(['/login']);
   }
 }

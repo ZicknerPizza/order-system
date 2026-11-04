@@ -17,6 +17,7 @@ import { NotificationService } from './shared/notifications';
           <tr>
             <th>Name</th>
             <th>Rolle</th>
+            <th>2FA</th>
             <th>Neues Passwort</th>
             <th></th>
           </tr>
@@ -26,6 +27,23 @@ import { NotificationService } from './shared/notifications';
             <tr>
               <td>{{ user.name }}</td>
               <td>{{ user.role ? roleLabels[user.role] : 'deaktiviert' }}</td>
+              <td>
+                @if (user.totp) {
+                  <span
+                    class="glyphicon glyphicon-phone text-success"
+                    title="Zwei-Faktor-Anmeldung aktiv"
+                    aria-hidden="true"
+                  ></span>
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-link"
+                    title="Bei verlorenem Handy: danach reicht das Passwort"
+                    (click)="resetTotp(user)"
+                  >
+                    zurücksetzen
+                  </button>
+                }
+              </td>
               <td>
                 <div class="input-group input-group-sm">
                   <input
@@ -139,6 +157,19 @@ export class UserAdmin implements OnInit {
       this.notifications.success(`Das Passwort von ${user.name} wurde gesetzt.`);
     } catch (error) {
       this.notifications.error(backendMessage(error, 'Das Passwort konnte nicht gesetzt werden.'));
+    }
+  }
+
+  protected async resetTotp(user: User): Promise<void> {
+    if (!window.confirm(`Zwei-Faktor-Anmeldung von ${user.name} zurücksetzen?`)) {
+      return;
+    }
+    try {
+      await firstValueFrom(this.userApi.resetTotp(user.id));
+      this.notifications.success(`${user.name} meldet sich jetzt nur mit dem Passwort an.`);
+      await this.load();
+    } catch (error) {
+      this.notifications.error(backendMessage(error, 'Das Zurücksetzen ist fehlgeschlagen.'));
     }
   }
 

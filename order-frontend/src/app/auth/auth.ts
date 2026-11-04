@@ -1,10 +1,18 @@
-import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpInterceptorFn,
+  HttpStatusCode,
+} from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { CurrentUser, Role } from '../api/models';
+import { catchError, firstValueFrom, throwError } from 'rxjs';
+import { CurrentUser, Role, Session } from '../api/models';
 
-/** Same key as the old frontend, so existing logins survive the update. */
+/**
+ * Logins of the old frontend under this key held the password, they don't work any more and are
+ * removed on start.
+ */
 const STORAGE_KEY = 'currentUser';
 
 /** A higher role includes the rights of the lower ones, like SystemUser.degree in the backend. */
@@ -18,14 +26,22 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 interface StoredUser {
   username: string;
-  /** base64 of "username:password" for HTTP Basic authentication */
+  /** Random session token, the backend only stores its hash */
   token: string;
-  /** Missing for logins of the old frontend until the backend was asked */
-  role?: Role;
+  role: Role;
+  totp: boolean;
+}
+
+/** Thrown by login(), totpRequired asks for the code of the authenticator app */
+export class LoginError {
+  constructor(
+    readonly message: string,
+    readonly totpRequired = false,
+  ) {}
 }
 
 /**
- * The backend is stateless, every request carries the credentials as HTTP Basic header.
+ * Session of the logged in user, sent as Bearer token with every request.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -35,9 +51,10 @@ export class AuthService {
   readonly loggedIn = () => this.user() !== null;
   readonly username = () => this.user()?.username ?? '';
   readonly role = computed(() => this.user()?.role ?? null);
+  readonly totpEnabled = computed(() => this.user()?.totp ?? false);
 
   /**
-   * Role and credentials of a stored login are checked once when the app starts. Not inside the
+   * Role and session of a stored login are checked once when the app starts. Not inside the
    * constructor, the HTTP interceptor needs this service itself.
    */
   readonly ready: Promise<void> = Promise.resolve().then(() => this.refresh());
@@ -51,26 +68,37 @@ export class AuthService {
     return own !== null && ROLE_RANK[own] >= ROLE_RANK[role];
   }
 
-  /** Throws 'Unauthorized' for wrong credentials, like the old frontend reported it. */
-  async login(username: string, password: string): Promise<void> {
-    const token = basicToken(username, password);
-    let current: CurrentUser;
+  /** Throws a LoginError with the message of the backend. */
+  async login(name: string, password: string, code?: string): Promise<void> {
+    let session: Session;
     try {
-      current = await firstValueFrom(
-        this.http.get<CurrentUser>('api/current-user', {
-          headers: { Authorization: `Basic ${token}` },
-        }),
+      session = await firstValueFrom(
+        this.http.post<Session>('api/session', { name, password, code }),
       );
     } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 401) {
-        throw 'Unauthorized';
+      if (error instanceof HttpErrorResponse && error.error?.message) {
+        throw new LoginError(error.error.message, error.error.totpRequired === true);
       }
-      throw error;
+      throw new LoginError('Die Anmeldung ist fehlgeschlagen.');
     }
-    this.store({ username, token, role: current.role });
+    this.store({
+      username: session.name,
+      token: session.token,
+      role: session.role,
+      totp: session.totp,
+    });
   }
 
-  logout(): void {
+  /** Ends the session in the backend as well, so the token is worthless afterwards. */
+  async logout(): Promise<void> {
+    if (this.user() !== null) {
+      await firstValueFrom(this.http.delete('api/session')).catch(() => undefined);
+    }
+    this.forget();
+  }
+
+  /** Session expired or ended elsewhere, nothing to tell the backend */
+  forget(): void {
     this.store(null);
   }
 
@@ -83,9 +111,13 @@ export class AuthService {
     } catch (error) {
       throw backendMessage(error, 'Das Passwort konnte nicht geändert werden.');
     }
-    // Every request carries the credentials, so the new password has to be used from now on
-    const user = this.user()!;
-    this.store({ ...user, token: basicToken(user.username, newPassword) });
+  }
+
+  setTotpEnabled(totp: boolean): void {
+    const user = this.user();
+    if (user !== null) {
+      this.store({ ...user, totp });
+    }
   }
 
   private async refresh(): Promise<void> {
@@ -95,12 +127,9 @@ export class AuthService {
     }
     try {
       const current = await firstValueFrom(this.http.get<CurrentUser>('api/current-user'));
-      this.store({ ...user, role: current.role });
-    } catch (error) {
-      // Password changed or user deleted, without connection the stored login stays
-      if (error instanceof HttpErrorResponse && error.status === 401) {
-        this.logout();
-      }
+      this.store({ ...user, role: current.role, totp: current.totp });
+    } catch {
+      // A 401 already ended the login in the interceptor, without connection it stays
     }
   }
 
@@ -110,24 +139,41 @@ export class AuthService {
   }
 }
 
-/** Message of a 400 response from the backend, otherwise the fallback */
+/** Message of a rejected request (400 or 429) from the backend, otherwise the fallback */
 export function backendMessage(error: unknown, fallback: string): string {
-  if (error instanceof HttpErrorResponse && error.status === 400 && error.error?.message) {
+  if (
+    error instanceof HttpErrorResponse &&
+    (error.status === 400 || error.status === HttpStatusCode.TooManyRequests) &&
+    error.error?.message
+  ) {
     return error.error.message;
   }
   return fallback;
 }
 
-function basicToken(username: string, password: string): string {
-  return btoa(String.fromCharCode(...new TextEncoder().encode(`${username}:${password}`)));
-}
-
+/**
+ * Adds the session token. When the backend no longer knows the session, the user has to log in
+ * again and comes back to the page afterwards.
+ */
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
-  const token = inject(AuthService).token;
-  if (token === null || request.headers.has('Authorization')) {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const token = auth.token;
+  if (token === null || (request.url === 'api/session' && request.method === 'POST')) {
     return next(request);
   }
-  return next(request.clone({ setHeaders: { Authorization: `Basic ${token}` } }));
+  return next(request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })).pipe(
+    catchError((error: unknown) => {
+      if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.Unauthorized) {
+        auth.forget();
+        // While the app starts, the route guard redirects with the page that was opened
+        if (router.navigated) {
+          router.navigate(['/login'], { queryParams: { returnUrl: router.url } });
+        }
+      }
+      return throwError(() => error);
+    }),
+  );
 };
 
 /** Pages for logged in users with at least the given role */
@@ -149,7 +195,17 @@ export const authGuard: CanActivateFn = roleGuard('SERVICE');
 function readStoredUser(): StoredUser | null {
   try {
     const user = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
-    return user?.token ? { username: user.username, token: user.token, role: user.role } : null;
+    // Logins of the old frontend have no role, their token is the password
+    if (!user?.token || !user.role) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return {
+      username: user.username,
+      token: user.token,
+      role: user.role,
+      totp: user.totp === true,
+    };
   } catch {
     return null;
   }

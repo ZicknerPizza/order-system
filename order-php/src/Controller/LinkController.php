@@ -53,7 +53,7 @@ final class LinkController
         }
         $this->db->execute(
             'UPDATE Link SET identifier = ?, eventId = ? WHERE id = ?',
-            [Json::string($body['identifier'] ?? null), Json::stringId($body['partyId'] ?? null), (int) $linkId]
+            [Json::text($body['identifier'] ?? null, 'Der Link', 255), Json::stringId($body['partyId'] ?? null), (int) $linkId]
         );
         return Response::ok();
     }

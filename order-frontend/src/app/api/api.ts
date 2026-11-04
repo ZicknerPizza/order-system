@@ -17,6 +17,7 @@ import {
   PartySave,
   Status,
   Stove,
+  TotpSetup,
   User,
   UserCreate,
 } from './models';
@@ -105,6 +106,28 @@ export class UserApi {
 
   delete(userId: number): Observable<void> {
     return this.http.delete<void>(`api/users/${userId}`);
+  }
+
+  resetTotp(userId: number): Observable<void> {
+    return this.http.delete<void>(`api/users/${userId}/totp`);
+  }
+}
+
+/** Two-factor login of the current user */
+@Injectable({ providedIn: 'root' })
+export class TotpApi {
+  private readonly http = inject(HttpClient);
+
+  start(): Observable<TotpSetup> {
+    return this.http.post<TotpSetup>('api/current-user/totp', {});
+  }
+
+  confirm(code: string): Observable<void> {
+    return this.http.put<void>('api/current-user/totp', { code });
+  }
+
+  disable(password: string): Observable<void> {
+    return this.http.delete<void>('api/current-user/totp', { body: { password } });
   }
 }
 

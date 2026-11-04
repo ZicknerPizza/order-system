@@ -109,6 +109,12 @@ export type Role = 'ADMIN' | 'KITCHEN' | 'SERVICE';
 export interface CurrentUser {
   name: string;
   role: Role;
+  /** Logs in with a code of an authenticator app as second factor */
+  totp: boolean;
+}
+
+export interface Session extends CurrentUser {
+  token: string;
 }
 
 export interface User {
@@ -116,6 +122,14 @@ export interface User {
   name: string;
   /** null for deactivated users of the old systems */
   role: Role | null;
+  totp: boolean;
+}
+
+export interface TotpSetup {
+  /** base32, for typing it into the app instead of scanning */
+  secret: string;
+  /** otpauth:// link shown as QR code */
+  uri: string;
 }
 
 export interface UserCreate {

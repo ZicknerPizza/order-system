@@ -11,6 +11,8 @@ final class Request
         public readonly array $query = [],
         private readonly string $body = '',
         public readonly ?string $authorization = null,
+        /** Client address for rate limits */
+        public readonly string $ip = '',
     ) {
     }
 
@@ -26,9 +28,6 @@ final class Request
 
         // PHP running as FastCGI only sees the header if .htaccess passes it on
         $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
-        if (($authorization === null || $authorization === '') && isset($_SERVER['PHP_AUTH_USER'])) {
-            $authorization = 'Basic ' . base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . ($_SERVER['PHP_AUTH_PW'] ?? ''));
-        }
 
         return new self(
             strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET'),
@@ -36,6 +35,7 @@ final class Request
             $_GET,
             (string) file_get_contents('php://input'),
             $authorization === '' ? null : $authorization,
+            (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
         );
     }
 

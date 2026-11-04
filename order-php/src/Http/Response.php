@@ -7,8 +7,16 @@ final class Response
 {
     private const JSON_FLAGS = JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
 
-    public function __construct(public readonly int $status, public readonly ?string $body = null)
+    public function __construct(
+        public readonly int $status,
+        public readonly ?string $body = null,
+        public readonly string $contentType = 'application/json',
+    ) {
+    }
+
+    public static function text(string $text): self
     {
+        return new self(200, $text, 'text/plain; charset=utf-8');
     }
 
     public static function json(mixed $data): self
@@ -26,9 +34,9 @@ final class Response
         return new self(204);
     }
 
-    public static function error(int $status, string $message): self
+    public static function error(int $status, string $message, array $data = []): self
     {
-        return new self($status, json_encode(['status' => $status, 'message' => $message], self::JSON_FLAGS));
+        return new self($status, json_encode(['status' => $status, 'message' => $message, ...$data], self::JSON_FLAGS));
     }
 
     public function decoded(): mixed
@@ -46,7 +54,7 @@ final class Response
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
         if ($this->body !== null) {
-            header('Content-Type: application/json');
+            header('Content-Type: ' . $this->contentType);
             echo $this->body;
         }
     }

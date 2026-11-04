@@ -76,6 +76,18 @@ final class Json
         return $value === null ? null : (is_bool($value) ? ($value ? 'true' : 'false') : (string) $value);
     }
 
+    /**
+     * A string that fits into its database column, longer values would fail or be cut off.
+     */
+    public static function text(mixed $value, string $label, int $maxLength): ?string
+    {
+        $text = self::string($value);
+        if ($text !== null && mb_strlen($text) > $maxLength) {
+            throw new HttpException(400, "$label darf höchstens $maxLength Zeichen lang sein.");
+        }
+        return $text;
+    }
+
     private static function idValue(mixed $id): mixed
     {
         if (is_array($id)) {

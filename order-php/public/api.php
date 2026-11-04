@@ -6,6 +6,10 @@ use OrderSystem\Database;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
 
+// Errors go to the log only, the output could reveal paths and configuration
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 require __DIR__ . '/../src/bootstrap.php';
 
 $config = require __DIR__ . '/../config.php';

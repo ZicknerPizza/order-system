@@ -23,7 +23,8 @@ order-php/
 ## Deployment on all-inkl
 
 1. **Database**: export the existing database (`mysqldump pizza > pizza.sql`) and import it in
-   the all-inkl KAS via phpMyAdmin. For a fresh installation import `schema.sql` instead.
+   the all-inkl KAS via phpMyAdmin, then run the scripts in `migrations/` in their order.
+   For a fresh installation import `schema.sql` instead, it already contains the migrations.
 2. **Check the schema** once: the column names were derived from the JPA mappings. Compare with
    `SHOW CREATE TABLE PartyCondiment_mm;` – the column referencing the party must be `Party_id`.
    If it is named differently, adjust `PartyController::PARTY_CONDIMENT_PARTY_COLUMN`.
@@ -35,7 +36,8 @@ order-php/
 5. **Config**: copy `config.example.php` to `config.php` and enter the database credentials from the KAS
    and the person and address for the imprint (`imprint`). Without it the imprint shows a warning.
 6. **Upload** the whole `order-php` folder via FTP and set the document root of the domain in the KAS
-   to `order-php/public`. In the KAS select PHP 8.1 or newer for the domain.
+   to `order-php/public`. In the KAS select PHP 8.1 or newer for the domain and set up a Let's Encrypt
+   certificate: `public/.htaccess` redirects every request to HTTPS.
 7. **Smoke test**: open the site, log in, open the kitchen view of a party.
 
 Users are taken over from the `SystemUser` table, the bcrypt hashes of Spring Security are compatible.
@@ -66,8 +68,13 @@ php tests/run.php
 |---|---|---|---|
 | GET | `/api/condiments` | – | condiments sorted by category |
 | GET | `/api/condiments/statistic` | kitchen | amount per pizza by rating |
-| GET | `/api/current-user` | service | name and role, used by the login form |
-| PUT | `/api/current-user/password` | service | 200, `{oldPassword, newPassword}` |
+| POST | `/api/session` | – | login `{name, password, code?}`, returns `{token, name, role, totp}` |
+| DELETE | `/api/session` | – | logout, ends the session |
+| GET | `/api/current-user` | service | name, role and whether TOTP is on |
+| PUT | `/api/current-user/password` | service | 200, `{oldPassword, newPassword}`, ends the other sessions |
+| POST | `/api/current-user/totp` | service | starts the TOTP setup, returns `{secret, uri}` |
+| PUT | `/api/current-user/totp` | service | 200, `{code}` confirms the setup |
+| DELETE | `/api/current-user/totp` | service | 200, `{password}` switches TOTP off |
 | GET | `/api/imprint` | – | person and address from `config.php` |
 | GET | `/api/links` | kitchen | all links |
 | GET | `/api/links/search?identifier=` | – | link incl. party key |
@@ -76,7 +83,7 @@ php tests/run.php
 | POST | `/api/orders/{partyId}` | service | 204 |
 | POST | `/api/orders/{partyId}/{key}` | party key | 204 |
 | PUT | `/api/orders/{partyId}/status` | service, kitchen from topping on | 200 |
-| DELETE | `/api/orders/{partyId}/{orderId}` | – | 200 |
+| DELETE | `/api/orders/{partyId}/{orderId}` | service | 200 |
 | GET | `/api/partys` | service | party overview, newest first |
 | POST | `/api/partys` | kitchen | 204 |
 | GET | `/api/partys/{partyId}` | service | party details |
@@ -84,10 +91,25 @@ php tests/run.php
 | GET | `/api/partys/{partyId}/{partyKey}` | party key | party details |
 | GET | `/api/users` | admin | users with role |
 | POST | `/api/users` | admin | 204, `{name, role, password}` |
-| PUT | `/api/users/{userId}/password` | admin | 200, `{password}` |
+| PUT | `/api/users/{userId}/password` | admin | 200, `{password}`, ends the sessions of the user |
+| DELETE | `/api/users/{userId}/totp` | admin | 200, resets TOTP of a lost phone |
 | DELETE | `/api/users/{userId}` | admin | 200, not the own user |
 
-Login is stateless HTTP Basic like before. Wrong credentials give 401 on every endpoint, a missing role 403.
+## Security
+
+- **Sessions**: `POST /api/session` returns a random token, requests send it as
+  `Authorization: Bearer <token>`. Only its SHA-256 hash is stored in `UserSession`. Sessions end after
+  30 days without use, on logout and when the password changes. An unknown token gives 401 on every
+  endpoint, a missing role 403.
+- **TOTP**: optional second factor per user (RFC 6238, 6 digits, 30 seconds). Each code is accepted once.
+  Admins reset it in the user management when a phone is lost.
+- **Rate limits** (table `RateLimit`): login is locked for 15 minutes after 5 failures of a user name or
+  20 failures of an address, guests can place 60 orders per address in 10 minutes.
+- **Web server**: `public/.htaccess` enforces HTTPS with HSTS and sets a Content Security Policy and
+  further security headers. `.htaccess` in this directory denies everything in case the document root
+  points here by mistake. PHP errors are only logged.
+- **Search engines**: `robots.txt` and `X-Robots-Tag` keep the private system out of search results.
+  `/.well-known/security.txt` names the e-mail address of the imprint as security contact.
 
 ## Differences to the Java version
 
@@ -99,6 +121,5 @@ Login is stateless HTTP Basic like before. Wrong credentials give 401 on every e
 - **Error codes**: invalid input (missing name, invalid status transition, ...) answers 400 instead of 500,
   unknown orders and parties on update/delete answer 404 instead of 500. The frontend only distinguishes success and failure.
 - **Time zone** comes from `config.php`. The Java version took a fixed UTC offset at startup, which was off by an hour across a DST change.
-
-Taken over unchanged on purpose: deleting an order (`DELETE /api/orders/...`) does not need a login,
-exactly like in the Java version.
+- **Login** uses sessions instead of HTTP Basic, deleting an order needs a login, the Java version allowed it
+  without.
