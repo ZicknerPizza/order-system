@@ -79,6 +79,22 @@ $t->assertEquals(401, $t->request('GET', '/api/partys', auth: null)->status, 'pa
 $t->assertEquals(404, $t->request('GET', '/api/unknown')->status, 'unknown endpoint');
 $t->assertEquals(405, $t->request('DELETE', '/api/partys')->status, 'unsupported method');
 
+// --- Imprint ----------------------------------------------------------------------------------
+
+$t->assertEquals(404, $t->request('GET', '/api/imprint', auth: null)->status, 'imprint without configuration');
+$imprintApp = new App($t->db, imprint: [
+    'name' => 'Max Mustermann',
+    'address' => ['Musterstraße 1', '12345 Musterstadt'],
+    'email' => 'max@example.com',
+    'phone' => '',
+]);
+$t->assertEquals([
+    'name' => 'Max Mustermann',
+    'address' => ['Musterstraße 1', '12345 Musterstadt'],
+    'email' => 'max@example.com',
+    'phone' => null,
+], $imprintApp->handle(new Request('GET', '/api/imprint'))->decoded(), 'imprint from configuration without login');
+
 // --- Condiments -------------------------------------------------------------------------------
 
 $t->assertEquals([

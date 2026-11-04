@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth';
 import { partyResolver, ordersResolver } from './event/party-edit';
+import { imprintResolver } from './general/imprint';
 import { linkRedirectGuard, linksResolver, partiesResolver } from './links';
 import { partyByKeyResolver } from './order';
 import { condimentsResolver, condimentStatisticResolver } from './shared/condiments';
@@ -19,6 +20,12 @@ export const routes: Routes = [
   {
     path: 'general/imprint',
     loadComponent: () => import('./general/imprint').then((m) => m.Imprint),
+    resolve: { imprint: imprintResolver },
+  },
+  {
+    path: 'general/privacy',
+    loadComponent: () => import('./general/privacy').then((m) => m.Privacy),
+    resolve: { imprint: imprintResolver },
   },
   { path: 'login', loadComponent: () => import('./login').then((m) => m.Login) },
   {

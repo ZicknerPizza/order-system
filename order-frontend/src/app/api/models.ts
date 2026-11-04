@@ -103,6 +103,14 @@ export interface Link {
   partyKey: string | null;
 }
 
+/** Person and address of the imprint, configured in the backend */
+export interface Imprint {
+  name: string;
+  address: string[];
+  email: string | null;
+  phone: string | null;
+}
+
 export function hasId<T>(ids: Id<T>[], search: Id<T>): boolean {
   return ids.some((id) => id.value === search.value);
 }

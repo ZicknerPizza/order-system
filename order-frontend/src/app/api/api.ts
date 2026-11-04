@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   Condiment,
   CondimentStatistic,
+  Imprint,
   Link,
   LinkId,
   Order,
@@ -81,6 +82,15 @@ export class OrderApi {
 
   delete(partyId: PartyId, orderId: OrderId): Observable<void> {
     return this.http.delete<void>(`api/orders/${partyId.value}/${orderId.value}`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class ImprintApi {
+  private readonly http = inject(HttpClient);
+
+  find(): Observable<Imprint> {
+    return this.http.get<Imprint>('api/imprint');
   }
 }
 

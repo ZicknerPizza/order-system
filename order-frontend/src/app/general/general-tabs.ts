@@ -16,10 +16,13 @@ import { RouterLink } from '@angular/router';
         <li [class.active]="active() === 'imprint'">
           <a routerLink="/general/imprint">Impressum</a>
         </li>
+        <li [class.active]="active() === 'privacy'">
+          <a routerLink="/general/privacy">Datenschutz</a>
+        </li>
       </ul>
     </div>
   `,
 })
 export class GeneralTabs {
-  readonly active = input.required<'aboutUs' | 'history' | 'imprint'>();
+  readonly active = input.required<'aboutUs' | 'history' | 'imprint' | 'privacy'>();
 }

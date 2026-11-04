@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace OrderSystem;
 
 use OrderSystem\Controller\CondimentController;
+use OrderSystem\Controller\ImprintController;
 use OrderSystem\Controller\LinkController;
 use OrderSystem\Controller\OrderController;
 use OrderSystem\Controller\PartyController;
@@ -17,8 +18,12 @@ final class App
 {
     private readonly \Closure $now;
 
-    public function __construct(private readonly Database $db, ?\Closure $now = null)
-    {
+    /** @param array $imprint 'imprint' section of config.php */
+    public function __construct(
+        private readonly Database $db,
+        ?\Closure $now = null,
+        private readonly array $imprint = [],
+    ) {
         $this->now = $now ?? static fn(): int => time();
     }
 
@@ -42,8 +47,11 @@ final class App
         $orders = new OrderController($this->db, $auth, $this->now);
         $parties = new PartyController($this->db, $auth);
         $users = new UserController($this->db, $auth);
+        $imprint = new ImprintController($this->imprint);
 
         $router = new Router();
+
+        $router->get('/api/imprint', $imprint->find(...));
 
         $router->get('/api/condiments', $condiments->findAll(...));
         $router->get('/api/condiments/statistic', $condiments->findCondimentStatistic(...));

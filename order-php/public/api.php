@@ -19,4 +19,4 @@ try {
     exit;
 }
 
-(new App(new Database($pdo)))->handle(Request::fromGlobals())->send();
+(new App(new Database($pdo), imprint: $config['imprint'] ?? []))->handle(Request::fromGlobals())->send();

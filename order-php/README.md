@@ -32,7 +32,8 @@ order-php/
    cd order-frontend && npm ci && npm run build
    ```
 4. **Copy** the build output into `order-php/public/`.
-5. **Config**: copy `config.example.php` to `config.php` and enter the database credentials from the KAS.
+5. **Config**: copy `config.example.php` to `config.php` and enter the database credentials from the KAS
+   and the person and address for the imprint (`imprint`). Without it the imprint shows a warning.
 6. **Upload** the whole `order-php` folder via FTP and set the document root of the domain in the KAS
    to `order-php/public`. In the KAS select PHP 8.1 or newer for the domain.
 7. **Smoke test**: open the site, log in, open the kitchen view of a party.
@@ -57,6 +58,8 @@ php tests/run.php
 | GET | `/api/condiments` | – | condiments sorted by category |
 | GET | `/api/condiments/statistic` | admin | amount per pizza by rating |
 | GET | `/api/current-user` | admin | 200, used by the login form |
+| PUT | `/api/current-user/password` | admin | 200, `{oldPassword, newPassword}` |
+| GET | `/api/imprint` | – | person and address from `config.php` |
 | GET | `/api/links` | admin | all links |
 | GET | `/api/links/search?identifier=` | – | link incl. party key |
 | PUT | `/api/links/{linkId}` | admin | 200 |
