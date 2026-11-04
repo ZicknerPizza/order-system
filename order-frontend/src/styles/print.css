@@ -1,0 +1,68 @@
+@media print {
+
+    h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    h2 {
+        font-size: 10px;
+        font-weight: bold;
+        margin: 4px 0;
+        padding: 13px 0 6px 0;
+        border-bottom: 1px solid black;
+    }
+
+    .btn,
+    .print_not {
+        display: none;
+    }
+
+    ul {
+        padding-left: 15px;
+    }
+
+    ul.recipe {
+        padding: 0;
+    }
+
+    ul.recipe li {
+        list-style-type: none;
+    }
+
+    .panel-condiment {
+        margin: 10px 0 0 0;
+        float: left;
+        width: 61%;
+        font-size: 10px;
+        line-height: normal;
+        border: none !important;
+    }
+
+    .panel-condiment th {
+        border-bottom: 1px solid black !important;
+    }
+
+    .print-info {
+        margin: 0;
+        float: right;
+        width: 37%;
+        font-size: 10px;
+    }
+
+    .label-comment {
+        font-size: 10px;
+        line-height: 150%;
+        margin-right: 0.4em;
+        margin-bottom: 0.4em;
+        float: left;
+        font-weight: normal;
+    }
+}
+
+@media screen {
+    .print_only {
+        display: none;
+    }
+}

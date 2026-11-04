@@ -27,14 +27,9 @@ order-php/
 2. **Check the schema** once: the column names were derived from the JPA mappings. Compare with
    `SHOW CREATE TABLE PartyCondiment_mm;` – the column referencing the party must be `Party_id`.
    If it is named differently, adjust `PartyController::PARTY_CONDIMENT_PARTY_COLUMN`.
-3. **Build the frontend** (output lands in `order-web-ui/target/classes/META-INF/resources/`):
+3. **Build the frontend** (`order-frontend`, output lands in `order-frontend/dist/order-frontend/browser/`):
    ```
-   ./mvnw -pl order-web-ui compile
-   ```
-   The build uses Node 10, which only exists for Intel. On Apple Silicon this needs Rosetta
-   (`softwareupdate --install-rosetta`) or Docker:
-   ```
-   docker run --rm -v "$PWD/order-web-ui":/app -w /app node:10 sh -c "yarn install && yarn run build"
+   cd order-frontend && npm ci && npm run build
    ```
 4. **Copy** the build output into `order-php/public/`.
 5. **Config**: copy `config.example.php` to `config.php` and enter the database credentials from the KAS.
