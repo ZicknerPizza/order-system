@@ -4,11 +4,12 @@ import { OrderCreateForm } from '../shared/order-create';
 import { Bakery } from './bakery';
 import { KitchenStore } from './kitchen-store';
 import { OrderList } from './order-list';
+import { OvenList } from './oven-list';
 import { PizzaList } from './pizza-list';
 import { RemainingCondiments } from './remaining-condiments';
 
 @Component({
-  imports: [OrderCreateForm, OrderList, PizzaList, Bakery, RemainingCondiments],
+  imports: [OrderCreateForm, OrderList, PizzaList, OvenList, Bakery, RemainingCondiments],
   providers: [KitchenStore],
   template: `
     <div class="row">
@@ -28,12 +29,7 @@ import { RemainingCondiments } from './remaining-condiments';
           title="Pizzen in der Küche"
           [condiments]="condiments()"
         />
-        <app-pizza-list
-          [orders]="store.baking()"
-          [alwaysOpen]="true"
-          title="Pizzen im Ofen"
-          [condiments]="condiments()"
-        />
+        <app-oven-list [condiments]="condiments()" />
         <app-pizza-list
           [orders]="store.eating()"
           title="Fertige Pizzen"

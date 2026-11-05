@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth/auth';
 
@@ -36,16 +36,6 @@ import { AuthService } from './auth/auth';
           </ul>
           @if (auth.loggedIn()) {
             <ul class="nav navbar-nav navbar-right">
-              <li>
-                <a class="pointer" (click)="expandedChange.emit(!expanded())">
-                  <span
-                    class="glyphicon"
-                    [class.glyphicon-resize-full]="!expanded()"
-                    [class.glyphicon-resize-small]="expanded()"
-                    aria-hidden="true"
-                  ></span>
-                </a>
-              </li>
               <li class="dropdown" [class.open]="userMenuOpen()">
                 <a
                   class="pointer dropdown-toggle"
@@ -114,7 +104,6 @@ import { AuthService } from './auth/auth';
 })
 export class Navigation {
   readonly expanded = input(false);
-  readonly expandedChange = output<boolean>();
 
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);

@@ -1,5 +1,13 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectorRef, Component, computed, inject, input, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ResolveFn, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -32,7 +40,7 @@ interface CondimentRow extends Condiment {
   imports: [FormsModule, DatePipe, DecimalPipe, EventTabs],
   templateUrl: './party-edit.html',
 })
-export class PartyEdit implements OnInit {
+export class PartyEdit {
   readonly party = input<Party>();
   readonly orders = input<Order[]>([]);
   readonly condiments = input.required<Condiment[]>();
@@ -61,22 +69,30 @@ export class PartyEdit implements OnInit {
   /** The amount per pizza applies to all parties, so only admins change it */
   protected readonly canEditAmountPerPizza = inject(AuthService).hasRole('ADMIN');
 
-  ngOnInit(): void {
-    const party = this.party();
-    if (party) {
-      this.model = {
-        name: party.name,
-        date: party.date,
-        estimatedNumberOfPizzas: party.estimatedNumberOfPizzas,
-        blendStatistics: party.blendStatistics,
-      };
-    }
+  constructor() {
+    // The router reuses this page when going from one party straight to another
+    effect(() => {
+      const party = this.party();
+      const condiments = this.condiments();
+      untracked(() => this.initialize(party, condiments));
+    });
+  }
+
+  private initialize(party: Party | undefined, condiments: Condiment[]): void {
+    this.model = party
+      ? {
+          name: party.name,
+          date: party.date,
+          estimatedNumberOfPizzas: party.estimatedNumberOfPizzas,
+          blendStatistics: party.blendStatistics,
+        }
+      : { name: '', date: '', estimatedNumberOfPizzas: 0, blendStatistics: 50 };
     const calculation = new Map(
       (party?.condimentCalculation ?? [])
         .filter((condiment) => condiment.condimentId !== null)
         .map((condiment) => [condiment.condimentId.value, condiment]),
     );
-    const rows: CondimentRow[] = this.condiments().map((condiment) => {
+    const rows: CondimentRow[] = condiments.map((condiment) => {
       const saved = calculation.get(condiment.id.value);
       return {
         ...condiment,

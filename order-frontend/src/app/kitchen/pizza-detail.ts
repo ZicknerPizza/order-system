@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { Condiment, CondimentId, hasId, Order, Stove } from '../api/models';
+import { Condiment, CondimentId, hasId, Order } from '../api/models';
 import { CondimentName, groupByCategory } from '../shared/condiments';
 import { KitchenStore, Pizza, pizzaOrders, remainingBakeTime } from './kitchen-store';
 
@@ -50,15 +50,22 @@ export function halfMarker(
               <p>
                 {{ order.name }}
                 @if (marker?.basil) {
-                  <span class="herb" title="Basilikum" aria-label="Basilikum">🌿</span>
+                  <img class="herb herb-icon" src="basil.svg" title="Basilikum" alt="Basilikum" />
                 }
                 @if (marker?.rucola) {
-                  <span class="herb" title="Rucola" aria-label="Rucola">🥬</span>
+                  <img class="herb herb-icon" src="rucola.svg" title="Rucola" alt="Rucola" />
                 }
               </p>
               <!-- The full condiment list replaces the marker when the pizza is opened -->
-              @if (marker?.condiment && !contentIsVisible()) {
-                <p class="marker text-muted">{{ marker?.condiment }}</p>
+              @if (marker && !contentIsVisible()) {
+                <!-- Empty without a condiment, so every pizza of the list has the same height -->
+                <p class="marker text-muted">
+                  @if (marker.condiment) {
+                    {{ marker.condiment }}
+                  } @else {
+                    &nbsp;
+                  }
+                </p>
               }
               @if (contentIsVisible()) {
                 <p class="p-pizza-comment">{{ order.comment }}</p>
@@ -72,18 +79,7 @@ export function halfMarker(
           }
           @if (pizza().order1.status === 'BAKING') {
             <th class="pizza-extra pizza-clock">
-              <p>
-                @if (pizza().order1.stove; as stove) {
-                  <span
-                    class="glyphicon"
-                    [class.glyphicon-triangle-top]="stove === 'go'"
-                    [class.glyphicon-triangle-bottom]="stove === 'gu'"
-                    [title]="STOVE_TITLES[stove]"
-                    [attr.aria-label]="STOVE_TITLES[stove]"
-                  ></span>
-                }
-                {{ timeInStove() | date: 'm:ss' : 'UTC' }}
-              </p>
+              <p>{{ timeInStove() | date: 'm:ss' : 'UTC' }}</p>
             </th>
           }
         </tr>
@@ -138,6 +134,13 @@ export function halfMarker(
   styles: `
     .herb {
       margin-left: 2px;
+    }
+
+    .herb-icon {
+      height: 1.1em;
+      vertical-align: -0.15em;
+      /* Keeps the line as high as one without an icon */
+      margin-block: -2px;
     }
 
     .marker {
@@ -199,11 +202,6 @@ export class PizzaDetail {
     const timeStove = this.pizza().order1.timeStove;
     return timeStove === null ? 0 : Math.max(this.store.now() - new Date(timeStove).getTime(), 0);
   });
-
-  protected readonly STOVE_TITLES: Record<Stove, string> = {
-    go: 'oberes Fach',
-    gu: 'unteres Fach',
-  };
 
   /** Baking time is over, the row blinks until the pizza moves to the finished ones */
   protected readonly done = computed(() => {
