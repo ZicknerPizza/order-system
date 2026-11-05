@@ -6,7 +6,7 @@ import { Role, User } from './api/models';
 import { AuthService, backendMessage, ROLE_LABELS } from './auth/auth';
 import { NotificationService } from './shared/notifications';
 
-/** Admins create and delete users and set their passwords. */
+/** Admins create and delete users and set their roles and passwords. */
 @Component({
   imports: [FormsModule],
   template: `
@@ -26,7 +26,23 @@ import { NotificationService } from './shared/notifications';
           @for (user of users(); track user.id) {
             <tr>
               <td>{{ user.name }}</td>
-              <td>{{ user.role ? roleLabels[user.role] : 'deaktiviert' }}</td>
+              <td>
+                @if (user.name === auth.username()) {
+                  <!-- Admins can't lock themselves out -->
+                  {{ user.role ? roleLabels[user.role] : 'deaktiviert' }}
+                } @else {
+                  <select
+                    class="form-control input-sm"
+                    [ngModel]="user.role"
+                    (ngModelChange)="setRole(user, $event)"
+                  >
+                    @for (role of roles; track role) {
+                      <option [ngValue]="role">{{ roleLabels[role] }}</option>
+                    }
+                    <option [ngValue]="null">deaktiviert</option>
+                  </select>
+                }
+              </td>
               <td>
                 @if (user.totp) {
                   <span
@@ -164,6 +180,19 @@ export class UserAdmin implements OnInit {
     } catch (error) {
       this.notifications.error(backendMessage(error, 'Das Passwort konnte nicht gesetzt werden.'));
     }
+  }
+
+  protected async setRole(user: User, role: Role | null): Promise<void> {
+    try {
+      await firstValueFrom(this.userApi.setRole(user.id, role));
+      this.notifications.success(
+        role ? `${user.name} ist jetzt ${this.roleLabels[role]}.` : `${user.name} ist deaktiviert.`,
+      );
+    } catch (error) {
+      this.notifications.error(backendMessage(error, 'Die Rolle konnte nicht geändert werden.'));
+    }
+    // Also puts the selection back after an error
+    await this.load();
   }
 
   protected async resetTotp(user: User): Promise<void> {

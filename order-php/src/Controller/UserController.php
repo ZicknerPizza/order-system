@@ -16,6 +16,8 @@ final class UserController
     public const MINIMUM_PASSWORD_LENGTH = 8;
     /** bcrypt only uses the first 72 bytes */
     private const MAXIMUM_PASSWORD_BYTES = 72;
+    /** Any degree below the roles, see Role::fromDegree() */
+    private const DEACTIVATED = 0;
 
     public function __construct(private readonly Database $db, private readonly Auth $auth)
     {
@@ -118,6 +120,28 @@ final class UserController
                 [password_hash($password, PASSWORD_BCRYPT), $id]
             );
             $this->db->execute('DELETE FROM UserSession WHERE userId = ?', [$id]);
+        });
+        return Response::ok();
+    }
+
+    /**
+     * Without a role (null) the user is deactivated and logged out. Admins can't change their own role,
+     * so there is always one left.
+     */
+    public function setRole(Request $request, string $userId): Response
+    {
+        $this->auth->requireRole(Role::ADMIN);
+        $body = Json::object($request->json());
+        $role = ($body['role'] ?? null) === null ? null : self::role($body['role']);
+        $id = $this->getUserId($userId);
+        if ($id === $this->auth->userId()) {
+            throw new HttpException(400, 'Du kannst deine eigene Rolle nicht ändern.');
+        }
+        $this->db->transactional(function () use ($id, $role): void {
+            $this->db->execute('UPDATE SystemUser SET degree = ? WHERE id = ?', [$role?->value ?? self::DEACTIVATED, $id]);
+            if ($role === null) {
+                $this->db->execute('DELETE FROM UserSession WHERE userId = ?', [$id]);
+            }
         });
         return Response::ok();
     }

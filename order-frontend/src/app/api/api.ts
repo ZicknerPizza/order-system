@@ -16,6 +16,7 @@ import {
   PartyId,
   PartyOverview,
   PartySave,
+  Role,
   Status,
   Stove,
   TotpSetup,
@@ -113,6 +114,11 @@ export class UserApi {
 
   setPassword(userId: number, password: string): Observable<void> {
     return this.http.put<void>(`api/users/${userId}/password`, { password });
+  }
+
+  /** Without a role the user is deactivated */
+  setRole(userId: number, role: Role | null): Observable<void> {
+    return this.http.put<void>(`api/users/${userId}/role`, { role });
   }
 
   delete(userId: number): Observable<void> {

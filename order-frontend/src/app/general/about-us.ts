@@ -6,7 +6,7 @@ import { GeneralTabs } from './general-tabs';
   imports: [GeneralTabs, RouterLink],
   template: `
     <app-general-tabs active="aboutUs" />
-    <h2>Herzlich Willkommen bei zickner.pizza!</h2>
+    <h2>Herzlich Willkommen bei zickner-pizza.de!</h2>
     <p>Bei uns gibt es Pizza bis der Pizzaservice kommt und den Rest abholt.</p>
     <p>
       Unser Ziel ist leckere und vor allem individuelle Pizza zu backen und zu essen. Dabei blicken

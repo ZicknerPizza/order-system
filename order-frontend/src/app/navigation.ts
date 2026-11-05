@@ -22,7 +22,7 @@ import { AuthService } from './auth/auth';
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" routerLink="/">zickner.pizza</a>
+          <a class="navbar-brand" routerLink="/">zickner-pizza.de</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse" [class.in]="menuOpen()">
           <ul class="nav navbar-nav">

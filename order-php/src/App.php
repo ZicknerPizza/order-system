@@ -75,6 +75,7 @@ final class App
         $router->get('/api/users', $users->findAll(...));
         $router->post('/api/users', $users->create(...));
         $router->put('/api/users/{userId}/password', $users->setPassword(...));
+        $router->put('/api/users/{userId}/role', $users->setRole(...));
         $router->delete('/api/users/{userId}/totp', $users->resetTotp(...));
         $router->delete('/api/users/{userId}', $users->delete(...));
 

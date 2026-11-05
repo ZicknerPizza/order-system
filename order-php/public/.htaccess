@@ -1,5 +1,8 @@
 DirectoryIndex index.html
 
+# The .htaccess one level up denies everything and would apply to this directory as well
+Require all granted
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 

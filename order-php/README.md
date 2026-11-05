@@ -94,6 +94,7 @@ php tests/run.php
 | GET | `/api/users` | admin | users with role |
 | POST | `/api/users` | admin | 204, `{name, role, password}` |
 | PUT | `/api/users/{userId}/password` | admin | 200, `{password}`, ends the sessions of the user |
+| PUT | `/api/users/{userId}/role` | admin | 200, `{role}`, `null` deactivates, not the own user |
 | DELETE | `/api/users/{userId}/totp` | admin | 200, resets TOTP of a lost phone |
 | DELETE | `/api/users/{userId}` | admin | 200, not the own user |
 

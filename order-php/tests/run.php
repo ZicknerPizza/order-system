@@ -374,6 +374,17 @@ $t->assertEquals(['name' => 'neu', 'role' => 'KITCHEN', 'totp' => false], $t->re
 $t->assertEquals(200, $t->request('PUT', '/api/users/5/password', ['password' => 'anders123'])->status, 'set password of a user');
 $t->assertEquals(200, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'user logs in with the set password');
 $t->assertEquals(404, $t->request('PUT', '/api/users/99/password', ['password' => 'anders123'])->status, 'set password of unknown user');
+$t->assertEquals(403, $t->request('PUT', '/api/users/5/role', ['role' => 'ADMIN'], auth: $kitchen)->status, 'only admins change roles');
+$t->assertEquals(400, $t->request('PUT', '/api/users/5/role', ['role' => 'CHEF'])->status, 'change to unknown role');
+$t->assertEquals(400, $t->request('PUT', '/api/users/1/role', ['role' => 'SERVICE'])->status, 'admins cannot change their own role');
+$t->assertEquals(404, $t->request('PUT', '/api/users/99/role', ['role' => 'SERVICE'])->status, 'change role of unknown user');
+$t->assertEquals(200, $t->request('PUT', '/api/users/5/role', ['role' => 'SERVICE'])->status, 'change role');
+$t->assertEquals('SERVICE', $t->request('GET', '/api/current-user', auth: 'neu:anders123')->decoded()['role'], 'changed role applies at once');
+$t->assertEquals(200, $t->request('PUT', '/api/users/5/role', ['role' => null])->status, 'deactivate user');
+$t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'deactivated user cannot log in');
+$t->assertEquals(200, $t->request('PUT', '/api/users/4/role', ['role' => 'KITCHEN'])->status, 'activate an old user');
+$t->assertEquals('KITCHEN', $t->request('GET', '/api/users')->decoded()[1]['role'], 'activated user has the role');
+$t->request('PUT', '/api/users/4/role', ['role' => null]);
 $t->assertEquals(400, $t->request('DELETE', '/api/users/1')->status, 'admins cannot delete themselves');
 $t->assertEquals(200, $t->request('DELETE', '/api/users/5')->status, 'delete user');
 $t->assertEquals(401, $t->request('GET', '/api/current-user', auth: 'neu:anders123')->status, 'deleted user cannot log in');
