@@ -1,12 +1,14 @@
-import { Component, computed, input } from '@angular/core';
-import { Condiment, Order, Status } from '../api/models';
+import { Component, computed, inject, input } from '@angular/core';
+import { Condiment, CondimentId, hasId, Order, Status } from '../api/models';
 import { groupByCategory } from '../shared/condiments';
+import { KitchenStore } from './kitchen-store';
 
 /** Orders that still need their condiments: neither in the oven nor finished */
 const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
 
 /**
  * How many of the open orders need each condiment, so the kitchen sees what has to be prepared.
+ * A condiment that ran out is marked here, it stays in the list until it is available again.
  */
 @Component({
   selector: 'app-remaining-condiments',
@@ -20,9 +22,28 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
           <li class="list-group-item">
             <p class="condimentCategory">{{ category[0] }}</p>
             @for (entry of category[1]; track entry.id.value) {
-              <div>
+              <div class="entry">
                 <span class="badge">{{ entry.count }}</span>
-                {{ entry.name }}
+                <span [class.sold-out]="entry.soldOut">{{ entry.name }}</span>
+                @if (entry.soldOut) {
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-success pull-right"
+                    title="Die Zutat kann wieder bestellt werden"
+                    (click)="setSoldOut(entry.id, false)"
+                  >
+                    Wieder da
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-default pull-right"
+                    title="Die Zutat ist ausgegangen und kann nicht mehr bestellt werden"
+                    (click)="setSoldOut(entry.id, true)"
+                  >
+                    Leer
+                  </button>
+                }
               </div>
             }
           </li>
@@ -37,20 +58,41 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
       margin-bottom: 2px;
       color: #aaa;
     }
+
+    .entry {
+      overflow: hidden;
+      margin-bottom: 3px;
+    }
+
+    .sold-out {
+      color: #aaa;
+      text-decoration: line-through;
+    }
   `,
 })
 export class RemainingCondiments {
   readonly orders = input.required<Order[]>();
   readonly condiments = input.required<Condiment[]>();
 
+  private readonly store = inject(KitchenStore);
+
   protected readonly categories = computed(() => {
     const counts = countCondiments(this.orders());
+    const soldOut = this.store.soldOut();
     return groupByCategory(
       this.condiments()
-        .filter((condiment) => counts.has(condiment.id.value))
-        .map((condiment) => ({ ...condiment, count: counts.get(condiment.id.value)! })),
+        .map((condiment) => ({
+          ...condiment,
+          count: counts.get(condiment.id.value) ?? 0,
+          soldOut: hasId(soldOut, condiment.id),
+        }))
+        .filter((condiment) => condiment.count > 0 || condiment.soldOut),
     );
   });
+
+  protected setSoldOut(condimentId: CondimentId, soldOut: boolean): void {
+    this.store.setSoldOut(condimentId, soldOut);
+  }
 }
 
 /** Condiment id => number of open orders with this condiment */

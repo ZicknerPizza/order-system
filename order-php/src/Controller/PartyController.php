@@ -107,6 +107,29 @@ final class PartyController
         return Response::noContent();
     }
 
+    /**
+     * A condiment that ran out can't be ordered any more until the kitchen has it again.
+     */
+    public function setSoldOut(Request $request, string $partyId, string $condimentId): Response
+    {
+        $this->auth->requireRole(Role::SERVICE);
+        $soldOut = Json::object($request->json())['soldOut'] ?? null;
+        if (!is_bool($soldOut)) {
+            throw new HttpException(400, "Field 'soldOut' must be true or false");
+        }
+        $this->getParty($partyId);
+        if (!ctype_digit($condimentId) || $this->db->one('SELECT id FROM Condiment WHERE id = ?', [(int) $condimentId]) === null) {
+            throw new HttpException(404, 'Condiment not found');
+        }
+        $this->db->transactional(function () use ($partyId, $condimentId, $soldOut): void {
+            $this->db->execute('DELETE FROM PartyCondimentSoldOut WHERE partyId = ? AND condimentId = ?', [$partyId, (int) $condimentId]);
+            if ($soldOut) {
+                $this->db->execute('INSERT INTO PartyCondimentSoldOut (partyId, condimentId) VALUES (?, ?)', [$partyId, (int) $condimentId]);
+            }
+        });
+        return Response::ok();
+    }
+
     private function getParty(string $partyId): array
     {
         return $this->db->one('SELECT id, party, `key`, aktiv, countPizza, blendStatistics FROM Party WHERE id = ?', [$partyId])
@@ -133,6 +156,10 @@ final class PartyController
             'condiments' => array_map(
                 static fn(array $condiment): ?array => $condiment['condiment_id'] === null ? null : ['value' => (int) $condiment['condiment_id']],
                 $condiments
+            ),
+            'soldOut' => array_map(
+                static fn(array $condiment): array => ['value' => (int) $condiment['condimentId']],
+                $this->db->all('SELECT condimentId FROM PartyCondimentSoldOut WHERE partyId = ? ORDER BY condimentId', [$party['id']])
             ),
         ];
         if ($withCalculation) {

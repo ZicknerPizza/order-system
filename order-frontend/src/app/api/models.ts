@@ -14,6 +14,8 @@ export interface Condiment {
   category: string;
   name: string;
   unit: string;
+  /** Set by admins for the shopping list, null falls back to the statistic */
+  amountPerPizza: number | null;
 }
 
 /** Minimum, average and maximum amount per pizza. */
@@ -43,6 +45,8 @@ export interface Party extends PartyOverview {
   estimatedNumberOfPizzas: number;
   blendStatistics: number;
   condiments: CondimentId[];
+  /** Ran out during the party, can't be ordered until available again */
+  soldOut: CondimentId[];
   /** Saved amounts and ratings, only included for logged in users */
   condimentCalculation?: PartyCondiment[];
 }

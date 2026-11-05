@@ -1,7 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { OrderApi } from '../api/api';
-import { Order, PartyId, Status, Stove } from '../api/models';
+import { OrderApi, PartyApi } from '../api/api';
+import { CondimentId, Order, Party, PartyId, Status, Stove } from '../api/models';
 import { AuthService } from '../auth/auth';
 
 const REFRESH_INTERVAL = 15000;
@@ -34,6 +34,7 @@ export interface Pizza {
 @Injectable()
 export class KitchenStore {
   private readonly orderApi = inject(OrderApi);
+  private readonly partyApi = inject(PartyApi);
   private readonly auth = inject(AuthService);
 
   /** Service takes orders but does not bake, the backend checks this as well */
@@ -41,6 +42,9 @@ export class KitchenStore {
   private partyId: PartyId | null = null;
 
   readonly orders = signal<Order[]>([]);
+
+  /** Condiments that ran out, they can't be ordered until available again */
+  readonly soldOut = signal<CondimentId[]>([]);
 
   /** Order taken over into the order form, wrapped so copying the same order twice fills it again */
   readonly orderToCopy = signal<{ order: Order } | null>(null);
@@ -107,16 +111,28 @@ export class KitchenStore {
     }
   }
 
-  init(partyId: PartyId): void {
-    this.partyId = partyId;
+  init(party: Party): void {
+    this.partyId = party.id;
+    this.soldOut.set(party.soldOut);
     this.refresh();
   }
 
+  /** Other kitchen pages may have marked condiments as sold out meanwhile */
   async refresh(): Promise<void> {
     if (this.partyId === null) {
       return;
     }
-    this.orders.set(await firstValueFrom(this.orderApi.findForParty(this.partyId)));
+    const [orders, party] = await Promise.all([
+      firstValueFrom(this.orderApi.findForParty(this.partyId)),
+      firstValueFrom(this.partyApi.findOne(this.partyId.value)),
+    ]);
+    this.orders.set(orders);
+    this.soldOut.set(party.soldOut);
+  }
+
+  async setSoldOut(condimentId: CondimentId, soldOut: boolean): Promise<void> {
+    await firstValueFrom(this.partyApi.setSoldOut(this.partyId!, condimentId, soldOut));
+    await this.refresh();
   }
 
   /** Fills the order form with name and condiments, so the order can be changed and ordered again. */

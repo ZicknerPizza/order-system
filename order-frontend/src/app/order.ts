@@ -14,6 +14,7 @@ import { OrderCreateForm } from './shared/order-create';
         [party]="party"
         [alwaysOpen]="true"
         [condiments]="condiments()"
+        [soldOut]="party.soldOut"
         title="Wünsche dir deine Pizza für die {{ party.name }}"
       />
     } @else {

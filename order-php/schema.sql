@@ -15,6 +15,8 @@ CREATE TABLE Condiment (
     sorting INT NOT NULL,
     unit VARCHAR(255),
     parent_id INT,
+    -- Set by admins on the party page, without a value the statistic of past parties is used
+    amountPerPizza DOUBLE NULL,
     PRIMARY KEY (id)
 );
 
@@ -98,3 +100,9 @@ CREATE TABLE RateLimit (
 );
 
 CREATE INDEX RateLimitBucket ON RateLimit (bucket, time);
+
+CREATE TABLE PartyCondimentSoldOut (
+    partyId VARCHAR(255) NOT NULL,
+    condimentId INT NOT NULL,
+    PRIMARY KEY (partyId, condimentId)
+);

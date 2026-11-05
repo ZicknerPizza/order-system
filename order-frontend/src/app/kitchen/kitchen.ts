@@ -18,6 +18,7 @@ import { RemainingCondiments } from './remaining-condiments';
           [condiments]="condiments()"
           title="Neuer Wunsch"
           [template]="store.orderToCopy()"
+          [soldOut]="store.soldOut()"
           (ordered)="store.refresh()"
         />
         <app-order-list [orders]="store.open()" title="Offene Bestellungen" />
@@ -68,6 +69,6 @@ export class Kitchen implements OnInit {
   protected readonly store = inject(KitchenStore);
 
   ngOnInit(): void {
-    this.store.init(this.party().id);
+    this.store.init(this.party());
   }
 }

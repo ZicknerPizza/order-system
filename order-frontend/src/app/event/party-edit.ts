@@ -1,9 +1,9 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject, input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, inject, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ResolveFn, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { OrderApi, PartyApi } from '../api/api';
+import { firstValueFrom } from 'rxjs';
+import { CondimentApi, OrderApi, PartyApi } from '../api/api';
 import {
   Condiment,
   CondimentStatistic,
@@ -14,28 +14,22 @@ import {
   PartySave,
   Rating,
 } from '../api/models';
-import { groupByCategory } from '../shared/condiments';
+import { AuthService, backendMessage } from '../auth/auth';
+import { CondimentCatalog, groupByCategory } from '../shared/condiments';
 import { NotificationService } from '../shared/notifications';
 import { EventTabs } from './event-tabs';
 import { PartyCalculation } from './statistic';
-import { StatisticChart } from './statistic-chart';
-
-/** Rating buttons on the page: too little, right, too much */
-type RatingButton = -1 | 0 | 1;
-
-const RATINGS: Record<RatingButton, Rating> = { [-1]: 'NOT_ENOUGH', 0: 'ENOUGH', 1: 'TO_MUCH' };
-const RATING_BUTTONS: Record<Rating, RatingButton> = { NOT_ENOUGH: -1, ENOUGH: 0, TO_MUCH: 1 };
 
 /** Editable state of one condiment row, kept apart from the shared condiment list. */
 interface CondimentRow extends Condiment {
   active: boolean;
   amount: string;
-  rating: RatingButton | null;
-  showDetails: boolean;
+  /** Ratings are no longer given, saved ones of past parties are kept */
+  rating: Rating | null;
 }
 
 @Component({
-  imports: [FormsModule, DatePipe, DecimalPipe, EventTabs, StatisticChart],
+  imports: [FormsModule, DatePipe, DecimalPipe, EventTabs],
   templateUrl: './party-edit.html',
 })
 export class PartyEdit implements OnInit {
@@ -45,6 +39,9 @@ export class PartyEdit implements OnInit {
   readonly statistics = input.required<CondimentStatistic[]>();
 
   private readonly partyApi = inject(PartyApi);
+  private readonly condimentApi = inject(CondimentApi);
+  private readonly catalog = inject(CondimentCatalog);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
 
@@ -61,11 +58,8 @@ export class PartyEdit implements OnInit {
   };
   protected categories: [string, CondimentRow[]][] = [];
 
-  protected readonly ratingButtons: { value: RatingButton; icon: string }[] = [
-    { value: -1, icon: 'glyphicon-triangle-left' },
-    { value: 0, icon: 'glyphicon-ok' },
-    { value: 1, icon: 'glyphicon-triangle-right' },
-  ];
+  /** The amount per pizza applies to all parties, so only admins change it */
+  protected readonly canEditAmountPerPizza = inject(AuthService).hasRole('ADMIN');
 
   ngOnInit(): void {
     const party = this.party();
@@ -88,8 +82,7 @@ export class PartyEdit implements OnInit {
         ...condiment,
         active: party !== undefined && hasId(party.condiments, condiment.id),
         amount: saved?.amount == null ? '' : String(saved.amount),
-        rating: saved?.rating == null ? null : RATING_BUTTONS[saved.rating],
-        showDetails: false,
+        rating: saved?.rating ?? null,
       };
     });
     this.categories = groupByCategory(rows);
@@ -102,8 +95,21 @@ export class PartyEdit implements OnInit {
     );
   }
 
-  protected changeRating(row: CondimentRow, rating: RatingButton): void {
-    row.rating = row.rating === rating ? null : rating;
+  /** Saved right away, it does not belong to this party. An empty field falls back to the statistic. */
+  protected async saveAmountPerPizza(row: CondimentRow, value: string): Promise<void> {
+    const amountPerPizza = parseAmount(value);
+    try {
+      await firstValueFrom(this.condimentApi.setAmountPerPizza(row.id, amountPerPizza));
+      row.amountPerPizza = amountPerPizza;
+      this.catalog.setAmountPerPizza(row.id, amountPerPizza);
+      // The rows are plain objects, without signals the calculation is not refreshed by itself
+      this.changeDetector.markForCheck();
+      this.notifications.success(`Menge je Pizza für ${row.name} gespeichert.`);
+    } catch (error) {
+      this.notifications.error(
+        backendMessage(error, 'Die Menge je Pizza konnte nicht gespeichert werden.'),
+      );
+    }
   }
 
   protected orderLabel(order: Order): string {
@@ -138,12 +144,12 @@ export class PartyEdit implements OnInit {
         .map((row): PartyCondiment => ({
           condimentId: row.id,
           amount: parseAmount(row.amount),
-          rating: row.rating === null ? null : RATINGS[row.rating],
+          rating: row.rating,
         })),
     };
 
     const party = this.party();
-    const result: Observable<void> = party
+    const result = party
       ? this.partyApi.update(party.id, data)
       : this.partyApi.create({
           ...data,

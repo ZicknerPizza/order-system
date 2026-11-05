@@ -147,9 +147,9 @@ $t->assertEquals(404, $t->request('GET', '/.well-known/security.txt', auth: null
 // --- Condiments -------------------------------------------------------------------------------
 
 $t->assertEquals([
-    ['id' => ['value' => 3], 'category' => 'Soße', 'name' => 'Tomatensoße', 'unit' => 'ml'],
-    ['id' => ['value' => 2], 'category' => 'Käse', 'name' => 'Gouda', 'unit' => 'g'],
-    ['id' => ['value' => 1], 'category' => 'Käse', 'name' => 'Mozzarella', 'unit' => 'g'],
+    ['id' => ['value' => 3], 'category' => 'Soße', 'name' => 'Tomatensoße', 'unit' => 'ml', 'amountPerPizza' => null],
+    ['id' => ['value' => 2], 'category' => 'Käse', 'name' => 'Gouda', 'unit' => 'g', 'amountPerPizza' => null],
+    ['id' => ['value' => 1], 'category' => 'Käse', 'name' => 'Mozzarella', 'unit' => 'g', 'amountPerPizza' => null],
 ], $t->request('GET', '/api/condiments/', auth: null)->decoded(), 'condiments sorted by category and condiment, trailing slash allowed');
 
 // --- Parties ----------------------------------------------------------------------------------
@@ -178,6 +178,7 @@ $expectedParty = [
     'estimatedNumberOfPizzas' => 10,
     'blendStatistics' => 50,
     'condiments' => [['value' => 1], ['value' => 3]],
+    'soldOut' => [],
 ];
 $t->assertEquals([...$expectedParty, 'condimentCalculation' => [
     ['condimentId' => ['value' => 1], 'amount' => 1000.0, 'rating' => 'ENOUGH'],
@@ -475,6 +476,32 @@ $response = $t->request('POST', "/api/orders/$partyId/abcd1234", $order('g62', s
 $t->assertEquals([400, 'Der Name darf höchstens 255 Zeichen lang sein.'], [$response->status, $response->decoded()['message']], 'names are limited to the column length');
 $t->assertEquals(400, $t->request('POST', '/api/partys', [...$createParty, 'id' => ['value' => 'p-key'], 'key' => '123456789'], auth: 'admin:newsecret1')->status, 'party keys have at most 8 characters');
 $t->assertEquals(400, $t->request('POST', '/api/users', ['name' => 'lang', 'role' => 'SERVICE', 'password' => str_repeat('x', 73)], auth: 'admin:newsecret1')->status, 'bcrypt only uses 72 characters');
+
+// --- Sold out condiments and amount per pizza --------------------------------------------------
+
+$soldOut = static fn(bool $value): array => ['soldOut' => $value];
+$t->assertEquals(401, $t->request('PUT', "/api/partys/$partyId/sold-out/1", $soldOut(true), auth: null)->status, 'marking sold out requires login');
+$t->assertEquals(200, $t->request('PUT', "/api/partys/$partyId/sold-out/1", $soldOut(true), auth: 'service:secret')->status, 'service marks a condiment as sold out');
+$t->assertEquals(200, $t->request('PUT', "/api/partys/$partyId/sold-out/1", $soldOut(true), auth: 'service:secret')->status, 'marking twice does not fail');
+$t->assertEquals(404, $t->request('PUT', "/api/partys/$partyId/sold-out/99", $soldOut(true), auth: 'service:secret')->status, 'unknown condiment');
+$t->assertEquals(400, $t->request('PUT', "/api/partys/$partyId/sold-out/1", ['soldOut' => 'ja'], auth: 'service:secret')->status, 'soldOut must be a boolean');
+$t->assertEquals([['value' => 1]], $t->request('GET', "/api/partys/$partyId/abcd1234", auth: null)->decoded()['soldOut'], 'guests see what is sold out');
+$response = $t->request('POST', "/api/orders/$partyId/abcd1234", $order('s1', 'Sina', [1, 3]), auth: null, ip: '10.0.0.7');
+$t->assertEquals([400, 'Mozzarella ist leider aus.'], [$response->status, $response->decoded()['message']], 'sold out condiments cannot be ordered');
+$t->assertEquals(400, $t->request('POST', "/api/orders/$partyId", $order('s2', 'Sina', [1]), auth: 'service:secret')->status, 'also not in the kitchen');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('s3', 'Sina', [3]), auth: null, ip: '10.0.0.7')->status, 'other condiments can be ordered');
+$t->assertEquals(200, $t->request('PUT', "/api/partys/$partyId/sold-out/1", $soldOut(false), auth: 'service:secret')->status, 'condiment is available again');
+$t->assertEquals([], $t->request('GET', "/api/partys/$partyId", auth: 'service:secret')->decoded()['soldOut'], 'nothing sold out any more');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('s4', 'Sina', [1]), auth: null, ip: '10.0.0.7')->status, 'available condiment can be ordered again');
+
+$admin = 'admin:newsecret1';
+$t->assertEquals(403, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => 120], auth: 'service:secret')->status, 'only admins set the amount per pizza');
+$t->assertEquals(400, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => -1], auth: $admin)->status, 'no negative amount');
+$t->assertEquals(404, $t->request('PUT', '/api/condiments/99', ['amountPerPizza' => 1], auth: $admin)->status, 'unknown condiment');
+$t->assertEquals(200, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => 120.5], auth: $admin)->status, 'admin sets the amount per pizza');
+$amounts = array_column($t->request('GET', '/api/condiments', auth: null)->decoded(), 'amountPerPizza', 'name');
+$t->assertEquals(['Tomatensoße' => null, 'Gouda' => null, 'Mozzarella' => 120.5], $amounts, 'amount per pizza in the condiment list');
+$t->assertEquals(200, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => null], auth: $admin)->status, 'amount can be removed again');
 
 echo "{$t->assertions} assertions, {$t->failures} failures\n";
 exit($t->failures === 0 ? 0 : 1);

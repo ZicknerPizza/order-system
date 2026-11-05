@@ -23,12 +23,11 @@
           Anzahl an Vorbestellungen empfiehlt es sich den Wert zu erhöhen.
         </li>
         <li>
-          Der Kalkulator hat nun zwei werte berechnet:
+          Der Kalkulator hat nun zwei Werte berechnet:
           <ul>
             <li>
-              <b>für alle Pizzen</b>: Dieser Wert gibt an, wie viel man von jeder Zutat benötigt,
-              würden alle Pizzen damit belegt. Er beruht auf den Bewertungen der Kalkulation, die
-              nach der Party abgegeben werden können.
+              <b>je Pizza</b>: so viel von der Zutat kommt auf eine Pizza. Der Wert gilt für alle
+              Events und kann von Admins angepasst werden.
             </li>
             <li>
               <b>nach Statistik</b>: mit Hilfe der Vorbestellungen und allgemeinen Statistik wird
@@ -38,37 +37,9 @@
         </li>
         <li>
           In der Spalte <b>Manuell</b> sollte jetzt der Wert eingetragen werden, der auf dem
-          Einkaufszettel stehen soll. Dieser Wert wird später auf für die Bewertung der Kalkulation
-          herangezogen.
+          Einkaufszettel stehen soll.
         </li>
         <li>Einkaufszettel drucken.</li>
-      </ol>
-      <h4>Nach deinem Event:</h4>
-      <ol start="8">
-        <li>
-          Bewerte deine Kalkulation. Dücke ...
-          <ul>
-            <li>
-              <b>Zu wenig</b>
-              <span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>, wenn dir
-              die Zutat während der Party aus gegegangen ist und nicht alle Bestellungen damit
-              belegt werden konnten.
-            </li>
-            <li>
-              <b>genau richtig</b> <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>,
-              wenn du mit dem Rest der übrig ist zufrieden bist. Bitte auch anwählen, wenn du
-              nachdem die Zutat nicht mehr verfügbar war, Sie auf dem Wunschzettel deaktiviert hast.
-              D. h. alle Bestellungen zufriedensetellend bedient wurden.
-            </li>
-            <li>
-              <b>Zu viel</b>
-              <span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span>, wenn die
-              Menge der Reste nicht akzeptabel ist.
-            </li>
-          </ul>
-          Gespeichert wird der Belag pro Pizza. Dieser Berechnet sich aus dem Wert im Feld Manuell
-          (bitte nicht ändern) und der Anzahl der Bestellungen für diese Zutat.
-        </li>
       </ol>
     </div>
   </div>
@@ -190,7 +161,6 @@
               <th class="td_right">je Pizza</th>
               <th class="td_right">nach Statistik</th>
               <th class="td_right">Manuell</th>
-              <th class="td_center print_not">Bewertung</th>
             </tr>
           </thead>
           <tbody>
@@ -207,14 +177,27 @@
                 <td class="td_center">{{ percentage(row) | number: '1.1-1' }}</td>
                 <td>{{ row.name }}</td>
                 <td class="td_right">
-                  {{ calculation().amountPerPizza(row) | number: '1.1-1' }} {{ row.unit }}
-                  <a
-                    (click)="row.showDetails = !row.showDetails"
-                    style="cursor: pointer"
-                    class="print_not"
-                  >
-                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                  </a>
+                  @if (canEditAmountPerPizza) {
+                    <div class="input-group input-group-sm input-100 pull-right print_not">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        class="form-control"
+                        title="Menge je Pizza für alle Events"
+                        [ngModel]="row.amountPerPizza"
+                        [ngModelOptions]="{ standalone: true }"
+                        [placeholder]="calculation().statisticAmountPerPizza(row) | number: '1.0-1'"
+                        (change)="saveAmountPerPizza(row, $any($event.target).value)"
+                      />
+                      <span class="input-group-addon">{{ row.unit }}</span>
+                    </div>
+                    <span class="print_only">
+                      {{ calculation().amountPerPizza(row) | number: '1.1-1' }} {{ row.unit }}
+                    </span>
+                  } @else {
+                    {{ calculation().amountPerPizza(row) | number: '1.1-1' }} {{ row.unit }}
+                  }
                 </td>
                 <td class="td_right">
                   {{ amountCalculated(row) | number: '1.1-1' }} {{ row.unit }}
@@ -233,33 +216,7 @@
                   </div>
                 </td>
                 <td class="td_right print_only">{{ row.amount }} {{ row.unit }}</td>
-                <td class="td_center print_not">
-                  <div class="btn-group btn-group-sm" role="group" aria-label="Bewertung">
-                    @for (button of ratingButtons; track button.value) {
-                      <button
-                        type="button"
-                        class="btn btn-default"
-                        [class.btn-primary]="row.rating === button.value"
-                        [disabled]="!row.active"
-                        (click)="changeRating(row, button.value)"
-                      >
-                        <span class="glyphicon {{ button.icon }}" aria-hidden="true"></span>
-                      </button>
-                    }
-                  </div>
-                </td>
               </tr>
-              @if (row.showDetails) {
-                <tr class="print_not">
-                  <td colspan="7">
-                    @if (calculation().statistic(row); as statistic) {
-                      <app-statistic-chart [statistic]="statistic" [unit]="row.unit" />
-                    } @else {
-                      Für diese Zutat gibt es noch keine Erfahrungswerte.
-                    }
-                  </td>
-                </tr>
-              }
             }
           </tbody>
         }

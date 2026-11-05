@@ -64,6 +64,7 @@ final class App
 
         $router->get('/api/condiments', $condiments->findAll(...));
         $router->get('/api/condiments/statistic', $condiments->findCondimentStatistic(...));
+        $router->put('/api/condiments/{condimentId}', $condiments->update(...));
 
         $router->get('/api/current-user', $users->getCurrentUser(...));
         $router->put('/api/current-user/password', $users->changePassword(...));
@@ -92,6 +93,7 @@ final class App
         $router->get('/api/partys/{partyId}', $parties->findById(...));
         $router->put('/api/partys/{partyId}', $parties->update(...));
         $router->get('/api/partys/{partyId}/{partyKey}', $parties->findByIdAndKey(...));
+        $router->put('/api/partys/{partyId}/sold-out/{condimentId}', $parties->setSoldOut(...));
 
         return $router;
     }

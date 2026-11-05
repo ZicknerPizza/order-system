@@ -19,6 +19,14 @@ export class CondimentCatalog {
   readonly byId = computed(
     () => new Map(this.condiments().map((condiment) => [condiment.id.value, condiment])),
   );
+
+  /** Keeps the loaded list up to date after an admin changed the amount per pizza */
+  setAmountPerPizza(condimentId: CondimentId, amountPerPizza: number | null): void {
+    const condiment = this.byId().get(condimentId.value);
+    if (condiment) {
+      condiment.amountPerPizza = amountPerPizza;
+    }
+  }
 }
 
 export const condimentsResolver: ResolveFn<Condiment[]> = () =>

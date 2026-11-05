@@ -1,7 +1,7 @@
-import { Condiment, CondimentStatistic, hasId, Order, Statistic } from '../api/models';
+import { Condiment, CondimentStatistic, hasId, Order } from '../api/models';
 
 /**
- * Calculation of the shopping list on the party page, unchanged from the old frontend.
+ * Calculation of the shopping list on the party page.
  */
 export class PartyCalculation {
   private readonly statistics: Map<number, CondimentStatistic>;
@@ -11,10 +11,6 @@ export class PartyCalculation {
     private readonly orders: Order[],
   ) {
     this.statistics = new Map(statistics.map((statistic) => [statistic.id.value, statistic]));
-  }
-
-  statistic(condiment: Condiment): Statistic | null {
-    return this.statistics.get(condiment.id.value)?.statistic ?? null;
   }
 
   /** Expected share of orders with this condiment in percent. */
@@ -30,10 +26,15 @@ export class PartyCalculation {
     return (blendStatistics * percentageOverall + (100 - blendStatistics) * percentageParty) / 100;
   }
 
-  /** Average of the median amounts per pizza of all ratings. */
+  /** Amount set by admins, otherwise the one from the ratings of past parties. */
   amountPerPizza(condiment: Condiment): number {
-    const statistic = this.statistic(condiment);
-    if (statistic === null) {
+    return condiment.amountPerPizza ?? this.statisticAmountPerPizza(condiment);
+  }
+
+  /** Average of the median amounts per pizza of all ratings. */
+  statisticAmountPerPizza(condiment: Condiment): number {
+    const statistic = this.statistics.get(condiment.id.value)?.statistic;
+    if (!statistic) {
       return 0;
     }
     const medians = [statistic.less, statistic.match, statistic.greater]
@@ -50,18 +51,4 @@ export class PartyCalculation {
       100
     );
   }
-}
-
-export function statisticMinimum(statistic: Statistic): number {
-  const minimums = [statistic.greater, statistic.match, statistic.less]
-    .filter((values) => values !== null)
-    .map((values) => values[0]);
-  return Math.min(Number.MAX_SAFE_INTEGER, ...minimums);
-}
-
-export function statisticMaximum(statistic: Statistic): number {
-  const maximums = [statistic.greater, statistic.match, statistic.less]
-    .filter((values) => values !== null)
-    .map((values) => values[values.length - 1]);
-  return Math.max(0, ...maximums);
 }

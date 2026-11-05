@@ -56,15 +56,20 @@ import { NotificationService } from './notifications';
                     <li class="list-group-item">
                       <h3>{{ category[0] }}</h3>
                       @for (condiment of category[1]; track condiment.id.value) {
-                        <div>
+                        @let soldOut = isSoldOut(condiment.id);
+                        <div [class.text-muted]="soldOut">
                           <input
                             type="checkbox"
                             id="condiment.order{{ condiment.id.value }}"
                             name="condiment.order{{ condiment.id.value }}"
+                            [disabled]="soldOut"
                             [(ngModel)]="selected[condiment.id.value]"
                           />
                           <label for="condiment.order{{ condiment.id.value }}">
                             {{ condiment.name }}
+                            @if (soldOut) {
+                              (leer)
+                            }
                           </label>
                         </div>
                       }
@@ -103,6 +108,8 @@ export class OrderCreateForm {
   readonly alwaysOpen = input(false);
   /** Order whose name and condiments are taken over into the form */
   readonly template = input<{ order: Order } | null>(null);
+  /** Ran out during the party, shown but can't be ordered */
+  readonly soldOut = input<CondimentId[]>([]);
   readonly ordered = output<void>();
 
   private readonly orderApi = inject(OrderApi);
@@ -134,11 +141,16 @@ export class OrderCreateForm {
       this.selected = Object.fromEntries(
         template.order.condiments
           .filter((condiment) => hasId(untracked(this.party).condiments, condiment))
+          .filter((condiment) => !untracked(() => this.isSoldOut(condiment)))
           .map((condiment) => [condiment.value, true]),
       );
       this.show.set(true);
       scrollTo(0, 0);
     });
+  }
+
+  protected isSoldOut(condimentId: CondimentId): boolean {
+    return hasId(this.soldOut(), condimentId);
   }
 
   protected sendOrder(): void {
@@ -152,7 +164,9 @@ export class OrderCreateForm {
     const party = this.party();
     const condiments: CondimentId[] = Object.entries(this.selected)
       .filter(([, selected]) => selected)
-      .map(([condimentId]) => ({ value: Number(condimentId) }));
+      .map(([condimentId]): CondimentId => ({ value: Number(condimentId) }))
+      // Ticked before the kitchen marked it as sold out
+      .filter((condiment) => !this.isSoldOut(condiment));
     // Orders before the party are pre-orders, the kitchen activates them on the day
     const status: Status = isToday(party.date) ? 'WAITING' : 'INACTIVE';
 

@@ -208,6 +208,18 @@ final class OrderController
             static fn(mixed $condimentId): ?int => Json::intId($condimentId),
             Json::list($body['condiments'] ?? null, 'condiments')
         );
+        // The order form may have been loaded before the condiment ran out
+        $soldOut = array_filter($condimentIds, fn(?int $condimentId): bool => $condimentId !== null && $this->db->one(
+            'SELECT condimentId FROM PartyCondimentSoldOut WHERE partyId = ? AND condimentId = ?',
+            [$partyId, $condimentId]
+        ) !== null);
+        if ($soldOut !== []) {
+            $names = array_column($this->db->all(
+                'SELECT name FROM Condiment WHERE id IN (' . Database::placeholders(count($soldOut)) . ') ORDER BY name',
+                array_values($soldOut)
+            ), 'name');
+            throw new HttpException(400, implode(', ', $names) . ' ist leider aus.');
+        }
 
         $this->db->transactional(function () use ($orderId, $partyId, $name, $comment, $status, $condimentIds): void {
             $this->db->execute(

@@ -1,14 +1,32 @@
 import { Condiment, CondimentStatistic, Order } from './api/models';
-import { PartyCalculation, statisticMaximum, statisticMinimum } from './event/statistic';
+import { PartyCalculation } from './event/statistic';
 import { remainingBakeTime, toPizzas } from './kitchen/kitchen-store';
 import { halfMarker } from './kitchen/pizza-detail';
 import { countCondiments } from './kitchen/remaining-condiments';
 import { groupByCategory } from './shared/condiments';
 import { isToday } from './shared/order-create';
 
-const cheese: Condiment = { id: { value: 1 }, category: 'Käse', name: 'Emmentaler', unit: 'g' };
-const ham: Condiment = { id: { value: 2 }, category: 'Wurst', name: 'Schinken', unit: 'g' };
-const gouda: Condiment = { id: { value: 3 }, category: 'Käse', name: 'Gouda', unit: 'g' };
+const cheese: Condiment = {
+  id: { value: 1 },
+  category: 'Käse',
+  name: 'Emmentaler',
+  unit: 'g',
+  amountPerPizza: null,
+};
+const ham: Condiment = {
+  id: { value: 2 },
+  category: 'Wurst',
+  name: 'Schinken',
+  unit: 'g',
+  amountPerPizza: null,
+};
+const gouda: Condiment = {
+  id: { value: 3 },
+  category: 'Käse',
+  name: 'Gouda',
+  unit: 'g',
+  amountPerPizza: null,
+};
 
 function order(id: string, condiments: number[], pizzaId: string | null = null): Order {
   return {
@@ -52,9 +70,9 @@ describe('PartyCalculation', () => {
     expect(calculation.amountCalculated(cheese, 0, 10)).toBe((50 * 165 * 10) / 100);
   });
 
-  it('finds the range over all ratings', () => {
-    expect(statisticMinimum(statistics[0].statistic)).toBe(100);
-    expect(statisticMaximum(statistics[0].statistic)).toBe(220);
+  it('prefers the amount per pizza set by admins', () => {
+    expect(calculation.amountPerPizza({ ...cheese, amountPerPizza: 150 })).toBe(150);
+    expect(calculation.statisticAmountPerPizza({ ...cheese, amountPerPizza: 150 })).toBe(165);
   });
 });
 
@@ -79,13 +97,25 @@ describe('remainingBakeTime', () => {
 
 describe('halfMarker', () => {
   const catalog: Condiment[] = [
-    { id: { value: 1 }, category: 'Käse', name: 'Mozzarella', unit: 'g' },
-    { id: { value: 2 }, category: 'Gewürze', name: 'Chili', unit: 'g' },
-    { id: { value: 3 }, category: 'Wurstwaren', name: 'Schinken', unit: 'g' },
-    { id: { value: 4 }, category: 'Wurstwaren', name: 'Salami', unit: 'g' },
-    { id: { value: 5 }, category: 'frische Kräuter', name: 'Basilikum', unit: 'g' },
-    { id: { value: 6 }, category: 'frische Kräuter', name: 'Rucola', unit: 'g' },
-    { id: { value: 7 }, category: 'Basis', name: 'Tomatensauce', unit: 'ml' },
+    { id: { value: 1 }, category: 'Käse', name: 'Mozzarella', unit: 'g', amountPerPizza: null },
+    { id: { value: 2 }, category: 'Gewürze', name: 'Chili', unit: 'g', amountPerPizza: null },
+    { id: { value: 3 }, category: 'Wurstwaren', name: 'Schinken', unit: 'g', amountPerPizza: null },
+    { id: { value: 4 }, category: 'Wurstwaren', name: 'Salami', unit: 'g', amountPerPizza: null },
+    {
+      id: { value: 5 },
+      category: 'frische Kräuter',
+      name: 'Basilikum',
+      unit: 'g',
+      amountPerPizza: null,
+    },
+    {
+      id: { value: 6 },
+      category: 'frische Kräuter',
+      name: 'Rucola',
+      unit: 'g',
+      amountPerPizza: null,
+    },
+    { id: { value: 7 }, category: 'Basis', name: 'Tomatensauce', unit: 'ml', amountPerPizza: null },
   ];
 
   it('takes the lowest condiment that is only on this half, without base, cheese, herbs and spices', () => {

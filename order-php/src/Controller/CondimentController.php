@@ -5,11 +5,13 @@ namespace OrderSystem\Controller;
 
 use OrderSystem\Auth;
 use OrderSystem\Database;
-use OrderSystem\Domain\Role;
 use OrderSystem\Domain\Rating;
+use OrderSystem\Domain\Role;
 use OrderSystem\Domain\Status;
+use OrderSystem\Http\HttpException;
 use OrderSystem\Http\Request;
 use OrderSystem\Http\Response;
+use OrderSystem\Json;
 
 final class CondimentController
 {
@@ -22,7 +24,7 @@ final class CondimentController
     public function findAll(Request $request): Response
     {
         $condiments = $this->db->all(
-            'SELECT c.id, c.name, c.unit, cc.name AS category
+            'SELECT c.id, c.name, c.unit, c.amountPerPizza, cc.name AS category
              FROM Condiment c JOIN CondimentCategory cc ON cc.id = c.parent_id
              ORDER BY cc.sorting ASC, c.sorting ASC'
         );
@@ -31,7 +33,25 @@ final class CondimentController
             'category' => $condiment['category'],
             'name' => $condiment['name'],
             'unit' => $condiment['unit'],
+            'amountPerPizza' => $condiment['amountPerPizza'] === null ? null : (float) $condiment['amountPerPizza'],
         ], $condiments));
+    }
+
+    /**
+     * Amount per pizza for the shopping list of all parties, null falls back to the statistic.
+     */
+    public function update(Request $request, string $condimentId): Response
+    {
+        $this->auth->requireRole(Role::ADMIN);
+        $amount = Json::float(Json::object($request->json())['amountPerPizza'] ?? null);
+        if ($amount !== null && ($amount < 0 || $amount > 100000)) {
+            throw new HttpException(400, 'Die Menge je Pizza muss zwischen 0 und 100000 liegen.');
+        }
+        if (!ctype_digit($condimentId) || $this->db->one('SELECT id FROM Condiment WHERE id = ?', [(int) $condimentId]) === null) {
+            throw new HttpException(404, 'Condiment not found');
+        }
+        $this->db->execute('UPDATE Condiment SET amountPerPizza = ? WHERE id = ?', [$amount, (int) $condimentId]);
+        return Response::ok();
     }
 
     public function findCondimentStatistic(Request $request): Response

@@ -68,6 +68,7 @@ php tests/run.php
 |---|---|---|---|
 | GET | `/api/condiments` | – | condiments sorted by category |
 | GET | `/api/condiments/statistic` | kitchen | amount per pizza by rating |
+| PUT | `/api/condiments/{condimentId}` | admin | 200, `{amountPerPizza}` for all parties, `null` uses the statistic |
 | POST | `/api/session` | – | login `{name, password, code?}`, returns `{token, name, role, totp}` |
 | DELETE | `/api/session` | – | logout, ends the session |
 | GET | `/api/current-user` | service | name, role and whether TOTP is on |
@@ -89,6 +90,7 @@ php tests/run.php
 | GET | `/api/partys/{partyId}` | service | party details |
 | PUT | `/api/partys/{partyId}` | kitchen | 204 |
 | GET | `/api/partys/{partyId}/{partyKey}` | party key | party details |
+| PUT | `/api/partys/{partyId}/sold-out/{condimentId}` | service | 200, `{soldOut}`, sold out condiments can't be ordered |
 | GET | `/api/users` | admin | users with role |
 | POST | `/api/users` | admin | 204, `{name, role, password}` |
 | PUT | `/api/users/{userId}/password` | admin | 200, `{password}`, ends the sessions of the user |

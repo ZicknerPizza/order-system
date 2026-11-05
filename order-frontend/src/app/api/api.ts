@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   Condiment,
+  CondimentId,
   CondimentStatistic,
   Imprint,
   Link,
@@ -33,6 +34,10 @@ export class CondimentApi {
   findStatistic(): Observable<CondimentStatistic[]> {
     return this.http.get<CondimentStatistic[]>('api/condiments/statistic');
   }
+
+  setAmountPerPizza(condimentId: CondimentId, amountPerPizza: number | null): Observable<void> {
+    return this.http.put<void>(`api/condiments/${condimentId.value}`, { amountPerPizza });
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -54,6 +59,12 @@ export class PartyApi {
 
   update(partyId: PartyId, party: PartySave): Observable<void> {
     return this.http.put<void>(`api/partys/${partyId.value}`, party);
+  }
+
+  setSoldOut(partyId: PartyId, condimentId: CondimentId, soldOut: boolean): Observable<void> {
+    return this.http.put<void>(`api/partys/${partyId.value}/sold-out/${condimentId.value}`, {
+      soldOut,
+    });
   }
 }
 
