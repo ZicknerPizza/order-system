@@ -119,6 +119,10 @@ import { NotificationService } from './shared/notifications';
     </p>
   `,
   styles: `
+    .table > tbody > tr > td {
+      vertical-align: middle;
+    }
+
     .form-inline .form-group {
       margin-right: 6px;
     }
@@ -155,6 +159,8 @@ export class UserAdmin implements OnInit {
       await firstValueFrom(this.userApi.setPassword(user.id, this.passwords[user.id] ?? ''));
       delete this.passwords[user.id];
       this.notifications.success(`Das Passwort von ${user.name} wurde gesetzt.`);
+      // Reloading refreshes the view, the emptied field would stay filled otherwise
+      await this.load();
     } catch (error) {
       this.notifications.error(backendMessage(error, 'Das Passwort konnte nicht gesetzt werden.'));
     }

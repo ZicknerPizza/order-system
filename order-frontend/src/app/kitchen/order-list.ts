@@ -1,12 +1,11 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { Order } from '../api/models';
-import { CondimentName } from '../shared/condiments';
+import { CondimentCatalog } from '../shared/condiments';
 import { KitchenStore } from './kitchen-store';
 
 /** Open orders, which can be activated, deactivated and deleted. */
 @Component({
   selector: 'app-order-list',
-  imports: [CondimentName],
   template: `
     <div class="panel panel-default">
       <div
@@ -30,9 +29,7 @@ import { KitchenStore } from './kitchen-store';
                     @if (order.comment) {
                       <p class="order-comment">{{ order.comment }}<br /></p>
                     }
-                    @for (condiment of order.condiments; track condiment.value) {
-                      <span class="condiment-list"><app-condiment [id]="condiment" /></span>
-                    }
+                    {{ condimentNames(order) }}
                   </div>
                 }
               </div>
@@ -78,8 +75,15 @@ export class OrderList {
   readonly orders = input.required<Order[]>();
 
   protected readonly store = inject(KitchenStore);
+  private readonly catalog = inject(CondimentCatalog);
   protected readonly show = signal(false);
   protected readonly details = signal(new Set<string>());
+
+  protected condimentNames(order: Order): string {
+    return order.condiments
+      .map((condiment) => this.catalog.byId().get(condiment.value)?.name ?? '')
+      .join(', ');
+  }
 
   protected isActive(order: Order): boolean {
     return order.status !== 'INACTIVE';

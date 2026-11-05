@@ -97,8 +97,10 @@ import { PizzaDetail } from './pizza-detail';
       display: block;
     }
 
+    /* Both buttons wrap in narrow columns */
     .oven-button {
       margin-left: 10px;
+      margin-bottom: 6px;
     }
   `,
 })

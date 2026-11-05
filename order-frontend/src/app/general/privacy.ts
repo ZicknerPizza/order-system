@@ -81,6 +81,11 @@ import { GeneralTabs } from './general-tabs';
 
     <p class="text-muted">Stand: November 2026</p>
   `,
+  styles: `
+    h3 {
+      margin-top: 20px;
+    }
+  `,
 })
 export class Privacy {
   readonly imprint = input.required<ImprintData | null>();
