@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../api/api';
 import { Condiment, CondimentId, hasId, Order, Party, Status } from '../api/models';
 import { backendMessage } from '../auth/auth';
-import { groupByCategory } from './condiments';
+import { BASE_CATEGORY, groupByCategory } from './condiments';
 import { NotificationService } from './notifications';
 
 @Component({
@@ -63,7 +63,8 @@ import { NotificationService } from './notifications';
                             id="condiment.order{{ condiment.id.value }}"
                             name="condiment.order{{ condiment.id.value }}"
                             [disabled]="soldOut"
-                            [(ngModel)]="selected[condiment.id.value]"
+                            [ngModel]="selected[condiment.id.value]"
+                            (ngModelChange)="select(condiment, $event)"
                           />
                           <label for="condiment.order{{ condiment.id.value }}">
                             {{ condiment.name }}
@@ -138,16 +139,48 @@ export class OrderCreateForm {
       this.name = template.order.name;
       this.comment = '';
       // Only condiments that are still offered, others would be ordered without being visible
-      this.selected = Object.fromEntries(
-        template.order.condiments
-          .filter((condiment) => hasId(untracked(this.party).condiments, condiment))
-          .filter((condiment) => !untracked(() => this.isSoldOut(condiment)))
-          .map((condiment) => [condiment.value, true]),
-      );
+      this.selected = {};
+      template.order.condiments
+        .filter((condiment) => hasId(untracked(this.party).condiments, condiment))
+        .filter((condiment) => !untracked(() => this.isSoldOut(condiment)))
+        .forEach((condimentId) => {
+          // Old orders may have two bases, the first one is kept
+          const condiment = untracked(this.condiments).find(
+            (c) => c.id.value === condimentId.value,
+          );
+          if (condiment) {
+            this.select(condiment, true, false);
+          }
+        });
       this.show.set(true);
       scrollTo(0, 0);
     });
   }
+
+  /** A base replaces the base chosen before, like a radio button that can be unticked */
+  protected select(condiment: Condiment, selected: boolean, replaceBase = true): void {
+    const isBase = condiment.category === BASE_CATEGORY;
+    if (selected && isBase) {
+      const otherBase = this.bases().find(
+        (base) => base.id.value !== condiment.id.value && this.selected[base.id.value],
+      );
+      if (otherBase && !replaceBase) {
+        return;
+      }
+      if (otherBase) {
+        this.selected[otherBase.id.value] = false;
+      }
+    }
+    this.selected[condiment.id.value] = selected;
+  }
+
+  /** Bases offered at the party */
+  private readonly bases = computed(() =>
+    this.condiments().filter(
+      (condiment) =>
+        condiment.category === BASE_CATEGORY && hasId(this.party().condiments, condiment.id),
+    ),
+  );
 
   protected isSoldOut(condimentId: CondimentId): boolean {
     return hasId(this.soldOut(), condimentId);
@@ -159,6 +192,17 @@ export class OrderCreateForm {
     if (name === '') {
       this.nameMissing.set(true);
       this.nameInput()?.nativeElement.focus();
+      return;
+    }
+    const available = this.bases().filter((base) => !this.isSoldOut(base.id));
+    const withBase = available.some((base) => this.selected[base.id.value]);
+    if (
+      available.length > 0 &&
+      !withBase &&
+      !window.confirm(
+        `Du hast keine Basis wie ${available[0].name} gewählt. Möchtest du die Pizza trotzdem so bestellen?`,
+      )
+    ) {
       return;
     }
     const party = this.party();

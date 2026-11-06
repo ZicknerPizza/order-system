@@ -1,5 +1,6 @@
 import { Condiment, CondimentStatistic, Order } from './api/models';
 import { PartyCalculation } from './event/statistic';
+import { choosePizza } from './kitchen/bakery';
 import { remainingBakeTime, toPizzas } from './kitchen/kitchen-store';
 import { halfMarker } from './kitchen/pizza-detail';
 import { countCondiments } from './kitchen/remaining-condiments';
@@ -174,5 +175,50 @@ describe('isToday', () => {
   it('compares with the local date also shortly after midnight', () => {
     expect(isToday('2026-11-03', new Date(2026, 10, 3, 0, 30))).toBe(true);
     expect(isToday('2026-11-02', new Date(2026, 10, 3, 0, 30))).toBe(false);
+  });
+});
+
+describe('choosePizza', () => {
+  // Tomato sauce and sour cream are the bases
+  const bases = [10, 11];
+  const names = (pizza: Order[]) => pizza.map((o) => o.name);
+
+  it('takes the first two orders with the same base', () => {
+    const queue = [order('a', [10, 1]), order('b', [10, 2]), order('c', [11])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'b']);
+  });
+
+  it('looks further back for an order with the same base', () => {
+    const queue = [order('a', [10]), order('b', [11]), order('c', [11]), order('d', [10])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'd']);
+  });
+
+  it('takes the second or third with more shared condiments without the same base', () => {
+    const queue = [order('a', [10, 1, 2]), order('b', [11]), order('c', [11, 1, 2])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('takes the second or third with more shared condiments when three have the same base', () => {
+    const queue = [
+      order('a', [10, 1, 2]),
+      order('b', [10, 3]),
+      order('c', [10, 2]),
+      order('d', [10, 1, 2]),
+    ];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('prefers the older order on a tie', () => {
+    const queue = [order('a', [10, 1]), order('b', [10, 1]), order('c', [10, 1])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'b']);
+  });
+
+  it('treats orders without a base as having the same base', () => {
+    const queue = [order('a', [1]), order('b', [10]), order('c', [2])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('pairs the only two orders', () => {
+    expect(names(choosePizza([order('a', [10]), order('b', [11])], bases))).toEqual(['a', 'b']);
   });
 });

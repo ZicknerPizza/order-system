@@ -99,9 +99,10 @@ final class TestContext
                 (1, 'admin', ?, 4), (2, 'koch', ?, 3), (3, 'service', ?, 2), (4, 'alt', ?, 0)",
             [$hash, $hash, $hash, $hash]
         );
-        $this->db->execute("INSERT INTO CondimentCategory (id, name, sorting) VALUES (1, 'Käse', 2), (2, 'Soße', 1)");
+        $this->db->execute("INSERT INTO CondimentCategory (id, name, sorting) VALUES (1, 'Käse', 2), (2, 'Soße', 1), (3, 'Basis', 0)");
         $this->db->execute("INSERT INTO Condiment (id, name, sorting, unit, parent_id) VALUES
-            (1, 'Mozzarella', 2, 'g', 1), (2, 'Gouda', 1, 'g', 1), (3, 'Tomatensoße', 1, 'ml', 2)");
+            (1, 'Mozzarella', 2, 'g', 1), (2, 'Gouda', 1, 'g', 1), (3, 'Tomatensoße', 1, 'ml', 2),
+            (4, 'Tomatensauce', 1, 'g', 3), (5, 'Schmand', 2, 'g', 3)");
         $this->db->execute("INSERT INTO Link (id, identifier, eventId) VALUES (1, 'weihnachten', NULL)");
     }
 }
@@ -147,6 +148,8 @@ $t->assertEquals(404, $t->request('GET', '/.well-known/security.txt', auth: null
 // --- Condiments -------------------------------------------------------------------------------
 
 $t->assertEquals([
+    ['id' => ['value' => 4], 'category' => 'Basis', 'name' => 'Tomatensauce', 'unit' => 'g', 'amountPerPizza' => null],
+    ['id' => ['value' => 5], 'category' => 'Basis', 'name' => 'Schmand', 'unit' => 'g', 'amountPerPizza' => null],
     ['id' => ['value' => 3], 'category' => 'Soße', 'name' => 'Tomatensoße', 'unit' => 'ml', 'amountPerPizza' => null],
     ['id' => ['value' => 2], 'category' => 'Käse', 'name' => 'Gouda', 'unit' => 'g', 'amountPerPizza' => null],
     ['id' => ['value' => 1], 'category' => 'Käse', 'name' => 'Mozzarella', 'unit' => 'g', 'amountPerPizza' => null],
@@ -504,6 +507,10 @@ $t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $orde
 $t->assertEquals(200, $t->request('PUT', "/api/partys/$partyId/sold-out/1", $soldOut(false), auth: 'service:secret')->status, 'condiment is available again');
 $t->assertEquals([], $t->request('GET', "/api/partys/$partyId", auth: 'service:secret')->decoded()['soldOut'], 'nothing sold out any more');
 $t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('s4', 'Sina', [1]), auth: null, ip: '10.0.0.7')->status, 'available condiment can be ordered again');
+$response = $t->request('POST', "/api/orders/$partyId/abcd1234", $order('b1', 'Sina', [4, 5, 1]), auth: null, ip: '10.0.0.7');
+$t->assertEquals([400, 'Bitte wähle höchstens eine Basis.'], [$response->status, $response->decoded()['message']], 'at most one base per order');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('b2', 'Sina', [4, 1, 2]), auth: null, ip: '10.0.0.7')->status, 'one base with other condiments');
+$t->assertEquals(204, $t->request('POST', "/api/orders/$partyId/abcd1234", $order('b3', 'Sina', [1]), auth: null, ip: '10.0.0.7')->status, 'order without a base');
 
 $admin = 'admin:newsecret1';
 $t->assertEquals(403, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => 120], auth: 'service:secret')->status, 'only admins set the amount per pizza');
@@ -511,7 +518,7 @@ $t->assertEquals(400, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' 
 $t->assertEquals(404, $t->request('PUT', '/api/condiments/99', ['amountPerPizza' => 1], auth: $admin)->status, 'unknown condiment');
 $t->assertEquals(200, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => 120.5], auth: $admin)->status, 'admin sets the amount per pizza');
 $amounts = array_column($t->request('GET', '/api/condiments', auth: null)->decoded(), 'amountPerPizza', 'name');
-$t->assertEquals(['Tomatensoße' => null, 'Gouda' => null, 'Mozzarella' => 120.5], $amounts, 'amount per pizza in the condiment list');
+$t->assertEquals(['Tomatensauce' => null, 'Schmand' => null, 'Tomatensoße' => null, 'Gouda' => null, 'Mozzarella' => 120.5], $amounts, 'amount per pizza in the condiment list');
 $t->assertEquals(200, $t->request('PUT', '/api/condiments/1', ['amountPerPizza' => null], auth: $admin)->status, 'amount can be removed again');
 
 echo "{$t->assertions} assertions, {$t->failures} failures\n";

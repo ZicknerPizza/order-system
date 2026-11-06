@@ -1,11 +1,13 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Condiment, Order, Stove } from '../api/models';
+import { Condiment, hasId, Order, Stove } from '../api/models';
+import { BASE_CATEGORY } from '../shared/condiments';
 import { KitchenStore, Pizza, pizzaOrders, STOVE_LABELS } from './kitchen-store';
 import { PizzaDetail } from './pizza-detail';
 
 /**
- * Bake mode: shows the next pizza to top in large font. The two oldest waiting orders become one pizza.
+ * Bake mode: shows the next pizza to top in large font. The oldest waiting order gets a partner with the
+ * same base, see choosePizza().
  * It starts by itself when a new order completes a pizza.
  */
 @Component({
@@ -196,7 +198,10 @@ export class Bakery {
       // The backend sorts the newest first, so the oldest orders come last
       const waiting = this.store.waiting();
       if (this.enabled() && this.current() === null && waiting.length >= 2) {
-        const [order1, order2] = waiting.slice(-2);
+        const bases = this.condiments()
+          .filter((condiment) => condiment.category === BASE_CATEGORY)
+          .map((condiment) => condiment.id.value);
+        const [order1, order2] = choosePizza([...waiting].reverse(), bases);
         await this.store.changeStatus([order1, order2], 'TOPPING');
         this.current.set({ order1, order2 });
       }
@@ -204,4 +209,33 @@ export class Bakery {
       this.busy = false;
     }
   }
+}
+
+/**
+ * The two orders of the next pizza, from the waiting orders oldest first (at least two):
+ * the oldest order and a partner with the same base, both halves get the same sauce.
+ * - The second order has another base: the next order with the same base further back.
+ * - The first three have the same base, or no order has it: the second or third, whichever
+ *   shares more condiments with the first, on a tie the older one.
+ */
+export function choosePizza(queue: Order[], baseIds: number[]): [Order, Order] {
+  const [first, second, third] = queue;
+  const base = (order: Order) =>
+    order.condiments.find((condiment) => baseIds.includes(condiment.value))?.value ?? null;
+  const sameBase = (order: Order) => base(order) === base(first);
+
+  if (!sameBase(second)) {
+    const partner = queue.slice(2).find(sameBase);
+    if (partner) {
+      return [first, partner];
+    }
+  } else if (third === undefined || !sameBase(third)) {
+    return [first, second];
+  }
+  if (third === undefined) {
+    return [first, second];
+  }
+  const shared = (order: Order) =>
+    order.condiments.filter((condiment) => hasId(first.condiments, condiment)).length;
+  return [first, shared(third) > shared(second) ? third : second];
 }

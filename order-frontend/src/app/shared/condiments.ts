@@ -35,6 +35,9 @@ export const condimentsResolver: ResolveFn<Condiment[]> = () =>
 export const condimentStatisticResolver: ResolveFn<CondimentStatistic[]> = () =>
   inject(CondimentApi).findStatistic();
 
+/** Category of the sauce or cream the pizza is spread with, an order has one or none */
+export const BASE_CATEGORY = 'Basis';
+
 /** Keeps the order of the condiments, which the backend sorts by category. */
 export function groupByCategory<T extends Condiment>(condiments: T[]): [string, T[]][] {
   const categories = new Map<string, T[]>();

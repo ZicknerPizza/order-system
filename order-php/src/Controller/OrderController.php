@@ -17,6 +17,8 @@ use OrderSystem\Uuid;
 
 final class OrderController
 {
+    /** Category of the sauce or cream the pizza is spread with */
+    private const BASE_CATEGORY = 'Basis';
     /**
      * Oven compartments, stored in PizzaOrder.stove like in the system before the Java version:
      * upper and lower compartment of the big oven.
@@ -219,6 +221,15 @@ final class OrderController
                 array_values($soldOut)
             ), 'name');
             throw new HttpException(400, implode(', ', $names) . ' ist leider aus.');
+        }
+        // The kitchen puts two orders with the same base on one pizza, so there is one base per order
+        $ids = array_values(array_filter($condimentIds, static fn(?int $condimentId): bool => $condimentId !== null));
+        if (count($ids) > 1 && (int) $this->db->one(
+            'SELECT COUNT(*) AS bases FROM Condiment c JOIN CondimentCategory cc ON cc.id = c.parent_id
+             WHERE cc.name = ? AND c.id IN (' . Database::placeholders(count($ids)) . ')',
+            [self::BASE_CATEGORY, ...$ids]
+        )['bases'] > 1) {
+            throw new HttpException(400, 'Bitte wähle höchstens eine Basis.');
         }
 
         $this->db->transactional(function () use ($orderId, $partyId, $name, $comment, $status, $condimentIds): void {
