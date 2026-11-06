@@ -11,7 +11,7 @@ npm start
 ```
 
 `npm start` serves the app on http://localhost:4200 and proxies `/api` to the PHP backend on
-http://127.0.0.1:8090 (`php -S 127.0.0.1:8090 -t order-php/public order-php/dev-router.php`).
+http://127.0.0.1:8090 (`php -S 127.0.0.1:8090 -t order-php/public order-php/public/api.php`, with a `config.php` for a local database).
 
 ## Tests and build
 
@@ -25,7 +25,7 @@ The build lands in `dist/order-frontend/browser/` and is copied into `order-php/
 ## Structure
 
 - `api/` – types and HTTP calls of the REST API
-- `auth/` – HTTP Basic login, interceptor and route guard
+- `auth/` – login with sessions and TOTP, interceptor and role guard
 - `shared/` – notifications, condiment catalog, order form
 - `general/`, `event/`, `kitchen/`, `login.ts`, `order.ts`, `links.ts` – pages
 - `styles/` – global styles taken over from the old frontend

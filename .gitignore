@@ -5,3 +5,6 @@
 .idea/
 *.iml
 .vscode/
+
+# Upload package for the web space, built from order-php and the frontend
+/deploy/
