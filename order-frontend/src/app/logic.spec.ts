@@ -62,6 +62,10 @@ describe('PartyCalculation', () => {
     expect(calculation.percentage(cheese, 50)).toBe(45);
   });
 
+  it('takes the overall statistic alone without orders', () => {
+    expect(new PartyCalculation(statistics, []).percentage(cheese, 50)).toBe(40);
+  });
+
   it('averages the medians of all ratings for the amount per pizza', () => {
     expect(calculation.amountPerPizza(cheese)).toBe((120 + 210) / 2);
     expect(calculation.amountPerPizza(ham)).toBe(0);

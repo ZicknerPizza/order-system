@@ -28,6 +28,9 @@ import { NotificationService } from '../shared/notifications';
 import { EventTabs } from './event-tabs';
 import { PartyCalculation } from './statistic';
 
+/** Estimated number of pizzas of a new party */
+const NEW_PARTY_PIZZAS = 8;
+
 /** Editable state of one condiment row, kept apart from the shared condiment list. */
 interface CondimentRow extends Condiment {
   active: boolean;
@@ -42,7 +45,8 @@ interface CondimentRow extends Condiment {
 })
 export class PartyEdit {
   readonly party = input<Party>();
-  readonly orders = input<Order[]>([]);
+  /** Not resolved for a new party, the router then sets it to undefined */
+  readonly orders = input<Order[] | undefined>();
   readonly condiments = input.required<Condiment[]>();
   readonly statistics = input.required<CondimentStatistic[]>();
 
@@ -54,7 +58,7 @@ export class PartyEdit {
   private readonly router = inject(Router);
 
   protected readonly calculation = computed(
-    () => new PartyCalculation(this.statistics(), this.orders()),
+    () => new PartyCalculation(this.statistics(), this.orders() ?? []),
   );
 
   /** Form model, initialized from the loaded party */
@@ -86,7 +90,7 @@ export class PartyEdit {
           estimatedNumberOfPizzas: party.estimatedNumberOfPizzas,
           blendStatistics: party.blendStatistics,
         }
-      : { name: '', date: '', estimatedNumberOfPizzas: 0, blendStatistics: 50 };
+      : { name: '', date: '', estimatedNumberOfPizzas: NEW_PARTY_PIZZAS, blendStatistics: 50 };
     const calculation = new Map(
       (party?.condimentCalculation ?? [])
         .filter((condiment) => condiment.condimentId !== null)
@@ -96,19 +100,13 @@ export class PartyEdit {
       const saved = calculation.get(condiment.id.value);
       return {
         ...condiment,
-        active: party !== undefined && hasId(party.condiments, condiment.id),
+        // A new party offers every condiment, the kitchen unticks what it doesn't buy
+        active: party === undefined || hasId(party.condiments, condiment.id),
         amount: saved?.amount == null ? '' : String(saved.amount),
         rating: saved?.rating ?? null,
       };
     });
     this.categories = groupByCategory(rows);
-  }
-
-  protected changeEstimatedNumberOfPizzas(change: number): void {
-    this.model.estimatedNumberOfPizzas = Math.max(
-      (Number(this.model.estimatedNumberOfPizzas) || 0) + change,
-      0,
-    );
   }
 
   /** Saved right away, it does not belong to this party. An empty field falls back to the statistic. */

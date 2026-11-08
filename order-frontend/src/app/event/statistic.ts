@@ -13,16 +13,17 @@ export class PartyCalculation {
     this.statistics = new Map(statistics.map((statistic) => [statistic.id.value, statistic]));
   }
 
-  /** Expected share of orders with this condiment in percent. */
+  /** Expected share of orders with this condiment in percent, from the statistic alone without orders. */
   percentage(condiment: Condiment, blendStatistics: number): number {
     const percentageOverall = this.statistics.get(condiment.id.value)?.percentageOfOrders ?? 0;
-    let percentageParty = 0;
-    if (this.orders.length > 0) {
-      const ordersWithCondiment = this.orders.filter((order) =>
-        hasId(order.condiments, condiment.id),
-      ).length;
-      percentageParty = (ordersWithCondiment / this.orders.length) * 100;
+    // Without orders the party has no share of its own, blending would only halve the statistic
+    if (this.orders.length === 0) {
+      return percentageOverall;
     }
+    const ordersWithCondiment = this.orders.filter((order) =>
+      hasId(order.condiments, condiment.id),
+    ).length;
+    const percentageParty = (ordersWithCondiment / this.orders.length) * 100;
     return (blendStatistics * percentageOverall + (100 - blendStatistics) * percentageParty) / 100;
   }
 
