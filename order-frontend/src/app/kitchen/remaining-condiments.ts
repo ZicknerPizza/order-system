@@ -24,11 +24,13 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
             @for (entry of category[1]; track entry.id.value) {
               <div class="entry">
                 <span class="badge text-bg-secondary">{{ entry.count }}</span>
-                <span [class.sold-out]="entry.soldOut">{{ entry.name }}</span>
+                <span class="name" [class.sold-out]="entry.soldOut" [title]="entry.name">{{
+                  entry.name
+                }}</span>
                 @if (entry.soldOut) {
                   <button
                     type="button"
-                    class="btn btn-xs btn-success float-end"
+                    class="btn btn-xs btn-success"
                     title="Die Zutat kann wieder bestellt werden"
                     (click)="setSoldOut(entry.id, false)"
                   >
@@ -37,7 +39,7 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
                 } @else {
                   <button
                     type="button"
-                    class="btn btn-xs btn-outline-secondary float-end"
+                    class="btn btn-xs btn-outline-secondary"
                     title="Die Zutat ist ausgegangen und kann nicht mehr bestellt werden"
                     (click)="setSoldOut(entry.id, true)"
                   >
@@ -59,9 +61,20 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
       color: #aaa;
     }
 
+    /* Badge, name and button on one line, a long name is cut off instead of wrapping */
     .entry {
-      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       margin-bottom: 3px;
+    }
+
+    .name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .sold-out {
