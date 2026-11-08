@@ -1,0 +1,5 @@
+/config.php
+# Built Angular frontend, copied in during deployment
+/public/*
+!/public/api.php
+!/public/.htaccess

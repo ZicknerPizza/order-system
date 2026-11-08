@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Basil leaf for the kitchen: midrib and side veins are cut out of the leaf -->
+  <mask id="veins">
+    <rect width="24" height="24" fill="#fff"/>
+    <g fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round">
+      <path d="M18.5 5.5 9 15"/>
+      <path d="M10.5 13.5 9.8 9.5"/>
+      <path d="M13.5 10.5 13.6 6.8"/>
+      <path d="M12 12h3.5"/>
+      <path d="M15.3 8.7h2.8"/>
+    </g>
+  </mask>
+  <path mask="url(#veins)" d="M21.5 2C11.5 2 4.5 6.5 4.5 13c0 1.9.5 3.3 1.5 4.3 1 1 2.5 1.5 4.5 1.5 7 0 11-6.3 11-16.8z"/>
+  <path d="M8.5 15.5Q5 19 4 22.5" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

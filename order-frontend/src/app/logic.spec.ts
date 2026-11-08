@@ -1,0 +1,224 @@
+import { Condiment, CondimentStatistic, Order } from './api/models';
+import { PartyCalculation } from './event/statistic';
+import { choosePizza } from './kitchen/bakery';
+import { remainingBakeTime, toPizzas } from './kitchen/kitchen-store';
+import { halfMarker } from './kitchen/pizza-detail';
+import { countCondiments } from './kitchen/remaining-condiments';
+import { groupByCategory } from './shared/condiments';
+import { isToday } from './shared/order-create';
+
+const cheese: Condiment = {
+  id: { value: 1 },
+  category: 'Käse',
+  name: 'Emmentaler',
+  unit: 'g',
+  amountPerPizza: null,
+};
+const ham: Condiment = {
+  id: { value: 2 },
+  category: 'Wurst',
+  name: 'Schinken',
+  unit: 'g',
+  amountPerPizza: null,
+};
+const gouda: Condiment = {
+  id: { value: 3 },
+  category: 'Käse',
+  name: 'Gouda',
+  unit: 'g',
+  amountPerPizza: null,
+};
+
+function order(id: string, condiments: number[], pizzaId: string | null = null): Order {
+  return {
+    orderId: { value: id },
+    pizzaId: pizzaId === null ? null : { value: pizzaId },
+    partyId: { value: 'party' },
+    name: id,
+    comment: null,
+    date: null,
+    timeStove: null,
+    stove: null,
+    status: 'TOPPING',
+    condiments: condiments.map((value) => ({ value })),
+  };
+}
+
+describe('PartyCalculation', () => {
+  const statistics: CondimentStatistic[] = [
+    {
+      id: { value: 1 },
+      percentageOfOrders: 40,
+      statistic: { less: [100, 120, 140], match: [200, 210, 220], greater: null },
+    },
+  ];
+  const orders = [order('a', [1]), order('b', [1, 2]), order('c', []), order('d', [2])];
+  const calculation = new PartyCalculation(statistics, orders);
+
+  it('blends the overall statistic with the orders of the party', () => {
+    // 2 of 4 orders with cheese = 50 %, overall 40 %
+    expect(calculation.percentage(cheese, 0)).toBe(50);
+    expect(calculation.percentage(cheese, 100)).toBe(40);
+    expect(calculation.percentage(cheese, 50)).toBe(45);
+  });
+
+  it('averages the medians of all ratings for the amount per pizza', () => {
+    expect(calculation.amountPerPizza(cheese)).toBe((120 + 210) / 2);
+    expect(calculation.amountPerPizza(ham)).toBe(0);
+  });
+
+  it('calculates the amount for the party', () => {
+    expect(calculation.amountCalculated(cheese, 0, 10)).toBe((50 * 165 * 10) / 100);
+  });
+
+  it('prefers the amount per pizza set by admins', () => {
+    expect(calculation.amountPerPizza({ ...cheese, amountPerPizza: 150 })).toBe(150);
+    expect(calculation.statisticAmountPerPizza({ ...cheese, amountPerPizza: 150 })).toBe(165);
+  });
+});
+
+describe('toPizzas', () => {
+  it('puts two orders with the same pizza id on one pizza', () => {
+    const pizzas = toPizzas([order('a', [], 'p1'), order('b', [], 'p1'), order('c', [], 'p2')]);
+    expect(pizzas.map((p) => [p.order1.name, p.order2?.name ?? null])).toEqual([
+      ['a', 'b'],
+      ['c', null],
+    ]);
+  });
+});
+
+describe('remainingBakeTime', () => {
+  it('counts down the four minutes from the oven time', () => {
+    const baking = { ...order('a', []), timeStove: '2026-11-04T20:00:00' };
+    const start = new Date('2026-11-04T20:00:00').getTime();
+    expect(remainingBakeTime(baking, start + 60_000)).toBe(3 * 60_000);
+    expect(remainingBakeTime(baking, start + 5 * 60_000)).toBe(0);
+  });
+});
+
+describe('halfMarker', () => {
+  const catalog: Condiment[] = [
+    { id: { value: 1 }, category: 'Käse', name: 'Mozzarella', unit: 'g', amountPerPizza: null },
+    { id: { value: 2 }, category: 'Gewürze', name: 'Chili', unit: 'g', amountPerPizza: null },
+    { id: { value: 3 }, category: 'Wurstwaren', name: 'Schinken', unit: 'g', amountPerPizza: null },
+    { id: { value: 4 }, category: 'Wurstwaren', name: 'Salami', unit: 'g', amountPerPizza: null },
+    {
+      id: { value: 5 },
+      category: 'frische Kräuter',
+      name: 'Basilikum',
+      unit: 'g',
+      amountPerPizza: null,
+    },
+    {
+      id: { value: 6 },
+      category: 'frische Kräuter',
+      name: 'Rucola',
+      unit: 'g',
+      amountPerPizza: null,
+    },
+    { id: { value: 7 }, category: 'Basis', name: 'Tomatensauce', unit: 'ml', amountPerPizza: null },
+  ];
+
+  it('takes the lowest condiment that is only on this half, without base, cheese, herbs and spices', () => {
+    const half1 = order('a', [1, 2, 3, 5]);
+    const half2 = order('b', [1, 4, 6]);
+    expect(halfMarker(half1, half2, catalog)).toEqual({
+      condiment: 'Schinken',
+      basil: true,
+      rucola: false,
+    });
+    expect(halfMarker(half2, half1, catalog)).toEqual({
+      condiment: 'Salami',
+      basil: false,
+      rucola: true,
+    });
+  });
+
+  it('ignores base and cheese', () => {
+    const withCheese = order('a', [1, 7]);
+    expect(halfMarker(withCheese, order('b', []), catalog).condiment).toBeNull();
+  });
+
+  it('has no condiment when both halves are the same', () => {
+    expect(halfMarker(order('a', [1, 3]), order('b', [1, 3]), catalog).condiment).toBeNull();
+  });
+});
+
+describe('countCondiments', () => {
+  it('counts the condiments of orders that are neither in the oven nor finished', () => {
+    const counts = countCondiments([
+      { ...order('a', [1, 2]), status: 'WAITING' },
+      { ...order('b', [1]), status: 'TOPPING' },
+      { ...order('c', [1]), status: 'INACTIVE' },
+      { ...order('d', [1, 2]), status: 'BAKING' },
+      { ...order('e', [2]), status: 'EATING' },
+    ]);
+    expect([...counts.entries()]).toEqual([
+      [1, 3],
+      [2, 1],
+    ]);
+  });
+});
+
+describe('groupByCategory', () => {
+  it('keeps the order of the condiments', () => {
+    expect(
+      groupByCategory([cheese, ham, gouda]).map(([category, c]) => [category, c.length]),
+    ).toEqual([
+      ['Käse', 2],
+      ['Wurst', 1],
+    ]);
+  });
+});
+
+describe('isToday', () => {
+  it('compares with the local date also shortly after midnight', () => {
+    expect(isToday('2026-11-03', new Date(2026, 10, 3, 0, 30))).toBe(true);
+    expect(isToday('2026-11-02', new Date(2026, 10, 3, 0, 30))).toBe(false);
+  });
+});
+
+describe('choosePizza', () => {
+  // Tomato sauce and sour cream are the bases
+  const bases = [10, 11];
+  const names = (pizza: Order[]) => pizza.map((o) => o.name);
+
+  it('takes the first two orders with the same base', () => {
+    const queue = [order('a', [10, 1]), order('b', [10, 2]), order('c', [11])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'b']);
+  });
+
+  it('looks further back for an order with the same base', () => {
+    const queue = [order('a', [10]), order('b', [11]), order('c', [11]), order('d', [10])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'd']);
+  });
+
+  it('takes the second or third with more shared condiments without the same base', () => {
+    const queue = [order('a', [10, 1, 2]), order('b', [11]), order('c', [11, 1, 2])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('takes the second or third with more shared condiments when three have the same base', () => {
+    const queue = [
+      order('a', [10, 1, 2]),
+      order('b', [10, 3]),
+      order('c', [10, 2]),
+      order('d', [10, 1, 2]),
+    ];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('prefers the older order on a tie', () => {
+    const queue = [order('a', [10, 1]), order('b', [10, 1]), order('c', [10, 1])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'b']);
+  });
+
+  it('treats orders without a base as having the same base', () => {
+    const queue = [order('a', [1]), order('b', [10]), order('c', [2])];
+    expect(names(choosePizza(queue, bases))).toEqual(['a', 'c']);
+  });
+
+  it('pairs the only two orders', () => {
+    expect(names(choosePizza([order('a', [10]), order('b', [11])], bases))).toEqual(['a', 'b']);
+  });
+});
