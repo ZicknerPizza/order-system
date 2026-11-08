@@ -8,6 +8,20 @@ html {
     font-size: 14px;
 }
 
+/* Phones keep the 16px of Bootstrap 5: easier to read while ordering, and iOS zooms into smaller fields */
+@media (max-width: 767.98px) {
+    html {
+        font-size: 16px;
+    }
+
+    /* Big enough to hit with a finger */
+    input[type=checkbox] {
+        width: 1.1em;
+        height: 1.1em;
+        vertical-align: -0.2em;
+    }
+}
+
 /* Paddings of the list items in Bootstrap 3, the rows inside rely on them */
 .list-group {
     --bs-list-group-item-padding-x: 15px;
@@ -71,14 +85,15 @@ a:hover {
         padding-top: 65px;
     }
 
+    /* In rem, so headings stay larger than the text on phones as well (16px on desktop) */
     h2 {
-        font-size: 16px;
+        font-size: 1.15rem;
         font-weight: 700;
     }
 
     h3 {
         margin-top: 0px;
-        font-size: 16px;
+        font-size: 1.15rem;
         font-weight: 500;
     }
 
