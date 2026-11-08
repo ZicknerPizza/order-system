@@ -39,12 +39,6 @@ import { RemainingCondiments } from './remaining-condiments';
       <div class="col-system-bake col-xl-7 col-lg-5 col-md-7 d-none d-md-block">
         @if (store.canBake()) {
           <app-bakery [condiments]="condiments()" />
-          <!-- Below the bakery on small screens, there is no space beside it -->
-          <app-remaining-condiments
-            class="d-block d-lg-none"
-            [orders]="store.orders()"
-            [condiments]="condiments()"
-          />
         } @else {
           <!-- Service does not bake, the condiments take the place of the bakery -->
           <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />

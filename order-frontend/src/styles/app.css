@@ -56,12 +56,9 @@ html {
     --bs-btn-border-radius: 3px;
 }
 
-a {
-    text-decoration: none;
-}
-
+a,
 a:hover {
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 /* Spacing of the panels in Bootstrap 3 */

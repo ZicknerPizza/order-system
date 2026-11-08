@@ -19,10 +19,26 @@ import { PizzaDetail } from './pizza-detail';
         <div class="card-header">
           <h3 class="card-title mb-0">Backsystem</h3>
         </div>
-        <div class="card-body">Anleitung</div>
+        <!-- How baking works -->
+        <div class="card-body flow">
+          @for (step of steps; track step.icon; let last = $last) {
+            <div class="step">
+              <i class="bi {{ step.icon }}" aria-hidden="true"></i>
+              <span>{{ step.text }}</span>
+            </div>
+            @if (!last) {
+              <i class="bi bi-arrow-right arrow" aria-hidden="true"></i>
+            }
+          }
+        </div>
+        <div class="card-footer text-muted small">
+          Nur noch eine Bestellung? „Auffüllen“ macht daraus eine ganze Pizza.
+        </div>
       </div>
       <div class="mb-3 td_right">
-        <button (click)="start()" type="button" class="btn btn-success">Jetzt backen!</button>
+        <button (click)="start()" type="button" class="btn btn-success">
+          Jetzt loslegen und backen
+        </button>
       </div>
     } @else {
       @if (current(); as pizza) {
@@ -99,6 +115,36 @@ import { PizzaDetail } from './pizza-detail';
       display: block;
     }
 
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      /* Icons on one line, the texts below have different lengths */
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* Equal shares of the whole width */
+      flex: 1 1 0;
+      min-width: 80px;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .step .bi {
+      font-size: 24px;
+      color: var(--bs-info-text-emphasis);
+    }
+
+    .arrow {
+      /* Middle of the icons */
+      margin-top: 4px;
+      color: #aaa;
+    }
+
     /* Both buttons wrap in narrow columns */
     .oven-button {
       margin-left: 10px;
@@ -114,6 +160,16 @@ export class Bakery {
   protected readonly current = signal<Pizza | null>(null);
   protected readonly filling = signal(false);
   protected fontSize = 14;
+
+  /** The flow shown before baking starts */
+  protected readonly steps = [
+    { icon: 'bi-plus-circle', text: 'Neuen Wunsch aufnehmen' },
+    { icon: 'bi-check-circle', text: 'Bestellung aktivieren' },
+    { icon: 'bi-people', text: 'Älteste Bestellung + eine mit gleicher Basis' },
+    { icon: 'bi-pencil', text: 'Belegen, rote Zutaten auf beide Hälften' },
+    { icon: 'bi-fire', text: 'Ofen oben oder unten, grün ist frei' },
+    { icon: 'bi-stopwatch', text: 'Nach 4 Minuten fertig' },
+  ];
   private busy = false;
 
   /** The single waiting order, which can be doubled to fill a pizza */
