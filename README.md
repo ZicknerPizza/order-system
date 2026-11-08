@@ -1,4 +1,4 @@
-# zickner-pizza.de order system
+# Pizza order system
 
 Order system for pizza parties: guests order their pizza online via a link, the kitchen bakes two orders
 at a time on one pizza. Runs on plain shared hosting with PHP and MySQL.
