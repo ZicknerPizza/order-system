@@ -11,8 +11,8 @@ import { NotificationService } from './shared/notifications';
   imports: [FormsModule],
   template: `
     <h2>Benutzerverwaltung</h2>
-    <div class="panel panel-default panel-table">
-      <table class="table table-condensed">
+    <div class="card panel-table">
+      <table class="table table-sm">
         <thead>
           <tr>
             <th>Name</th>
@@ -32,7 +32,7 @@ import { NotificationService } from './shared/notifications';
                   {{ user.role ? roleLabels[user.role] : 'deaktiviert' }}
                 } @else {
                   <select
-                    class="form-control input-sm"
+                    class="form-select form-select-sm"
                     [ngModel]="user.role"
                     (ngModelChange)="setRole(user, $event)"
                   >
@@ -46,7 +46,7 @@ import { NotificationService } from './shared/notifications';
               <td>
                 @if (user.totp) {
                   <span
-                    class="glyphicon glyphicon-phone text-success"
+                    class="bi bi-phone text-success"
                     title="Zwei-Faktor-Anmeldung aktiv"
                     aria-hidden="true"
                   ></span>
@@ -69,27 +69,25 @@ import { NotificationService } from './shared/notifications';
                     autocomplete="new-password"
                     [(ngModel)]="passwords[user.id]"
                   />
-                  <span class="input-group-btn">
-                    <button
-                      type="button"
-                      class="btn btn-default"
-                      title="Passwort setzen"
-                      (click)="setPassword(user)"
-                    >
-                      <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
-                    </button>
-                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    title="Passwort setzen"
+                    (click)="setPassword(user)"
+                  >
+                    <span class="bi bi-floppy" aria-hidden="true"></span>
+                  </button>
                 </div>
               </td>
               <td class="td_right">
                 @if (user.name !== auth.username()) {
                   <button
                     type="button"
-                    class="btn btn-sm btn-default"
+                    class="btn btn-sm btn-outline-secondary"
                     title="Löschen"
                     (click)="delete(user)"
                   >
-                    <span class="glyphicon glyphicon-trash text-danger" aria-hidden="true"></span>
+                    <span class="bi bi-trash text-danger" aria-hidden="true"></span>
                   </button>
                 }
               </td>
@@ -100,8 +98,8 @@ import { NotificationService } from './shared/notifications';
     </div>
 
     <h2>Neuer Benutzer</h2>
-    <form class="form-inline" (ngSubmit)="create()">
-      <div class="form-group">
+    <form class="d-flex flex-wrap gap-2 align-items-start" (ngSubmit)="create()">
+      <div class="mb-3">
         <input
           class="form-control"
           name="name"
@@ -110,14 +108,14 @@ import { NotificationService } from './shared/notifications';
           [(ngModel)]="newUser.name"
         />
       </div>
-      <div class="form-group">
-        <select class="form-control" name="role" [(ngModel)]="newUser.role">
+      <div class="mb-3">
+        <select class="form-select" name="role" [(ngModel)]="newUser.role">
           @for (role of roles; track role) {
             <option [value]="role">{{ roleLabels[role] }}</option>
           }
         </select>
       </div>
-      <div class="form-group">
+      <div class="mb-3">
         <input
           type="password"
           class="form-control"
@@ -129,7 +127,7 @@ import { NotificationService } from './shared/notifications';
       </div>
       <button type="submit" class="btn btn-primary">Anlegen</button>
     </form>
-    <p class="help-block">
+    <p class="form-text">
       Service nimmt in der Küche Bestellungen auf, backt aber nicht. Küche backt und verwaltet
       Events und Links. Admin verwaltet zusätzlich die Benutzer.
     </p>
@@ -137,10 +135,6 @@ import { NotificationService } from './shared/notifications';
   styles: `
     .table > tbody > tr > td {
       vertical-align: middle;
-    }
-
-    .form-inline .form-group {
-      margin-right: 6px;
     }
   `,
 })

@@ -8,13 +8,13 @@ import { NotificationService } from './shared/notifications';
   imports: [FormsModule],
   template: `
     <form class="form-horizontal" (submit)="login()">
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <h2>Anmeldung</h2>
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <input
             class="form-control"
             id="username"
@@ -26,8 +26,8 @@ import { NotificationService } from './shared/notifications';
           />
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <input
             type="password"
             class="form-control"
@@ -40,8 +40,8 @@ import { NotificationService } from './shared/notifications';
         </div>
       </div>
       @if (totpRequired()) {
-        <div class="form-group">
-          <div class="col-sm-offset-4 col-sm-4">
+        <div class="row mb-3">
+          <div class="offset-md-4 col-md-4">
             <input
               #codeInput
               class="form-control"
@@ -56,8 +56,8 @@ import { NotificationService } from './shared/notifications';
           </div>
         </div>
       }
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4 td_right">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4 td_right">
           <button type="submit" class="btn btn-primary">Anmelden</button>
         </div>
       </div>

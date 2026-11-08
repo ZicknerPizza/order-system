@@ -14,15 +14,15 @@ import { NotificationService } from './shared/notifications';
   imports: [FormsModule],
   template: `
     <div class="row">
-      <div class="col-sm-offset-3 col-sm-6">
+      <div class="offset-md-3 col-md-6">
         <h2>Zwei-Faktor-Anmeldung</h2>
         @if (auth.totpEnabled()) {
           <p>
-            <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+            <span class="bi bi-check-lg text-success" aria-hidden="true"></span>
             Die Anmeldung fragt nach dem Passwort einen Code aus deiner Authenticator-App ab.
           </p>
-          <form class="form-inline" (ngSubmit)="disable()">
-            <div class="form-group">
+          <form class="d-flex flex-wrap gap-2 align-items-start" (ngSubmit)="disable()">
+            <div class="mb-3">
               <input
                 type="password"
                 class="form-control"
@@ -32,7 +32,7 @@ import { NotificationService } from './shared/notifications';
                 [(ngModel)]="password"
               />
             </div>
-            <button type="submit" class="btn btn-default">Ausschalten</button>
+            <button type="submit" class="btn btn-outline-secondary">Ausschalten</button>
           </form>
         } @else if (setup(); as setup) {
           <ol>
@@ -43,11 +43,11 @@ import { NotificationService } from './shared/notifications';
             <li>Gib den sechsstelligen Code ein, den die App anzeigt.</li>
           </ol>
           <img [src]="qrCode()" alt="QR-Code für die Authenticator-App" width="200" height="200" />
-          <p class="help-block">
+          <p class="form-text">
             Ohne Kamera: Schlüssel <code>{{ setup.secret }}</code> in der App von Hand eingeben.
           </p>
-          <form class="form-inline" (ngSubmit)="confirm()">
-            <div class="form-group">
+          <form class="d-flex flex-wrap gap-2 align-items-start" (ngSubmit)="confirm()">
+            <div class="mb-3">
               <input
                 class="form-control"
                 name="code"
@@ -72,10 +72,6 @@ import { NotificationService } from './shared/notifications';
     </div>
   `,
   styles: `
-    .form-inline .form-group {
-      margin-right: 6px;
-    }
-
     img {
       display: block;
       margin-bottom: 10px;

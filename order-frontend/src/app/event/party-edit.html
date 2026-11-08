@@ -1,12 +1,12 @@
 <app-event-tabs active="edit" />
 <form (ngSubmit)="save()">
-  <div class="panel panel-info print_not">
-    <div class="panel-heading">
-      <h3 class="panel-title">
+  <div class="card border-info print_not">
+    <div class="card-header">
+      <h3 class="card-title mb-0">
         Hinweis: Du befindest dich im Konfigurations- und Kalkulationsmenü für dein Event.
       </h3>
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       <h4>Bitte gehe folgendermaßen vor:</h4>
       <ol>
         <li>Eventdaten eintragen und speichern.</li>
@@ -44,18 +44,18 @@
     </div>
   </div>
   <h1 class="print_only">{{ model.name }} am {{ model.date | date: 'dd.MM.yyyy' }}</h1>
-  <div class="panel panel-default print_not">
-    <div class="panel-heading">
-      <h3 class="panel-title">Allgemeinen</h3>
+  <div class="card print_not">
+    <div class="card-header">
+      <h3 class="card-title mb-0">Allgemeinen</h3>
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       <div class="row">
-        <div class="form-group col-sm-3">
-          <label for="partyName" class="control-label">Party Name</label>
+        <div class="mb-3 col-md-3">
+          <label for="partyName" class="form-label">Party Name</label>
           <input class="form-control" id="partyName" name="partyName" [(ngModel)]="model.name" />
         </div>
-        <div class="form-group col-sm-3">
-          <label for="partyDate" class="control-label">Datum</label>
+        <div class="mb-3 col-md-3">
+          <label for="partyDate" class="form-label">Datum</label>
           <input
             type="date"
             class="form-control"
@@ -64,8 +64,8 @@
             [(ngModel)]="model.date"
           />
         </div>
-        <div class="form-group col-sm-3">
-          <label for="estimatedNumberOfPizzas" class="control-label">Anzahl Pizzen*</label>
+        <div class="mb-3 col-md-3">
+          <label for="estimatedNumberOfPizzas" class="form-label">Anzahl Pizzen*</label>
           <input
             class="form-control"
             type="number"
@@ -76,8 +76,8 @@
             [(ngModel)]="model.estimatedNumberOfPizzas"
           />
         </div>
-        <div class="form-group col-sm-3">
-          <label for="blendStatistics" class="control-label">Anteil der allg. Statistik*</label>
+        <div class="mb-3 col-md-3">
+          <label for="blendStatistics" class="form-label">Anteil der allg. Statistik*</label>
           <input
             id="blendStatistics"
             name="blendStatistics"
@@ -86,7 +86,7 @@
             max="100"
             step="5"
             [(ngModel)]="model.blendStatistics"
-            class="slider"
+            class="slider w-100"
           />
         </div>
       </div>
@@ -108,7 +108,7 @@
       <h2>Kommentare</h2>
     </div>
     @for (order of orders() ?? []; track order.orderId.value) {
-      <span class="label label-default label-comment">{{ orderLabel(order) }}</span>
+      <span class="badge text-bg-secondary label-comment">{{ orderLabel(order) }}</span>
     }
     <div class="clear"></div>
     <div class="print_only">
@@ -134,8 +134,8 @@
     </div>
   </div>
   <h2 class="print_not">Zutaten</h2>
-  <div class="panel panel-default panel-condiment">
-    <table class="table table-condensed">
+  <div class="card panel-condiment">
+    <table class="table table-sm">
       @for (category of categories; track category[0]) {
         <thead>
           <tr>
@@ -162,7 +162,7 @@
               <td>{{ row.name }}</td>
               <td class="td_right">
                 @if (canEditAmountPerPizza) {
-                  <div class="input-group input-group-sm input-100 pull-right print_not">
+                  <div class="input-group input-group-sm input-100 float-end print_not">
                     <input
                       type="number"
                       min="0"
@@ -174,7 +174,7 @@
                       [placeholder]="calculation().statisticAmountPerPizza(row) | number: '1.0-1'"
                       (change)="saveAmountPerPizza(row, $any($event.target).value)"
                     />
-                    <span class="input-group-addon">{{ row.unit }}</span>
+                    <span class="input-group-text">{{ row.unit }}</span>
                   </div>
                   <span class="print_only">
                     {{ calculation().amountPerPizza(row) | number: '1.1-1' }} {{ row.unit }}
@@ -194,7 +194,7 @@
                     [ngModelOptions]="{ standalone: true }"
                     [disabled]="!row.active"
                   />
-                  <span class="input-group-addon">{{ row.unit }}</span>
+                  <span class="input-group-text">{{ row.unit }}</span>
                 </div>
               </td>
               <td class="td_right print_only">{{ row.amount }} {{ row.unit }}</td>
@@ -204,9 +204,9 @@
       }
     </table>
   </div>
-  <div class="form-group td_right">
+  <div class="mb-3 td_right">
     @if (party()) {
-      <button type="button" class="btn btn-default" (click)="print()">Drucken</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="print()">Drucken</button>
     }
     <button type="submit" class="btn btn-primary">Speichern</button>
   </div>

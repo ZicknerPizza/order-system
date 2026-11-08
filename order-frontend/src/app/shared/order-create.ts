@@ -21,25 +21,26 @@ import { NotificationService } from './notifications';
   selector: 'app-order-create',
   imports: [FormsModule],
   template: `
-    <div class="panel panel-default">
+    <div class="card">
       <div
         (click)="show.set(!show())"
         [class.panel-heading-standalone]="!isOpen()"
-        class="panel-heading panel-expand"
+        class="card-header panel-expand"
       >
-        <h3 class="panel-title">{{ title() }}</h3>
+        <h3 class="card-title mb-0">{{ title() }}</h3>
       </div>
-      <ul class="list-group">
+      <ul class="list-group list-group-flush">
         @if (isOpen()) {
           <li class="list-group-item">
             <div class="row row-standalone">
               <form (ngSubmit)="sendOrder()">
-                <ul class="list-group showCondiment" style="margin-bottom: 0">
-                  <li class="list-group-item" [class.has-error]="nameMissing()">
+                <ul class="list-group list-group-flush showCondiment" style="margin-bottom: 0">
+                  <li class="list-group-item">
                     <input
                       #nameInput
                       type="text"
                       class="form-control"
+                      [class.is-invalid]="nameMissing()"
                       placeholder="Name"
                       required
                       [(ngModel)]="name"
@@ -47,9 +48,7 @@ import { NotificationService } from './notifications';
                       name="name"
                     />
                     @if (nameMissing()) {
-                      <span class="help-block" style="margin-bottom: 0">
-                        Bitte gib deinen Namen ein.
-                      </span>
+                      <div class="invalid-feedback">Bitte gib deinen Namen ein.</div>
                     }
                   </li>
                   @for (category of categories(); track category[0]) {
@@ -87,7 +86,7 @@ import { NotificationService } from './notifications';
                     ></textarea>
                     <button
                       type="submit"
-                      class="btn btn-default"
+                      class="btn btn-outline-secondary"
                       style="width: 100%; margin-top: 10px"
                     >
                       Pizza wünschen

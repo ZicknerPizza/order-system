@@ -13,7 +13,7 @@ import { RemainingCondiments } from './remaining-condiments';
   providers: [KitchenStore],
   template: `
     <div class="row">
-      <div class="col-system-service col-lg-3 col-md-4 col-sm-5">
+      <div class="col-system-service col-xl-3 col-lg-4 col-md-5">
         <app-order-create
           [party]="party()"
           [condiments]="condiments()"
@@ -36,12 +36,12 @@ import { RemainingCondiments } from './remaining-condiments';
           [condiments]="condiments()"
         />
       </div>
-      <div class="col-system-bake col-lg-7 col-md-5 col-sm-7 hidden-xs">
+      <div class="col-system-bake col-xl-7 col-lg-5 col-md-7 d-none d-md-block">
         @if (store.canBake()) {
           <app-bakery [condiments]="condiments()" />
           <!-- Below the bakery on small screens, there is no space beside it -->
           <app-remaining-condiments
-            class="visible-sm-block"
+            class="d-block d-lg-none"
             [orders]="store.orders()"
             [condiments]="condiments()"
           />
@@ -51,7 +51,7 @@ import { RemainingCondiments } from './remaining-condiments';
         }
       </div>
       @if (store.canBake()) {
-        <div class="col-lg-2 col-md-3 hidden-sm hidden-xs">
+        <div class="col-xl-2 col-lg-3 d-none d-lg-block">
           <app-remaining-condiments [orders]="store.orders()" [condiments]="condiments()" />
         </div>
       }

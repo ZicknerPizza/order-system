@@ -28,8 +28,8 @@ export const partiesResolver: ResolveFn<PartyOverview[]> = () => inject(PartyApi
 @Component({
   imports: [FormsModule],
   template: `
-    <div class="panel panel-default panel-table">
-      <table class="table table-condensed">
+    <div class="card panel-table">
+      <table class="table table-sm">
         <thead>
           <tr>
             <th width="70%">Link</th>
@@ -42,30 +42,28 @@ export const partiesResolver: ResolveFn<PartyOverview[]> = () => inject(PartyApi
             <tr>
               <td>
                 <div class="input-group">
-                  <span class="input-group-addon">{{ pagePath }}/#/l/</span>
+                  <span class="input-group-text">{{ pagePath }}/#/l/</span>
                   <input
                     type="text"
                     [(ngModel)]="link.identifier"
                     class="form-control"
                     [id]="'identifier_' + link.id.value"
                   />
-                  <span class="input-group-btn">
-                    <button
-                      class="btn btn-default"
-                      type="button"
-                      title="In die Zwischenablage kopieren"
-                      (click)="copy(link)"
-                    >
-                      <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
-                    </button>
-                  </span>
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    title="In die Zwischenablage kopieren"
+                    (click)="copy(link)"
+                  >
+                    <span class="bi bi-copy" aria-hidden="true"></span>
+                  </button>
                 </div>
               </td>
               <td>
-                <div class="btn-group btn-justified dropdown" [class.open]="isOpen(link.id)">
+                <div class="btn-group btn-justified dropdown">
                   <button
                     type="button"
-                    class="btn btn-default btn-justified"
+                    class="btn btn-outline-secondary btn-justified"
                     aria-haspopup="true"
                     [attr.aria-expanded]="isOpen(link.id)"
                     title="Event auswählen"
@@ -74,10 +72,16 @@ export const partiesResolver: ResolveFn<PartyOverview[]> = () => inject(PartyApi
                   >
                     {{ partyName(link.partyId) }}
                   </button>
-                  <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdown_' + link.id.value">
+                  <ul
+                    class="dropdown-menu"
+                    [class.show]="isOpen(link.id)"
+                    [attr.aria-labelledby]="'dropdown_' + link.id.value"
+                  >
                     @for (party of upcomingParties(); track party.id.value) {
-                      <li class="dropdown-item">
-                        <a (click)="setParty(link, party)" class="pointer">{{ party.name }}</a>
+                      <li>
+                        <a (click)="setParty(link, party)" class="dropdown-item pointer">{{
+                          party.name
+                        }}</a>
                       </li>
                     }
                   </ul>
@@ -87,10 +91,10 @@ export const partiesResolver: ResolveFn<PartyOverview[]> = () => inject(PartyApi
                 <button
                   (click)="save(link)"
                   type="button"
-                  class="btn btn-default"
+                  class="btn btn-outline-secondary"
                   title="Speichern"
                 >
-                  <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                  <span class="bi bi-floppy" aria-hidden="true"></span>
                 </button>
               </td>
             </tr>

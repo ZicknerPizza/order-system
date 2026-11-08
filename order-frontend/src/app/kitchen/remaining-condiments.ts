@@ -13,22 +13,22 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
 @Component({
   selector: 'app-remaining-condiments',
   template: `
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Benötigte Zutaten</h3>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title mb-0">Benötigte Zutaten</h3>
       </div>
-      <ul class="list-group">
+      <ul class="list-group list-group-flush">
         @for (category of categories(); track category[0]) {
           <li class="list-group-item">
             <p class="condimentCategory">{{ category[0] }}</p>
             @for (entry of category[1]; track entry.id.value) {
               <div class="entry">
-                <span class="badge">{{ entry.count }}</span>
+                <span class="badge text-bg-secondary">{{ entry.count }}</span>
                 <span [class.sold-out]="entry.soldOut">{{ entry.name }}</span>
                 @if (entry.soldOut) {
                   <button
                     type="button"
-                    class="btn btn-xs btn-success pull-right"
+                    class="btn btn-xs btn-success float-end"
                     title="Die Zutat kann wieder bestellt werden"
                     (click)="setSoldOut(entry.id, false)"
                   >
@@ -37,7 +37,7 @@ const OPEN_STATUS: Status[] = ['INACTIVE', 'WAITING', 'TOPPING'];
                 } @else {
                   <button
                     type="button"
-                    class="btn btn-xs btn-default pull-right"
+                    class="btn btn-xs btn-outline-secondary float-end"
                     title="Die Zutat ist ausgegangen und kann nicht mehr bestellt werden"
                     (click)="setSoldOut(entry.id, true)"
                   >

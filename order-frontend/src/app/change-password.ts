@@ -11,13 +11,13 @@ const MINIMUM_PASSWORD_LENGTH = 8;
   imports: [FormsModule],
   template: `
     <form class="form-horizontal" (ngSubmit)="save()">
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <h2>Passwort ändern</h2>
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <input
             type="password"
             class="form-control"
@@ -29,8 +29,8 @@ const MINIMUM_PASSWORD_LENGTH = 8;
           />
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <input
             type="password"
             class="form-control"
@@ -41,23 +41,24 @@ const MINIMUM_PASSWORD_LENGTH = 8;
           />
         </div>
       </div>
-      <div class="form-group" [class.has-error]="error()">
-        <div class="col-sm-offset-4 col-sm-4">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4">
           <input
             type="password"
             class="form-control"
+            [class.is-invalid]="error()"
             name="repeatedPassword"
             [(ngModel)]="repeatedPassword"
             placeholder="Neues Passwort wiederholen"
             autocomplete="new-password"
           />
           @if (error(); as error) {
-            <span class="help-block">{{ error }}</span>
+            <div class="invalid-feedback">{{ error }}</div>
           }
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-4 td_right">
+      <div class="row mb-3">
+        <div class="offset-md-4 col-md-4 td_right">
           <button type="submit" class="btn btn-primary" [disabled]="saving()">Speichern</button>
         </div>
       </div>

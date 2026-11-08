@@ -9,8 +9,8 @@ import { EventTabs } from './event-tabs';
   imports: [DatePipe, RouterLink, EventTabs],
   template: `
     <app-event-tabs active="list" />
-    <div class="panel panel-default panel-table">
-      <table class="table table-condensed">
+    <div class="card panel-table">
+      <table class="table table-sm">
         <thead>
           <tr>
             <th>Event</th>
@@ -22,8 +22,8 @@ import { EventTabs } from './event-tabs';
             <tr>
               <td>
                 <div class="row">
-                  <div class="col-md-8">{{ party.name }}</div>
-                  <div class="col-md-4">
+                  <div class="col-lg-8">{{ party.name }}</div>
+                  <div class="col-lg-4">
                     {{ party.date | date: 'dd.MM.yyyy' }} | Key:
                     <a [routerLink]="['/order', party.id.value, party.key]">{{ party.key }}</a>
                   </div>
@@ -32,11 +32,11 @@ import { EventTabs } from './event-tabs';
               <td class="td_center">
                 @if (auth.hasRole('KITCHEN')) {
                   <a [routerLink]="['/event/edit', party.id.value]"
-                    ><span class="glyphicon glyphicon-pencil margin-right" aria-hidden="true"></span
+                    ><span class="bi bi-pencil margin-right" aria-hidden="true"></span
                   ></a>
                 }
                 <a [routerLink]="['/kitchen', party.id.value]"
-                  ><span class="glyphicon glyphicon-circle-arrow-right" aria-hidden="true"></span
+                  ><span class="bi bi-arrow-right-circle-fill" aria-hidden="true"></span
                 ></a>
               </td>
             </tr>

@@ -7,18 +7,18 @@ import { KitchenStore } from './kitchen-store';
 @Component({
   selector: 'app-order-list',
   template: `
-    <div class="panel panel-default">
+    <div class="card">
       <div
         (click)="show.set(!show())"
         [class.panel-heading-standalone]="!show()"
-        class="panel-heading panel-expand"
+        class="card-header panel-expand"
       >
-        <h3 class="panel-title">
-          <span class="badge">{{ orders().length }}</span>
+        <h3 class="card-title mb-0">
+          <span class="badge text-bg-secondary">{{ orders().length }}</span>
           {{ title() }}
         </h3>
       </div>
-      <ul class="list-group" [hidden]="!show()">
+      <ul class="list-group list-group-flush" [hidden]="!show()">
         @for (order of orders(); track order.orderId.value) {
           <li class="list-group-item" [class.list-group-item-disabled]="!isActive(order)">
             <div class="row row-standalone row-flex">
@@ -36,32 +36,28 @@ import { KitchenStore } from './kitchen-store';
               @if (isActive(order)) {
                 <div
                   (click)="store.changeStatus([order], 'INACTIVE')"
-                  class="list-group-item-action pointer bg-info"
+                  class="list-group-item-action pointer bg-info-subtle"
                 >
                   <span
                     title="deaktivieren"
-                    class="glyphicon glyphicon-ban-circle text-info"
+                    class="bi bi-slash-circle text-info"
                     aria-hidden="true"
                   ></span>
                 </div>
               } @else {
                 <div
                   (click)="store.changeStatus([order], 'WAITING')"
-                  class="list-group-item-action pointer bg-success"
+                  class="list-group-item-action pointer bg-success-subtle"
                 >
                   <span
                     title="aktivieren"
-                    class="glyphicon glyphicon-ok-circle text-success"
+                    class="bi bi-check-circle text-success"
                     aria-hidden="true"
                   ></span>
                 </div>
               }
-              <div (click)="delete(order)" class="list-group-item-action pointer bg-danger">
-                <span
-                  title="löschen"
-                  class="glyphicon glyphicon-remove-circle text-danger"
-                  aria-hidden="true"
-                ></span>
+              <div (click)="delete(order)" class="list-group-item-action pointer bg-danger-subtle">
+                <span title="löschen" class="bi bi-x-circle text-danger" aria-hidden="true"></span>
               </div>
             </div>
           </li>

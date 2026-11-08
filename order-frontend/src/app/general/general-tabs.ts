@@ -7,17 +7,25 @@ import { RouterLink } from '@angular/router';
   template: `
     <div class="nav-head">
       <ul class="nav nav-tabs">
-        <li [class.active]="active() === 'aboutUs'">
-          <a routerLink="/general/aboutUs">Wir über uns</a>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="active() === 'aboutUs'" routerLink="/general/aboutUs"
+            >Wir über uns</a
+          >
         </li>
-        <li [class.active]="active() === 'history'">
-          <a routerLink="/general/history">Geschichte</a>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="active() === 'history'" routerLink="/general/history"
+            >Geschichte</a
+          >
         </li>
-        <li [class.active]="active() === 'imprint'">
-          <a routerLink="/general/imprint">Impressum</a>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="active() === 'imprint'" routerLink="/general/imprint"
+            >Impressum</a
+          >
         </li>
-        <li [class.active]="active() === 'privacy'">
-          <a routerLink="/general/privacy">Datenschutz</a>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="active() === 'privacy'" routerLink="/general/privacy"
+            >Datenschutz</a
+          >
         </li>
       </ul>
     </div>

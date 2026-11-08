@@ -15,24 +15,24 @@ import { PizzaDetail } from './pizza-detail';
   imports: [FormsModule, PizzaDetail],
   template: `
     @if (!enabled()) {
-      <div class="panel panel-info">
-        <div class="panel-heading">
-          <h3 class="panel-title">Backsystem</h3>
+      <div class="card border-info">
+        <div class="card-header">
+          <h3 class="card-title mb-0">Backsystem</h3>
         </div>
-        <div class="panel-body">Anleitung</div>
+        <div class="card-body">Anleitung</div>
       </div>
-      <div class="form-group td_right">
+      <div class="mb-3 td_right">
         <button (click)="start()" type="button" class="btn btn-success">Jetzt backen!</button>
       </div>
     } @else {
       @if (current(); as pizza) {
-        <div class="panel panel-default">
-          <div class="panel-heading">
+        <div class="card">
+          <div class="card-header">
             <div class="row">
-              <div class="col-sm-9">
-                <h3 class="panel-title">Pizza</h3>
+              <div class="col-md-9">
+                <h3 class="card-title mb-0">Pizza</h3>
               </div>
-              <div class="col-sm-3">
+              <div class="col-md-3">
                 <input
                   id="changeFontSize"
                   type="range"
@@ -57,7 +57,7 @@ import { PizzaDetail } from './pizza-detail';
           Es ist nur noch die Bestellung von {{ order.name }} da. Mit „Auffüllen“ wird sie doppelt
           bestellt und als ganze Pizza gebacken.
         </div>
-        <div class="form-group td_right">
+        <div class="mb-3 td_right">
           <button
             type="button"
             class="btn btn-primary"
@@ -71,13 +71,13 @@ import { PizzaDetail } from './pizza-detail';
         <div class="alert alert-warning">Es sind nicht ausreichend Bestellungen da.</div>
       }
       <div class="row">
-        <div class="col-sm-6 form-group">
-          <button (click)="stop()" type="button" class="btn btn-default">
+        <div class="col-md-6 mb-3">
+          <button (click)="stop()" type="button" class="btn btn-outline-secondary">
             Backmodus verlassen
           </button>
         </div>
         <!-- Green: compartment is free, red: a pizza is still baking there -->
-        <div class="col-sm-6 form-group td_right">
+        <div class="col-md-6 mb-3 td_right">
           @for (compartment of compartments(); track compartment.stove) {
             <button
               type="button"

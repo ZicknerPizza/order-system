@@ -21,14 +21,14 @@ import { GeneralTabs } from './general-tabs';
 
     <br />
 
-    <div class="panel panel-warning">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          <span class="glyphicon glyphicon-warning-sign margin-right" aria-hidden="true"></span
+    <div class="card border-warning">
+      <div class="card-header">
+        <h3 class="card-title mb-0">
+          <span class="bi bi-exclamation-triangle-fill margin-right" aria-hidden="true"></span
           >Wichtiger Hinweis:
         </h3>
       </div>
-      <div class="panel-body">
+      <div class="card-body">
         Nein, wir sind kein Pizza Service. Falls du uns über einen Branchenbucheintrag gefunden
         hast, müssen wir dich leider enttäuschen. Ansonsten wünschen wir dir viel Spaß.
       </div>

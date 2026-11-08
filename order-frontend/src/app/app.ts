@@ -10,7 +10,7 @@ import { Notifications } from './shared/notifications';
   imports: [RouterOutlet, Navigation, Notifications],
   template: `
     <app-navigation [expanded]="expanded()" />
-    <div class="container" [class.container-full]="expanded()">
+    <div [class]="expanded() ? 'container-fluid' : 'container'">
       <app-notifications />
       <router-outlet />
     </div>

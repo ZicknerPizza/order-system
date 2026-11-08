@@ -6,96 +6,83 @@ import { AuthService } from './auth/auth';
   selector: 'app-navigation',
   imports: [RouterLink],
   template: `
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container" [class.container-full]="expanded()">
-        <div class="navbar-header">
-          <button
-            type="button"
-            class="navbar-toggle"
-            [class.collapsed]="!menuOpen()"
-            (click)="menuOpen.set(!menuOpen())"
-            [attr.aria-expanded]="menuOpen()"
-            aria-controls="navbar"
-          >
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" routerLink="/">zickner-pizza.de</a>
-        </div>
-        <div id="navbar" class="collapse navbar-collapse" [class.in]="menuOpen()">
-          <ul class="nav navbar-nav">
-            <li><a routerLink="/general/aboutUs">Allgemein</a></li>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <div [class]="expanded() ? 'container-fluid' : 'container'">
+        <a class="navbar-brand" routerLink="/">zickner-pizza.de</a>
+        <button
+          type="button"
+          class="navbar-toggler"
+          [class.collapsed]="!menuOpen()"
+          (click)="menuOpen.set(!menuOpen())"
+          [attr.aria-expanded]="menuOpen()"
+          aria-controls="navbar"
+          aria-label="Navigation umschalten"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbar" class="collapse navbar-collapse" [class.show]="menuOpen()">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/general/aboutUs">Allgemein</a>
+            </li>
             @if (auth.loggedIn()) {
-              <li><a routerLink="/event/list">Events</a></li>
+              <li class="nav-item"><a class="nav-link" routerLink="/event/list">Events</a></li>
               @if (auth.hasRole('KITCHEN')) {
-                <li><a routerLink="/links">Links</a></li>
+                <li class="nav-item"><a class="nav-link" routerLink="/links">Links</a></li>
               }
             }
           </ul>
-          @if (auth.loggedIn()) {
-            <ul class="nav navbar-nav navbar-right">
-              <li class="dropdown" [class.open]="userMenuOpen()">
+          <ul class="navbar-nav">
+            @if (auth.loggedIn()) {
+              <li class="nav-item dropdown">
                 <a
-                  class="pointer dropdown-toggle"
+                  class="nav-link dropdown-toggle pointer"
                   role="button"
-                  aria-haspopup="true"
+                  [class.show]="userMenuOpen()"
                   [attr.aria-expanded]="userMenuOpen()"
                   (click)="toggleUserMenu($event)"
                 >
-                  <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-                  {{ auth.username() }} <span class="caret"></span>
+                  <i class="bi bi-person-fill" aria-hidden="true"></i>
+                  {{ auth.username() }}
                 </a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-end" [class.show]="userMenuOpen()">
                   <li>
-                    <a routerLink="/account/password">
-                      <span class="glyphicon glyphicon-lock margin-right" aria-hidden="true"></span>
+                    <a class="dropdown-item" routerLink="/account/password">
+                      <i class="bi bi-lock-fill margin-right" aria-hidden="true"></i>
                       Passwort ändern
                     </a>
                   </li>
                   <li>
-                    <a routerLink="/account/two-factor">
-                      <span
-                        class="glyphicon glyphicon-phone margin-right"
-                        aria-hidden="true"
-                      ></span>
+                    <a class="dropdown-item" routerLink="/account/two-factor">
+                      <i class="bi bi-phone margin-right" aria-hidden="true"></i>
                       Zwei-Faktor-Anmeldung
                     </a>
                   </li>
                   @if (auth.hasRole('ADMIN')) {
                     <li>
-                      <a routerLink="/users">
-                        <span
-                          class="glyphicon glyphicon-th-list margin-right"
-                          aria-hidden="true"
-                        ></span>
+                      <a class="dropdown-item" routerLink="/users">
+                        <i class="bi bi-people-fill margin-right" aria-hidden="true"></i>
                         Benutzerverwaltung
                       </a>
                     </li>
                   }
-                  <li role="separator" class="divider"></li>
+                  <li><hr class="dropdown-divider" /></li>
                   <li>
-                    <a class="pointer" (click)="logout()">
-                      <span
-                        class="glyphicon glyphicon-log-out margin-right"
-                        aria-hidden="true"
-                      ></span>
+                    <a class="dropdown-item pointer" (click)="logout()">
+                      <i class="bi bi-box-arrow-right margin-right" aria-hidden="true"></i>
                       Abmelden
                     </a>
                   </li>
                 </ul>
               </li>
-            </ul>
-          } @else {
-            <ul class="nav navbar-nav navbar-right">
-              <li>
-                <a routerLink="/login"
-                  ><span class="glyphicon glyphicon-user" aria-hidden="true"></span> Anmeldung</a
+            } @else {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/login"
+                  ><i class="bi bi-person-fill" aria-hidden="true"></i> Anmeldung</a
                 >
               </li>
-            </ul>
-          }
+            }
+          </ul>
         </div>
       </div>
     </nav>

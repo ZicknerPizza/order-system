@@ -1,6 +1,74 @@
 /* app css stylesheet */
 
 /* GLOBAL */
+
+/* Bootstrap 5 starts at 16px, the pages were laid out for the 14px of Bootstrap 3.
+   Everything in Bootstrap 5 is sized in rem, so this scales buttons and fields as well. */
+html {
+    font-size: 14px;
+}
+
+/* Paddings of the list items in Bootstrap 3, the rows inside rely on them */
+.list-group {
+    --bs-list-group-item-padding-x: 15px;
+    --bs-list-group-item-padding-y: 10px;
+}
+
+/* Colored headers like panel-info and panel-warning in Bootstrap 3 */
+.card.border-info {
+    border-color: var(--bs-info-border-subtle) !important;
+}
+
+.card.border-info > .card-header {
+    background-color: var(--bs-info-bg-subtle);
+    color: var(--bs-info-text-emphasis);
+    border-color: var(--bs-info-border-subtle);
+}
+
+.card.border-warning {
+    border-color: var(--bs-warning-border-subtle) !important;
+}
+
+.card.border-warning > .card-header {
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    border-color: var(--bs-warning-border-subtle);
+}
+
+/* Icons on the light backgrounds, text-info is too light on bg-info-subtle */
+.bg-info-subtle .text-info {
+    color: var(--bs-info-text-emphasis) !important;
+}
+
+.bg-success-subtle .text-success {
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+.bg-danger-subtle .text-danger {
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+/* Bootstrap 5 dropped the extra small buttons */
+.btn-xs {
+    --bs-btn-padding-y: 1px;
+    --bs-btn-padding-x: 5px;
+    --bs-btn-font-size: 12px;
+    --bs-btn-border-radius: 3px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Spacing of the panels in Bootstrap 3 */
+.card {
+    margin-bottom: 20px;
+}
+
 @media screen {
     body {
         padding-top: 65px;
@@ -27,20 +95,26 @@
         font-weight: 700;
     }
 
+    /* Fills the list item edge to edge, like a row in Bootstrap 3 */
     .row-standalone {
+        --bs-gutter-x: 30px;
         margin-top: -10px;
         margin-bottom: -10px;
+    }
+
+    .row-standalone > * {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* Side by side, like the order name and its buttons */
+    .row-standalone.row-flex > * {
+        width: auto;
     }
 
     .btn-justified {
         width:100%;
         text-align: left;
-    }
-
-    .container-full {
-        width: 100%;
-        margin-right: 0;
-        margin-left: 0;
     }
 
     /* SLIDER */
@@ -119,7 +193,7 @@
 
 /* SYSTEM (KITCHEN) */
 @media screen {
-    .panel-heading .badge {
+    .card-header .badge {
         float: right;
         background-color: #777 !important;
     }
@@ -181,6 +255,11 @@
         margin: 0;
     }
 
+    /* Bootstrap 5 draws a line under every cell, Bootstrap 3 one above, which was switched off here */
+    .table-pizza > :not(caption) > * > * {
+        border-bottom-width: 0;
+    }
+
     .order-comment,
     .table-pizza .p-pizza-comment {
         color: #aaa;
@@ -202,7 +281,7 @@
 
     /* SYSTEM -> KITCHEN -> PIZZA*/
 
-    .col-system-bake .panel {
+    .col-system-bake .card {
         padding-bottom: 0px;
     }
 
@@ -282,7 +361,7 @@
 
 @media screen {
 
-    .panel-body p {
+    .card-body p {
         padding-bottom: 0px;
     }
 

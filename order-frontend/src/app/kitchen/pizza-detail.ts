@@ -73,8 +73,8 @@ export function halfMarker(
             </th>
           }
           @if (pizza().order1.status === 'TOPPING' && store.canBake()) {
-            <th class="pizza-extra pointer bg-info" (click)="moveToQueue()">
-              <p><span class="glyphicon glyphicon-arrow-up text-info" aria-hidden="true"></span></p>
+            <th class="pizza-extra pointer bg-info-subtle" (click)="moveToQueue()">
+              <p><span class="bi bi-arrow-up text-info" aria-hidden="true"></span></p>
             </th>
           }
           @if (pizza().order1.status === 'BAKING') {
@@ -89,7 +89,7 @@ export function halfMarker(
           <tr>
             @for (categories of orderCategories(); track $index) {
               <td>
-                <ul class="list-group">
+                <ul class="list-group list-group-flush">
                   <li class="list-group-item">
                     @for (category of categories; track category[0]) {
                       <div>
@@ -106,7 +106,7 @@ export function halfMarker(
               </td>
             }
             @if (pizza().order1.status === 'TOPPING' && store.canBake()) {
-              <td class="bg-info" (click)="moveToQueue()"></td>
+              <td class="bg-info-subtle" (click)="moveToQueue()"></td>
             }
             @if (pizza().order1.status === 'BAKING') {
               <td></td>
@@ -117,11 +117,11 @@ export function halfMarker(
               @for (order of orders(); track order.orderId.value) {
                 <td>
                   <div
-                    class="bg-info order-copy pointer"
+                    class="bg-info-subtle order-copy pointer"
                     title="In neue Bestellung kopieren"
                     (click)="store.copyToForm(order)"
                   >
-                    <span class="glyphicon glyphicon-copy text-info" aria-hidden="true"></span>
+                    <span class="bi bi-copy text-info" aria-hidden="true"></span>
                   </div>
                 </td>
               }

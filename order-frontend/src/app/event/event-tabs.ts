@@ -8,10 +8,16 @@ import { AuthService } from '../auth/auth';
   template: `
     <div class="nav-head print_not">
       <ul class="nav nav-tabs">
-        <li [class.active]="active() === 'list'"><a routerLink="/event/list">Übersicht</a></li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="active() === 'list'" routerLink="/event/list"
+            >Übersicht</a
+          >
+        </li>
         @if (auth.hasRole('KITCHEN')) {
-          <li [class.active]="active() === 'edit'">
-            <a routerLink="/event/edit">Event neu/bearbeiten</a>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="active() === 'edit'" routerLink="/event/edit"
+              >Event neu/bearbeiten</a
+            >
           </li>
         }
       </ul>

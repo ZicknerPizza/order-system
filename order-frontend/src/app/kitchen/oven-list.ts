@@ -14,14 +14,14 @@ const STOVES: Stove[] = ['go', 'gu'];
   selector: 'app-oven-list',
   imports: [PizzaDetail],
   template: `
-    <div class="panel panel-default">
-      <div class="panel-heading panel-expand">
-        <h3 class="panel-title">
-          <span class="badge">{{ count() }}</span>
+    <div class="card">
+      <div class="card-header panel-expand">
+        <h3 class="card-title mb-0">
+          <span class="badge text-bg-secondary">{{ count() }}</span>
           Pizzen im Ofen
         </h3>
       </div>
-      <ul class="list-group">
+      <ul class="list-group list-group-flush">
         @for (row of rows(); track $index) {
           <li class="list-group-item list-group-item-pizzas">
             @if (row; as pizza) {

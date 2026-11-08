@@ -7,18 +7,18 @@ import { PizzaDetail } from './pizza-detail';
   selector: 'app-pizza-list',
   imports: [PizzaDetail],
   template: `
-    <div class="panel panel-default">
+    <div class="card">
       <div
         (click)="show.set(!show())"
         [class.panel-heading-standalone]="!isOpen()"
-        class="panel-heading panel-expand"
+        class="card-header panel-expand"
       >
-        <h3 class="panel-title">
-          <span class="badge">{{ pizzas().length }}</span>
+        <h3 class="card-title mb-0">
+          <span class="badge text-bg-secondary">{{ pizzas().length }}</span>
           {{ title() }}
         </h3>
       </div>
-      <ul class="list-group" [hidden]="!isOpen()">
+      <ul class="list-group list-group-flush" [hidden]="!isOpen()">
         @for (pizza of pizzas(); track pizza.order1.orderId.value) {
           <li class="list-group-item list-group-item-pizzas">
             <div class="row row-standalone">
